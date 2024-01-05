@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>API_KEY</key>
+	<string>AIzaSyDajSyhEBj03pGGcfG5p9GUYWiwsCv6y4Y</string>
+	<key>GCM_SENDER_ID</key>
+	<string>458451555038</string>
+	<key>PLIST_VERSION</key>
+	<string>1</string>
+	<key>BUNDLE_ID</key>
+	<string>com.boha.eduChatbot.RunnerTests</string>
+	<key>PROJECT_ID</key>
+	<string>stealthcannabis</string>
+	<key>STORAGE_BUCKET</key>
+	<string>stealthcannabis.appspot.com</string>
+	<key>IS_ADS_ENABLED</key>
+	<false></false>
+	<key>IS_ANALYTICS_ENABLED</key>
+	<false></false>
+	<key>IS_APPINVITE_ENABLED</key>
+	<true></true>
+	<key>IS_GCM_ENABLED</key>
+	<true></true>
+	<key>IS_SIGNIN_ENABLED</key>
+	<true></true>
+	<key>GOOGLE_APP_ID</key>
+	<string>1:458451555038:ios:52fefbc5579ea71c76a84f</string>
+</dict>
+</plist>
