@@ -50,7 +50,7 @@ class ExamsDocumentListState extends State<ExamsDocumentList> {
         busy = true;
       });
       examDocs = await widget.repository.getExamDocuments(false);
-      examDocs.sort((a, b) => a.title!.compareTo(b.title!));
+      examDocs.sort((b, a) => a.title!.compareTo(b.title!));
     } catch (e) {
       pp(e);
       if (mounted) {
@@ -81,30 +81,46 @@ class ExamsDocumentListState extends State<ExamsDocumentList> {
     return SafeArea(
         child: Scaffold(
             appBar: AppBar(
-              title: const Text('Examination Periods'),
+              title:  Text('Examination Periods',
+              style: myTextStyleSmall(context)),
             ),
             body: Stack(
               children: [
-                Column(
-                  children: [
-                    const Text('Available Examination Papers'),
-                    Expanded(
-                      child: ListView.builder(
-                          itemCount: examDocs.length,
-                          itemBuilder: (_, index) {
-                            var doc = examDocs.elementAt(index);
-                            return GestureDetector(
-                              onTap: (){
-                                _navigateToExamLinks(doc);
-                              },
-                              child: Card(
-                                elevation: 8,
-                                child: Text('${doc.title}'),
-                              ),
-                            );
-                          }),
-                    )
-                  ],
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Column(
+                    children: [
+                      Text('${widget.subject.title}',
+                          style: myTextStyle(
+                              context,
+                              Theme.of(context).primaryColor,
+                              18,
+                              FontWeight.w900)),
+                      Expanded(
+                        child: ListView.builder(
+                            itemCount: examDocs.length,
+                            itemBuilder: (_, index) {
+                              var doc = examDocs.elementAt(index);
+                              return GestureDetector(
+                                onTap: () {
+                                  _navigateToExamLinks(doc);
+                                },
+                                child: Card(
+                                  elevation: 8,
+                                  child: ListTile(
+                                    title: Text(
+                                      '${doc.title}',
+                                      style: myTextStyleSmall(context),
+                                    ),
+                                    leading: Icon(Icons.edit_note,
+                                        color: Theme.of(context).primaryColor),
+                                  ),
+                                ),
+                              );
+                            }),
+                      )
+                    ],
+                  ),
                 )
               ],
             )));

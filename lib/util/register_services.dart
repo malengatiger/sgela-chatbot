@@ -1,4 +1,6 @@
 import 'package:dio/dio.dart';
+import 'package:edu_chatbot/util/dark_light_control.dart';
+import 'package:edu_chatbot/util/prefs.dart';
 import 'package:get_it/get_it.dart';
 
 import '../repositories/repository.dart';
@@ -22,6 +24,9 @@ Future<void> registerServices() async {
   Dio dio = Dio();
   var dioUtil = DioUtil(dio, lds);
   var repository = Repository(dioUtil, lds, dio);
+  var prefs = Prefs();
+  var dlc = DarkLightControl(prefs);
+  var cWatcher = ColorWatcher(dlc, prefs);
   GetIt.instance.registerLazySingleton<MathService>(() => MathService());
   GetIt.instance.registerLazySingleton<ChatService>(() => ChatService(dioUtil));
   GetIt.instance
@@ -37,6 +42,12 @@ Future<void> registerServices() async {
           () => YouTubeService(dioUtil, lds));
   GetIt.instance.registerLazySingleton<DownloaderService>(
           () => DownloaderService(repository, lds));
+  GetIt.instance.registerLazySingleton<Prefs>(
+          () => Prefs());
+  GetIt.instance.registerLazySingleton<ColorWatcher>(
+          () => cWatcher);
+  GetIt.instance.registerLazySingleton<DarkLightControl>(
+          () => dlc);
 
-  pp('🍎🍎🍎🍎🍎🍎 registerServices: GetIt has registered 10 services. 🍎Cool! 🍎🍎🍎');
+  pp('🍎🍎🍎🍎🍎🍎 registerServices: GetIt has registered 13 services. 🍎 Cool!! 🍎🍎🍎');
 }

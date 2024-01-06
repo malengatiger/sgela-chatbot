@@ -54,14 +54,14 @@ class Prefs {
     return country;
   }
 
-  static Future saveMode(int mode) async {
+   Future saveMode(int mode) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     prefs.setInt('mode', mode);
     pp("🌽🌽🌽 Prefs: saveMode: 🌽 ${mode == 1? 'DARK':'LIGHT'} 🌽🌽🌽");
     return null;
   }
 
-  static Future<int> getMode() async {
+   Future<int> getMode() async {
     var prefs = await SharedPreferences.getInstance();
     var mode = prefs.getInt('mode');
     if (mode == null) {
@@ -69,6 +69,23 @@ class Prefs {
     }
     pp("🌽🌽🌽 Prefs: getMode: 🌽 ${mode == 1? 'DARK':'LIGHT'} 🌽🌽🌽");
     return mode;
+  }
+
+   Future saveColorIndex(int index) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    prefs.setInt('color', index);
+    pp("🌽🌽🌽 Prefs: saveColor: 🌽 $index 🌽🌽🌽");
+    return null;
+  }
+
+   Future<int> getColorIndex() async {
+    var prefs = await SharedPreferences.getInstance();
+    var color = prefs.getInt('color');
+    if (color == null) {
+      return 0;
+    }
+    pp("🌽🌽🌽 Prefs: getColor: 🌽 $color 🌽🌽🌽");
+    return color;
   }
 
 }

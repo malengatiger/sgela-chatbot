@@ -3,7 +3,8 @@ import 'package:edu_chatbot/data/subject.dart';
 import 'package:edu_chatbot/repositories/repository.dart';
 import 'package:edu_chatbot/services/downloader_isolate.dart';
 import 'package:edu_chatbot/ui/busy_indicator.dart';
-import 'package:edu_chatbot/ui/exams_by_document.dart';
+import 'package:edu_chatbot/ui/color_gallery.dart';
+import 'package:edu_chatbot/ui/exam_document_list.dart';
 import 'package:edu_chatbot/util/dark_light_control.dart';
 import 'package:edu_chatbot/util/functions.dart';
 import 'package:flutter/material.dart';
@@ -13,7 +14,6 @@ import '../services/local_data_service.dart';
 import '../services/you_tube_service.dart';
 import '../util/navigation_util.dart';
 import '../util/prefs.dart';
-import 'exam_link_list_widget.dart';
 import 'image_picker_widget.dart';
 
 class SubjectSearch extends StatefulWidget {
@@ -21,15 +21,21 @@ class SubjectSearch extends StatefulWidget {
   final LocalDataService localDataService;
   final ChatService chatService;
   final YouTubeService youTubeService;
-
+  final Prefs prefs;
   final DownloaderService downloaderService;
+  final ColorWatcher colorWatcher;
+  final DarkLightControl darkLightControl;
 
   const SubjectSearch(
       {super.key,
       required this.repository,
       required this.localDataService,
       required this.chatService,
-      required this.youTubeService, required this.downloaderService});
+      required this.youTubeService,
+      required this.downloaderService,
+      required this.prefs,
+      required this.colorWatcher,
+      required this.darkLightControl});
 
   @override
   SubjectSearchState createState() => SubjectSearchState();
@@ -40,6 +46,7 @@ class SubjectSearchState extends State<SubjectSearch> {
   List<Subject> _subjects = [];
   List<Subject> _filteredSubjects = [];
   bool busy = false;
+
   @override
   void initState() {
     super.initState();
@@ -80,7 +87,7 @@ class SubjectSearchState extends State<SubjectSearch> {
         ));
   }
 
-  navigateToExamLinkListWidget(BuildContext context, Subject subject) {
+  navigateToExamsDocumentList(BuildContext context, Subject subject) {
     NavigationUtils.navigateToPage(
         context: context,
         widget: ExamsDocumentList(
@@ -115,20 +122,31 @@ class SubjectSearchState extends State<SubjectSearch> {
       child: SafeArea(
         child: Scaffold(
           appBar: AppBar(
-            title:  Text('SgelaAI', style: myTextStyle(context, Theme.of(context).primaryColor,
-                24, FontWeight.w900),),
+            title: Text(
+              'SgelaAI',
+              style: myTextStyle(
+                  context, Theme.of(context).primaryColor, 24, FontWeight.w900),
+            ),
             actions: [
               IconButton(
                 onPressed: () async {
                   await _handleMode(bright);
                 },
-                icon: Icon(mode == 1 ? Icons.dark_mode : Icons.light_mode),
+                icon: Icon(mode == DARK ? Icons.light_mode : Icons.dark_mode,
+                    color: Theme.of(context).primaryColor),
               ),
               IconButton(
                 onPressed: () {
                   _navigateToAI(context);
                 },
-                icon: const Icon(Icons.camera),
+                icon: Icon(Icons.camera, color: Theme.of(context).primaryColor),
+              ),
+              IconButton(
+                onPressed: () {
+                  _showColorDialog();
+                },
+                icon: Icon(Icons.color_lens_outlined,
+                    color: Theme.of(context).primaryColor),
               )
             ],
           ),
@@ -162,30 +180,31 @@ class SubjectSearchState extends State<SubjectSearch> {
                         padding: const EdgeInsets.all(8.0),
                         badgeColor: Colors.pink.shade800,
                         elevation: 12),
-                    child: busy? const BusyIndicator(
-                      caption: 'Loading subjects'
-                    ): ListView.builder(
-                      itemCount: _filteredSubjects.length,
-                      itemBuilder: (context, index) {
-                        Subject subject = _filteredSubjects[index];
-                        return GestureDetector(
-                          onTap: () {
-                            navigateToExamLinkListWidget(context, subject);
-                          },
-                          child: Card(
-                            elevation: 8,
-                            shape: getDefaultRoundedBorder(),
-                            child: ListTile(
-                              leading: const Icon(Icons.ac_unit),
-                              title: Text(
-                                subject.title ?? '',
-                                style: titleStyle,
-                              ),
-                            ),
+                    child: busy
+                        ? const BusyIndicator(caption: 'Loading subjects')
+                        : ListView.builder(
+                            itemCount: _filteredSubjects.length,
+                            itemBuilder: (context, index) {
+                              Subject subject = _filteredSubjects[index];
+                              return GestureDetector(
+                                onTap: () {
+                                  navigateToExamsDocumentList(context, subject);
+                                },
+                                child: Card(
+                                  elevation: 8,
+                                  shape: getDefaultRoundedBorder(),
+                                  child: ListTile(
+                                    leading: Icon(Icons.ac_unit,
+                                        color: Theme.of(context).primaryColor),
+                                    title: Text(
+                                      subject.title ?? '',
+                                      style: titleStyle,
+                                    ),
+                                  ),
+                                ),
+                              );
+                            },
                           ),
-                        );
-                      },
-                    ),
                   ),
                 ),
               ],
@@ -197,23 +216,45 @@ class SubjectSearchState extends State<SubjectSearch> {
   }
 
   Future<void> _handleMode(Brightness bright) async {
-    mode = await Prefs.getMode();
+    mode = await prefs.getMode();
     if (mode > -1) {
       switch (mode) {
-        case 1:
-          DarkLightControl.setLightMode();
+        case DARK:
+          widget.darkLightControl.setLightMode();
+          prefs.saveMode(LIGHT);
           break;
-        case 0:
-          DarkLightControl.setDarkMode();
+        case LIGHT:
+          widget.darkLightControl.setDarkMode();
+          prefs.saveMode(DARK);
           break;
       }
     } else {
-      if (bright == Brightness.light) {
-        DarkLightControl.setLightMode();
+      if (bright == Brightness.dark) {
+        widget.darkLightControl.setLightMode();
       } else {
-        DarkLightControl.setDarkMode();
-
+        widget.darkLightControl.setDarkMode();
       }
     }
+  }
+
+  void _showColorDialog() {
+    showDialog(
+        context: context,
+        builder: (_) {
+          return AlertDialog(
+            title: const Text('Select Colour'),
+            content: ColorGallery(
+              prefs: widget.prefs,
+              colorWatcher: widget.colorWatcher,
+            ),
+            actions: [
+              IconButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                  icon: const Icon(Icons.close)),
+            ],
+          );
+        });
   }
 }

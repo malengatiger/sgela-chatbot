@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:collection';
 import 'dart:io';
-import 'dart:typed_data';
 
 import 'package:badges/badges.dart' as bd;
 import 'package:edu_chatbot/data/exam_link.dart';
@@ -103,6 +102,7 @@ class ExamPaperPagesState extends State<ExamPaperPages> {
   }
 
   String prompt = '';
+  List<File> realFiles = [];
 
   Future<void> _fetchExamImages() async {
     pp('$mm .........................'
@@ -114,11 +114,25 @@ class ExamPaperPagesState extends State<ExamPaperPages> {
     try {
       images = await widget.downloaderService.getExamImages(widget.examLink);
       pp('$mm exam images found for display: ${images.length}');
+      int index = 0;
+      for (var img in images) {
+        var path = 'image_${widget.examLink.id!}_$index.png';
+        File x = File(path);
+        if (x.existsSync()) {
+          realFiles.add(x);
+        } else {
+          var mFile =
+              await ImageFileUtil.createImageFileFromBytes(img.bytes!, path);
+          realFiles.add(mFile);
+        }
+        index++;
+      }
+      pp('$mm exam images turned into files: ${realFiles.length}');
       _executeAfterDelay();
     } catch (e) {
       pp(e);
       if (mounted) {
-        showErrorDialog(context, 'Failed to load examination images');
+        showErrorDialog(context, 'Failed to load examination images: $e');
       }
     }
     if (mounted) {
@@ -241,6 +255,7 @@ class ExamPaperPagesState extends State<ExamPaperPages> {
           repository: widget.repository,
           prompt: prompt,
           examPageImage: examPageImage,
+          tokensUsed: geminiResponse.tokensUsed!,
         ),
       ),
     );
@@ -248,9 +263,10 @@ class ExamPaperPagesState extends State<ExamPaperPages> {
 
   _share() {}
 
-  _navigateToMathViewer(String text) async {
+  _navigateToMathViewer(MyGeminiResponse geminiResponse, String text) async {
     pp('$mm _navigateToMathViewer: selectedImages: ${selectedImages.length}');
 
+    int tokens = 0;
     await NavigationUtils.navigateToPage(
         context: context,
         widget: MathViewer(
@@ -263,7 +279,6 @@ class ExamPaperPagesState extends State<ExamPaperPages> {
           onRerun: (images) {
             pp('$mm ... will rerun ... images: ${images.length}');
             busySending = false;
-            _onRerun(images);
           },
           selectedImages: selectedImages,
           onExit: (images) {
@@ -272,11 +287,13 @@ class ExamPaperPagesState extends State<ExamPaperPages> {
           repository: widget.repository,
           prompt: prompt,
           examLink: widget.examLink,
+          tokensUsed: geminiResponse.tokensUsed!,
         ));
     pp('$mm ... back from Math Viewer');
   }
 
   String responseText = '';
+  MyGeminiResponse? response;
 
   _onSubmit() async {
     pp('$mm submitting the whole thing to Gemini AI : image files: ${selectedImages.length}');
@@ -289,63 +306,28 @@ class ExamPaperPagesState extends State<ExamPaperPages> {
     });
 
     prompt = getPrompt(widget.examLink.subjectTitle!);
-    MyGeminiResponse? response;
     try {
       var examPageImage = selectedImages.first;
       File file = await ImageFileUtil.createImageFileFromBytes(
           examPageImage.bytes!, 'imageFile');
       response = await widget.chatService.sendExamPageImageAndText(
-          prompt: prompt, linkResponse: 'false', file: file);
+          prompt: prompt,
+          linkResponse: 'false',
+          file: file,
+          examLinkId: widget.examLink.id!);
       pp('$mm 😎 😎 😎 Gemini AI has responded! .... 😎 😎 😎');
       // myPrettyJsonPrint(response.toJson());
-      responseText = _getResponseString(response);
+      responseText = _getResponseString(response!);
       if (isValidLaTeXString(responseText)) {
-        await _navigateToMathViewer(responseText);
+        await _navigateToMathViewer(response!, responseText);
       } else {
-        await _navigateToGeminiResponse(response, selectedImages.first, prompt);
+        await _navigateToGeminiResponse(
+            response!, selectedImages.first, prompt);
       }
       Future.delayed(const Duration(milliseconds: 1000), () {
         setState(() {
           selectedImages.clear();
         });
-      });
-    } catch (e) {
-      pp('$mm ERROR $e');
-      if (mounted) {
-        showErrorDialog(context, 'Error from Gemini AI: $e');
-      }
-    }
-    setState(() {
-      busySending = false;
-    });
-    //_onShowPagesToast();
-  }
-
-  _onRerun(List<ExamPageImage> images) async {
-    pp('$mm _onRerun .... : image files: ${images.length}');
-
-    if (busySending) {
-      return;
-    }
-    setState(() {
-      busySending = true;
-    });
-
-    // selectedImages = images;
-    String mPrompt = getPrompt(widget.examLink.subjectTitle!);
-    MyGeminiResponse? response;
-    try {
-      response = await widget.chatService.sendImageTextPrompt(images, mPrompt);
-      pp('$mm 😎 😎 😎 Gemini AI has responded!  .... 😎 😎 😎');
-      // myPrettyJsonPrint(response.toJson());
-      responseText = _getResponseString(response);
-      if (isValidLaTeXString(responseText)) {
-        await _navigateToMathViewer(responseText);
-      } else {
-        await _navigateToGeminiResponse(response, selectedImages.first, prompt);
-      }
-      Future.delayed(const Duration(milliseconds: 1000), () {
-        selectedImages.clear();
       });
     } catch (e) {
       pp('$mm ERROR $e');
@@ -391,7 +373,10 @@ class ExamPaperPagesState extends State<ExamPaperPages> {
     return SafeArea(
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('Exam Paper'),
+          title: Text(
+            'Exam Paper',
+            style: myTextStyleSmall(context),
+          ),
           actions: [
             bd.Badge(
               badgeContent: Text(
@@ -436,32 +421,34 @@ class ExamPaperPagesState extends State<ExamPaperPages> {
                 : Positioned.fill(
                     child: PageView.builder(
                       controller: _pageController,
-                      itemCount: images.length,
+                      itemCount: realFiles.length,
                       reverse: false,
                       onPageChanged: (index) {
                         _handlePageChanged(index);
                       },
                       itemBuilder: (context, index) {
-                        final image = images[index];
-                        Uint8List bytes = Uint8List.fromList(image.bytes!);
+                        final imageFile = realFiles[index];
                         return Stack(
                           children: [
                             GestureDetector(
-                              onTap: () {
+                              onTap: () async {
                                 pp('$mm onTap, selected images: ${selectedImages.length} '
-                                    '🍎${image.bytes!.length}');
-                                _fillSelected(image);
-                                _handlePageTapped(image);
-                                setState(() {});
+                                    '🍎${await imageFile.length()}');
+                                if (!busySending) {
+                                  _fillSelected(images.elementAt(index));
+                                  _handlePageTapped(images.elementAt(index));
+                                  setState(() {});
+                                }
                               },
                               child: Padding(
-                                padding: const EdgeInsets.all(4.0),
+                                padding: const EdgeInsets.all(8.0),
                                 child: InteractiveViewer(
-                                  child: Image.memory(
-                                    bytes,
+
+                                  child: Image.file(
+                                    imageFile,
                                     fit: BoxFit.cover,
                                     height: double.infinity,
-                                    width: double.infinity,
+                                    width: double.infinity, scale: 2.0,
                                   ),
                                 ),
                               ),
@@ -474,7 +461,7 @@ class ExamPaperPagesState extends State<ExamPaperPages> {
                                     child: BusyIndicator(
                                       showClock: false,
                                       caption:
-                                          'Waiting for SgelaAI ... This may take a minute or two. Please wait. ',
+                                          'Waiting for SgelaAI to respond to the request ... This may take a minute or two. Please wait. ',
                                     ),
                                   )
                                 : gapW8,
@@ -488,7 +475,7 @@ class ExamPaperPagesState extends State<ExamPaperPages> {
                 left: 12,
                 child: Text(
                   '${currentPageIndex + 1}',
-                  style: myTextStyle(context, Colors.blue, 36, FontWeight.w900),
+                  style: myTextStyle(context, Colors.blue, 24, FontWeight.w900),
                 )),
             if (isHeaderVisible) // Conditionally show the ExamPaperHeader
               Positioned(
@@ -512,18 +499,8 @@ class ExamPaperPagesState extends State<ExamPaperPages> {
             onPressed: () {
               _onSubmit();
             },
-            elevation: 16,
-            shape: const RoundedRectangleBorder(),
-            label: const SizedBox(
-                height: 160,
-                width: 200,
-                child: Row(
-                  children: [
-                    Icon(Icons.send, size: 36, color: Colors.blue),
-                    gapW16,
-                    Text('Send to SgelaAI 🍎')
-                  ],
-                )),
+            elevation: 16, label: Icon(Icons.send, size: 24, color: Theme.of(context).primaryColor),
+
           ),
         ),
       ),

@@ -47,8 +47,9 @@ class ChatbotEnvironment {
   static int maxResults = 48;
 
   static bool isDotLoaded = false;
-  static String part1 = 'SyAuArZYG0wNXtNdz8aa1YX';
-  static String part2 = 'CjYxlVcnDF8M';
+  //AIza
+  static String part1 = 'SyAUXc8lM1wPsR-Rrow0XLms3i';
+  static String part2 = 'Tbok7FjDA';
   static String part0 = 'AIza';
   static String getGeminiAPIKey()  {
     return '$part0$part1$part2';

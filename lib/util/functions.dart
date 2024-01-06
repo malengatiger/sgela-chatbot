@@ -40,7 +40,25 @@ pp(dynamic msg) {
     }
   }
 }
+final List<Color> _colors = [
+  Colors.red,
+  Colors.green,
+  Colors.blue,
+  Colors.yellow,
+  Colors.pink,
+  Colors.teal,
+  Colors.indigo,
+  Colors.brown,
+  Colors.deepPurple,
+  Colors.amber,
+  Colors.lightGreen,
+  Colors.orange,
+  Colors.cyan,
+];
 
+List<Color> getColors() {
+  return _colors;
+}
 bool isValidLaTeXString(String text) {
   // Define a list of special characters or phrases to check for
   List<String> specialCharacters = [
@@ -170,29 +188,6 @@ bool isMarkdownFormat(String text) {
   return false;
 }
 
-Future<void> handleMode(Brightness bright) async {
-  pp('functions: 🍎handleMode 🍎 '
-      'mode could be changing, mode: ${bright.name}');
-
-  mode = await Prefs.getMode();
-  if (mode > -1) {
-    switch (mode) {
-      case 1:
-        DarkLightControl.setLightMode();
-        break;
-      case 0:
-        DarkLightControl.setDarkMode();
-        break;
-    }
-  } else {
-    if (bright == Brightness.light) {
-      DarkLightControl.setLightMode();
-    } else {
-      DarkLightControl.setDarkMode();
-
-    }
-  }
-}
 
 String replaceTextInPlace(String text) {
   const pattern = r'\*{1,2}';

@@ -16,9 +16,10 @@ class GeminiResponseRating {
   String? responseText;
   String? prompt;
 
+  int? tokensUsed;
 
   GeminiResponseRating({required this.rating, required this.date,
-    this.id, required this.pageNumber,
+    this.id, required this.pageNumber, required this.tokensUsed,
     required this.examLinkId, required this.responseText, required this.prompt});
 
   factory GeminiResponseRating.fromJson(Map<String, dynamic> json) =>

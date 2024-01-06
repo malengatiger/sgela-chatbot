@@ -17,13 +17,14 @@ class GeminiResponseViewer extends StatefulWidget {
       required this.geminiResponse,
       required this.repository,
       required this.prompt,
-      required this.examPageImage});
+      required this.examPageImage, required this.tokensUsed});
 
   final ExamLink examLink;
   final MyGeminiResponse geminiResponse;
   final Repository repository;
   final String prompt;
   final ExamPageImage examPageImage;
+  final int tokensUsed;
 
   @override
   State<GeminiResponseViewer> createState() => _GeminiResponseViewerState();
@@ -49,13 +50,16 @@ class _GeminiResponseViewerState extends State<GeminiResponseViewer> {
     try {
       var gr = GeminiResponseRating(
           rating: mRating,
+          id: DateTime.now().millisecondsSinceEpoch,
           date: DateTime.now().toIso8601String(),
-          pageNumber: widget.examPageImage.id,
+          pageNumber: widget.examPageImage.pageIndex,
           responseText: getResponseString(),
+          tokensUsed: widget.tokensUsed,
           prompt: widget.prompt, examLinkId: widget.examLink.id!);
 
       var res = await widget.repository.addRating(gr);
       pp('$mm 💙💙💙💙 GeminiResponseRating sent to backend!  🍎🍎🍎response: $res');
+      myPrettyJsonPrint(gr.toJson());
     } catch (e) {
       pp('$mm ERROR - $e');
     }
@@ -114,7 +118,7 @@ class _GeminiResponseViewerState extends State<GeminiResponseViewer> {
                     child: Text('SgelaAI Response',
                         style: myTextStyle(
                             context,
-                            bright == Brightness.dark?Colors.black:Theme.of(context).primaryColor,
+                            bright == Brightness.dark?Colors.white:Theme.of(context).primaryColor,
                             20,
                             FontWeight.w900)),
                   ),

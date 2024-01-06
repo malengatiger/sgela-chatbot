@@ -19,7 +19,7 @@ class LocalDataService {
     pp('$mm initialize sqlite ...');
 
     db = await openDatabase(
-      join(await getDatabasesPath(), 'skunk039db'),
+      join(await getDatabasesPath(), 'skunk040db'),
       version: 1,
     );
     pp('$mm SQLite Database is open: ${db.isOpen} 🔵🔵 ${db.path}');
@@ -254,12 +254,10 @@ class LocalDataService {
       try {
         var obj = examLink.toJson();
         await db.insert('exam_links', obj);
-        pp('$mm check problem ... ');
-        obj['examText'] = '';
-        myPrettyJsonPrint(obj);
+        // obj['examText'] = '';
+        // myPrettyJsonPrint(obj);
         cnt++;
-        // pp('$mm examLink #$cnt added to local db, '
-        //     'id: 🍎${examLink.id} 🔵🔵 title: ${examLink.title}');
+
       } catch (e) {
         pp("$mm addExamLinks: ERROR: 🖐🏽${e.toString()} 🖐🏽");
       }

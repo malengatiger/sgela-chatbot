@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:archive/archive.dart';
+import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:mime/mime.dart';
 import 'package:path_provider/path_provider.dart';
 
@@ -29,7 +30,7 @@ class ImageFileUtil {
       pp('Error downloading file: $e');
       rethrow;
     }
-  }  static List<File> unpackZipFile(File zipFile) {
+  }  static Future<List<File>> unpackZipFile(File zipFile) async {
     Directory destinationDirectory = Directory.systemTemp;
 
     if (!zipFile.existsSync()) {
@@ -58,6 +59,9 @@ class ImageFileUtil {
       }
     }
     pp('$mm .... files unpacked: ${files.length} ');
+    for (var value in files) {
+      pp('$mm unpacked file: 💙💙 ${(await value.length())/1024}K 💙💙 ${value.path}');
+    }
 
     return files;
   }
@@ -109,5 +113,28 @@ class ImageFileUtil {
     http.MultipartFile(fieldName, stream, length, filename: filename);
 
     return multipartFile;
+  }
+
+  Future<File> scaleDownImage(File imageFile) async {
+    pp('$mm Compress file size: ${await imageFile.length()}');
+
+    final fileSize = await imageFile.length();
+    if (fileSize <= 1024 * 1024) {
+      pp('$mm Image size is already less than or equal to 1 MB, no need to scale down');
+      return imageFile;
+    }
+
+    final compressedFile = await FlutterImageCompress.compressAndGetFile(
+      imageFile.path,
+      imageFile.path,
+      quality: 85,
+      format: imageFile.path.endsWith('.png')
+          ? CompressFormat.png
+          : CompressFormat.jpeg,
+    );
+    final filePath = compressedFile?.path;
+    var file = File(filePath!);
+    pp('$mm Compressed file size: ${await file.length()}');
+    return file;
   }
 }

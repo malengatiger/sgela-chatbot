@@ -8,8 +8,10 @@ part 'gemini_response.g.dart';
 class MyGeminiResponse {
   List<MyCandidates>? candidates;
   MyPromptFeedback? promptFeedback;
+  int? tokensUsed;
 
-  MyGeminiResponse({this.candidates, this.promptFeedback});
+
+  MyGeminiResponse(this.candidates, this.promptFeedback, this.tokensUsed);
 
   factory MyGeminiResponse.fromJson(Map<String, dynamic> json) =>
       _$MyGeminiResponseFromJson(json);

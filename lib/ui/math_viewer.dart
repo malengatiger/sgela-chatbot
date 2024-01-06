@@ -27,9 +27,10 @@ class MathViewer extends StatefulWidget {
       required this.onExit,
       required this.repository,
       required this.prompt,
-      required this.examLink});
+      required this.examLink, required this.tokensUsed});
 
   final String text, prompt;
+  final int tokensUsed;
   static const mm = '💙💙💙💙 MathViewer 💙';
   final Function(List<ExamPageImage>) onShare;
   final Function(List<ExamPageImage>) onExit;
@@ -98,42 +99,23 @@ class _MathViewerState extends State<MathViewer> {
       var examPageImage = list.first;
       var gr = GeminiResponseRating(
           rating: mRating,
+          id: DateTime.now().millisecondsSinceEpoch,
           date: DateTime.now().toIso8601String(),
           pageNumber: examPageImage.pageIndex,
-          responseText: responseText,
+          responseText: widget.text,
+          tokensUsed: widget.tokensUsed,
           prompt: widget.prompt,
           examLinkId: widget.examLink.id!);
-      pp('💙💙💙💙 GeminiResponseRating sent to backend!');
+      var res = await widget.repository.addRating(gr);
+      pp('💙💙💙💙 GeminiResponseRating sent to backend! id: $res');
       myPrettyJsonPrint(gr.toJson());
-      widget.repository.addRating(gr);
-      _showShareDialog(gr);
+
+      if (mounted) {
+        Navigator.of(context).pop();
+      }
     } catch (e) {
       pp('${MathViewer.mm} ERROR - $e');
     }
-  }
-
-  _showShareDialog(GeminiResponseRating rating) {
-    showDialog(
-        context: (context),
-        builder: (_) {
-          return AlertDialog(
-            title: Text(
-              'Sharing',
-              style: myTextStyle(
-                  context, Theme.of(context).primaryColor, 24, FontWeight.w900),
-            ),
-            content: const Text('Do you want to share this response from SgelaAI? '),
-            actions: [
-              TextButton(onPressed: (){
-                Navigator.of(context).pop();
-              }, child: const Text('No')),
-              TextButton(onPressed: (){
-                _share(rating);
-              }, child: const Text('Share')),
-
-            ],
-          );
-        });
   }
 
   @override

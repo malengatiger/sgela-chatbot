@@ -34,7 +34,8 @@ class ExamLinkListWidget extends StatefulWidget {
     required this.localDataService,
     required this.chatService,
     required this.youTubeService,
-    required this.downloaderService, required this.examDocument,
+    required this.downloaderService,
+    required this.examDocument,
   });
 
   @override
@@ -54,14 +55,13 @@ class ExamLinkListWidgetState extends State<ExamLinkListWidget> {
   }
 
   Future<void> _getExamLinks() async {
-    pp('$mm  _getExamLinks ...');
-    List<ExamLink> filtered = [];
+    pp('$mm  ............... _getExamLinks ...');
     try {
       setState(() {
         busy = true;
       });
-      List<ExamLink> fetchedExamLinks =
-          await widget.repository.getExamLinksByDocument(
+      List<ExamLink> fetchedExamLinks = await widget.repository
+          .getExamLinksByDocument(
               widget.subject, widget.examDocument.title!, false);
       pp('$mm fetchedExamLinks: ${fetchedExamLinks.length}');
 

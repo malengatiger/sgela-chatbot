@@ -17,7 +17,7 @@ import 'package:get_it/get_it.dart';
 import 'firebase_options.dart';
 const String mx = '🍎 🍎 🍎 main: ';
 Future<void> main() async {
-  pp('$mx AI ChatBuddy starting .... $mx');
+  pp('$mx SgelaAI Chatbot starting .... $mx');
   WidgetsFlutterBinding.ensureInitialized();
   var app = await Firebase.initializeApp(
     name: ChatbotEnvironment.getFirebaseName(),
@@ -30,12 +30,17 @@ Future<void> main() async {
   Gemini.init(apiKey: ChatbotEnvironment.getGeminiAPIKey());
   pp('$mx Gemini AI API has been initialized!! $mx'
       ' Gemini apiKey: ${ChatbotEnvironment.getGeminiAPIKey()}');
-  mode = await Prefs.getMode();
+  //
+  var prefs = Prefs();
+  var mode = await prefs.getMode();
+  var colorIndex = await prefs.getColorIndex();
+  modeAndColor = ModeAndColor(mode, colorIndex);
+  //
   runApp(const MyApp());
 }
 
 
-int mode = 0;
+late ModeAndColor modeAndColor;
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -53,6 +58,8 @@ class MyApp extends StatelessWidget {
     var repository = GetIt.instance<Repository>();
     var youTubeService = GetIt.instance<YouTubeService>();
     var downloaderService = GetIt.instance<DownloaderService>();
+    var dlc = GetIt.instance<DarkLightControl>();
+
 
     return GestureDetector(
       onTap: () {
@@ -60,12 +67,13 @@ class MyApp extends StatelessWidget {
         _dismissKeyboard(context);
       },
       child: StreamBuilder(
-          stream: DarkLightControl.darkLightStream,
+          stream: dlc.darkLightStream,
           // Replace myStream with your actual stream
           builder: (context, snapshot) {
             if (snapshot.hasData) {
-              pp('🍎 mode could be changing, mode: ${snapshot.data!}');
-              mode = snapshot.data!;
+              pp('main:dlc.darkLightStream: 🍎 mode could be changing, '
+                  'mode: ${snapshot.data!.mode} colorIndex: ${snapshot.data!.colorIndex}');
+              modeAndColor = snapshot.data!;
             }
 
             return MaterialApp(
@@ -74,10 +82,13 @@ class MyApp extends StatelessWidget {
               theme: _getTheme(context),
               home: SubjectSearch(
                 repository: repository,
+                prefs: GetIt.instance<Prefs>(),
                 downloaderService: GetIt.instance<DownloaderService>(),
                 localDataService: GetIt.instance<LocalDataService>(),
                 chatService: GetIt.instance<ChatService>(),
                 youTubeService: youTubeService,
+                colorWatcher:  GetIt.instance<ColorWatcher>(),
+                darkLightControl:  GetIt.instance<DarkLightControl>(),
               ),
             );
           }),
@@ -86,21 +97,29 @@ class MyApp extends StatelessWidget {
 
   ThemeData _getTheme(BuildContext context) {
     var brightness = MediaQuery.of(context).platformBrightness;
-    if ( mode > -1) {
-      if (mode == 0) {
+    if ( modeAndColor.mode > -1) {
+      if (modeAndColor.mode == 0) {
         pp('... we are in own LIGHT mode ... ');
-        return ThemeData.light(useMaterial3: true,);
+        return ThemeData.light().copyWith(
+          primaryColor: getColors().elementAt(modeAndColor.colorIndex), // Set the primary color
+        );
       } else {
         pp('... we are in own DARK mode ... ');
-        return ThemeData.dark(useMaterial3: true,);
+        //return ThemeData.dark(useMaterial3: true,);
+        return ThemeData.dark().copyWith(
+          primaryColor: getColors().elementAt(modeAndColor.colorIndex), // Set the primary color
+        );
       }
     }
     if (brightness == Brightness.dark) {
       pp('... we are in device DARK mode ... ');
-      return ThemeData.dark(useMaterial3: true,);
+      return ThemeData.dark().copyWith(
+        primaryColor: getColors().elementAt(modeAndColor.colorIndex), // Set the primary color
+      );
     } else {
       pp('... we are in device LIGHT mode ... ');
-      return ThemeData.light(useMaterial3: true,);
-    }
+      return ThemeData.light().copyWith(
+        primaryColor: getColors().elementAt(modeAndColor.colorIndex), // Set the primary color
+      );    }
   }
 }

@@ -44,7 +44,7 @@ class Repository {
       for (var imgFile in imageFiles) {
         var img = ExamPageImage(examLink.id!, null,
             examLink.pageImageZipUrl, imgFile.readAsBytesSync(),
-            index, getMimeType(imgFile));
+            index, ImageFileUtil.getMimeType(imgFile));
         await localDataService.addExamImage(img);
         images.add(img);
         index++;
@@ -62,35 +62,6 @@ class Repository {
     }
   }
 
-  Future<File> createImageFileFromBytes(List<int> bytes, String filePath) async {
-    final file = File(filePath);
-
-    // Determine the file extension based on the content
-    String fileExtension = '';
-    if (bytes.length >= 4) {
-      if (bytes[0] == 0x89 && bytes[1] == 0x50 && bytes[2] == 0x4E && bytes[3] == 0x47) {
-        fileExtension = '.png';
-      } else if (bytes[0] == 0xFF && bytes[1] == 0xD8 && bytes[bytes.length - 2] == 0xFF && bytes[bytes.length - 1] == 0xD9) {
-        fileExtension = '.jpg';
-      }
-    }
-
-    // If the file extension is still empty, fallback to .jpeg
-    if (fileExtension.isEmpty) {
-      fileExtension = '.jpeg';
-    }
-
-    // Append the file extension to the file path
-    String finalFilePath = filePath + fileExtension;
-
-    await file.writeAsBytes(bytes);
-    return file.renameSync(finalFilePath);
-  }
-  String getMimeType(File file) {
-    final mimeTypeResolver = MimeTypeResolver();
-    final mimeType = mimeTypeResolver.lookup(file.path);
-    return mimeType ?? 'application/octet-stream';
-  }
   Future<List<GeminiResponseRating>> getRatings(int examLinkId) async {
     pp('$mm ... getRatings ....');
     List<GeminiResponseRating> ratings = [];
@@ -204,7 +175,7 @@ class Repository {
     Future<List<ExamLink>> getExamLinksByDocument(Subject subject, String documentTitle, bool refresh) async {
     List<ExamLink> list = [];
     List<ExamLink> filtered = [];
-
+    pp("$mm  getExamLinksByDocument ... $documentTitle");
     try {
       if (refresh) {
         list = await _downloadExamLinks(subject.id!);
