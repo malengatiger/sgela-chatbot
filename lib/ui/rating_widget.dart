@@ -18,7 +18,7 @@ class GeminiRatingWidget extends StatelessWidget {
     return visible
         ? Card(
             elevation: 12,
-            color: Colors.black,
+            // color: Colors.black,
             child: Padding(
               padding: const EdgeInsets.all(16.0),
               child: RatingBar.builder(
@@ -30,7 +30,7 @@ class GeminiRatingWidget extends StatelessWidget {
                 itemPadding: const EdgeInsets.symmetric(horizontal: 4.0),
                 itemBuilder: (context, _) =>  Icon(
                   Icons.star,
-                  color: color == null? Colors.pink: color!,
+                  color: color == null? Theme.of(context).primaryColor: color!,
                 ),
                 onRatingUpdate: (rating) {
                   pp('🍎🍎🍎 onRatingUpdate: rating: 🍎$rating 🍎 calling onRating() ...');

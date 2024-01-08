@@ -193,7 +193,7 @@ class Repository {
       pp("$mm  Exam links filtered; found: ${filtered.length}, "
           "subject: ${subject.toJson()} ");
 
-      return filtered;
+      return list;
     } catch (e) {
       pp(e);
       rethrow;

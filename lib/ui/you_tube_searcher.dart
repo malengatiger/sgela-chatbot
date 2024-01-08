@@ -1,25 +1,32 @@
+import 'package:badges/badges.dart' as bd;
+import 'package:edu_chatbot/ui/busy_indicator.dart';
 import 'package:edu_chatbot/ui/you_tube_gallery.dart';
 import 'package:edu_chatbot/ui/you_tube_viewer.dart';
 import 'package:edu_chatbot/util/environment.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:badges/badges.dart' as bd;
+
 import '../data/subject.dart';
 import '../data/youtube_data.dart';
 import '../services/you_tube_service.dart';
+import '../util/dark_light_control.dart';
 import '../util/functions.dart';
 import '../util/navigation_util.dart';
+import '../util/prefs.dart';
+import 'color_gallery.dart';
 
 class YouTubeSearcher extends StatefulWidget {
   const YouTubeSearcher(
       {super.key,
       required this.youTubeService,
       required this.subject,
-      required this.showSearchBox});
+      required this.prefs,
+      required this.colorWatcher});
 
   final YouTubeService youTubeService;
   final Subject subject;
-  final bool showSearchBox;
+  final Prefs prefs;
+  final ColorWatcher colorWatcher;
 
   @override
   YouTubeSearcherState createState() => YouTubeSearcherState();
@@ -76,28 +83,62 @@ class YouTubeSearcherState extends State<YouTubeSearcher> {
     }
   }
 
+  bool showSearch = false;
+
+  void _navigateToColorGallery() {
+    NavigationUtils.navigateToPage(
+        context: context,
+        widget: ColorGallery(
+            prefs: widget.prefs, colorWatcher: widget.colorWatcher));
+  }
+
   @override
   Widget build(BuildContext context) {
     return SafeArea(
       child: Scaffold(
           appBar: AppBar(
-            title: const Text('YouTube Videos'),
-            bottom: PreferredSize(preferredSize: const Size.fromHeight(32), 
-                child: Text('${widget.subject.title}', style: myTextStyleMediumBold(context),))
+            title: Text('YouTube Videos',
+                style: myTextStyle(context, Theme.of(context).primaryColor, 16,
+                    FontWeight.w600)),
+            bottom: PreferredSize(
+                preferredSize: const Size.fromHeight(24),
+                child: Text(
+                  '${widget.subject.title}',
+                  style: myTextStyleMediumBold(context),
+                )),
+            actions: [
+              IconButton(
+                  onPressed: () {
+                    _navigateToColorGallery();
+                  },
+                  icon:  Icon(Icons.color_lens_outlined, color: Theme.of(context).primaryColor)),
+              IconButton(
+                  onPressed: () {
+                    setState(() {
+                      showSearch = !showSearch;
+                    });
+                  },
+                  icon:  Icon(Icons.search, color: Theme.of(context).primaryColor)),
+            ],
           ),
           body: Stack(
             children: [
               bd.Badge(
-                position: bd.BadgePosition.topEnd(top:2, end: 12),
-                badgeContent: Text('${videos.length}', style: myTextStyle(context,
-                    Colors.white, 16, FontWeight.normal),),
+                position: bd.BadgePosition.topEnd(top: 6, end: 12),
+                badgeContent: Text(
+                  '${videos.length}',
+                  style:
+                      myTextStyle(context, Colors.white, 16, FontWeight.normal),
+                ),
                 badgeStyle: const bd.BadgeStyle(
-                  padding: EdgeInsets.all(12), elevation: 16,
+                  padding: EdgeInsets.all(12),
+                  elevation: 16,
                 ),
                 child: Column(
                   children: [
-                    gapH16,gapH16,
-                    widget.showSearchBox
+                    gapH16,
+                    gapH16,
+                    showSearch
                         ? Padding(
                             padding: const EdgeInsets.all(8.0),
                             child: TextField(
@@ -118,13 +159,21 @@ class YouTubeSearcherState extends State<YouTubeSearcher> {
                             ),
                           )
                         : gapW8,
-                    Expanded(
-                        child: videos.isEmpty? gapW8: YouTubeGallery(
-                            videos: videos,
-                            onTapped: (video) {
-                              _launchVideo(video.videoUrl!);
-                            }),
-                    ),
+                    busy
+                        ? const Expanded(
+                            child: BusyIndicator(
+                              caption: 'Searching for videos ... please wait',
+                            ),
+                          )
+                        : Expanded(
+                            child: videos.isEmpty
+                                ? gapW8
+                                : YouTubeGallery(
+                                    videos: videos,
+                                    onTapped: (video) {
+                                      _launchVideo(video.videoUrl!);
+                                    }),
+                          ),
                   ],
                 ),
               )

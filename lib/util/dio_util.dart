@@ -18,6 +18,7 @@ final LocalDataService localDataService;
 
   Future<dynamic> sendGetRequest(
       String path, Map<String, dynamic> queryParameters) async {
+    pp('$mm Dio starting ...: 🍎🍎🍎 path: $path 🍎🍎');
     try {
       Response response;
       // The below request is the same as above.
@@ -27,20 +28,19 @@ final LocalDataService localDataService;
         options: Options(responseType: ResponseType.json),
       );
 
-      pp('$mm network response: 🥬🥬🥬 status code: ${response.statusCode}');
+      pp('$mm Dio network response: 🥬🥬🥬🥬🥬🥬 status code: ${response.statusCode}');
       return response.data;
     } catch (e) {
+      pp('$mm Dio network response: 👿👿👿👿 ERROR: $e');
       pp(e);
       rethrow;
     }
   }
 
   Future<dynamic> sendPostRequest(String path, dynamic body) async {
+    pp('$mm Dio sendPostRequest ...: 🍎🍎🍎 path: $path 🍎🍎');
     try {
       Response response;
-      // The below request is the same as above.
-      pp('$mm ... sendPostRequest: path: $path body: $body');
-
       response = await dio
           .post(
             path,

@@ -97,6 +97,8 @@ class SubjectSearchState extends State<SubjectSearch> {
           localDataService: widget.localDataService,
           chatService: widget.chatService,
           youTubeService: widget.youTubeService,
+          colorWatcher: widget.colorWatcher,
+          prefs: widget.prefs
         ));
   }
 
@@ -125,7 +127,7 @@ class SubjectSearchState extends State<SubjectSearch> {
             title: Text(
               'SgelaAI',
               style: myTextStyle(
-                  context, Theme.of(context).primaryColor, 24, FontWeight.w900),
+                  context, Theme.of(context).primaryColor, 32, FontWeight.w900),
             ),
             actions: [
               IconButton(
@@ -143,7 +145,7 @@ class SubjectSearchState extends State<SubjectSearch> {
               ),
               IconButton(
                 onPressed: () {
-                  _showColorDialog();
+                  _navigateToColorGallery();
                 },
                 icon: Icon(Icons.color_lens_outlined,
                     color: Theme.of(context).primaryColor),
@@ -156,19 +158,24 @@ class SubjectSearchState extends State<SubjectSearch> {
             child: Column(
               children: [
                 Card(
-                  elevation: 4,
-                  child: TextField(
-                    controller: _searchController,
-                    onChanged: (value) {
-                      pp('🍎 🍎 ........ value: $value');
-                      _filterSubjects(value);
-                    },
-                    // autofocus: false,
-                    decoration: const InputDecoration(
-                        hintText: 'Search Subjects', icon: Icon(Icons.search)),
+                  elevation: 12,
+                  child: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: TextField(
+                      controller: _searchController,
+                      onChanged: (value) {
+                        pp('🍎 🍎 ........ value: $value');
+                        _filterSubjects(value);
+                      },
+                      // autofocus: false,
+                      decoration: const InputDecoration(
+                          border: OutlineInputBorder(),
+                          hintText: 'Search Subjects',
+                          icon: Icon(Icons.search)),
+                    ),
                   ),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 4),
                 Expanded(
                   child: bd.Badge(
                     position: bd.BadgePosition.topEnd(top: -8, end: -2),
@@ -237,24 +244,10 @@ class SubjectSearchState extends State<SubjectSearch> {
     }
   }
 
-  void _showColorDialog() {
-    showDialog(
+  void _navigateToColorGallery() {
+    NavigationUtils.navigateToPage(
         context: context,
-        builder: (_) {
-          return AlertDialog(
-            title: const Text('Select Colour'),
-            content: ColorGallery(
-              prefs: widget.prefs,
-              colorWatcher: widget.colorWatcher,
-            ),
-            actions: [
-              IconButton(
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                  },
-                  icon: const Icon(Icons.close)),
-            ],
-          );
-        });
+        widget: ColorGallery(
+            prefs: widget.prefs, colorWatcher: widget.colorWatcher));
   }
 }

@@ -112,22 +112,10 @@ class ExamPaperPagesState extends State<ExamPaperPages> {
     });
 
     try {
-      images = await widget.downloaderService.getExamImages(widget.examLink);
-      pp('$mm exam images found for display: ${images.length}');
-      int index = 0;
-      for (var img in images) {
-        var path = 'image_${widget.examLink.id!}_$index.png';
-        File x = File(path);
-        if (x.existsSync()) {
-          realFiles.add(x);
-        } else {
-          var mFile =
-              await ImageFileUtil.createImageFileFromBytes(img.bytes!, path);
-          realFiles.add(mFile);
-        }
-        index++;
-      }
-      pp('$mm exam images turned into files: ${realFiles.length}');
+      images =
+          await widget.repository.getExamPageImages(widget.examLink, false);
+      realFiles = await ImageFileUtil.convertPageImageFiles(
+          widget.examLink, images);
       _executeAfterDelay();
     } catch (e) {
       pp(e);
@@ -310,6 +298,17 @@ class ExamPaperPagesState extends State<ExamPaperPages> {
       var examPageImage = selectedImages.first;
       File file = await ImageFileUtil.createImageFileFromBytes(
           examPageImage.bytes!, 'imageFile');
+      if (await file.length() > (1024*1024*3)) {
+        if (mounted) {
+          showErrorDialog(context,
+              'Sorry, this page cannot be processed. The image is too large for SgelaAI to process properly');
+        }
+        setState(() {
+          busySending = false;
+          selectedImages.clear();
+        });
+        return;
+      }
       response = await widget.chatService.sendExamPageImageAndText(
           prompt: prompt,
           linkResponse: 'false',
@@ -373,26 +372,25 @@ class ExamPaperPagesState extends State<ExamPaperPages> {
     return SafeArea(
       child: Scaffold(
         appBar: AppBar(
-          title: Text(
-            'Exam Paper',
-            style: myTextStyleSmall(context),
+          title: Column(
+            children: [
+              Text(
+                '${widget.examLink.subjectTitle}',
+                style: myTextStyleSmall(context),
+              ),
+              Text(
+                '${widget.examLink.title}',
+                style: myTextStyleSmall(context),
+              ),
+            ],
           ),
           actions: [
-            bd.Badge(
-              badgeContent: Text(
-                '${images.length}',
-                style:
-                    myTextStyle(context, Colors.white, 14, FontWeight.normal),
-              ),
-              badgeStyle: const bd.BadgeStyle(
-                elevation: 12,
-                padding: EdgeInsets.all(12),
-              ),
-            ),
-            gapW16,
+
             IconButton(
               icon: Icon(
-                  isHeaderVisible ? Icons.visibility_off : Icons.visibility),
+                  isHeaderVisible ? Icons.visibility_off : Icons.visibility,
+                  size: 24,
+                  color: Theme.of(context).primaryColor),
               onPressed: () {
                 setState(() {
                   isHeaderVisible = !isHeaderVisible;
@@ -400,7 +398,8 @@ class ExamPaperPagesState extends State<ExamPaperPages> {
               },
             ),
             IconButton(
-              icon: const Icon(Icons.file_download),
+              icon: Icon(Icons.file_download,
+                  size: 32, color: Theme.of(context).primaryColor),
               onPressed: () {
                 _navigateToPdfViewer();
               },
@@ -419,60 +418,66 @@ class ExamPaperPagesState extends State<ExamPaperPages> {
                         caption:
                             "Loading exam paper and converting to images. This may take a few minutes. Please wait for completion."))
                 : Positioned.fill(
-                    child: PageView.builder(
-                      controller: _pageController,
-                      itemCount: realFiles.length,
-                      reverse: false,
-                      onPageChanged: (index) {
-                        _handlePageChanged(index);
-                      },
-                      itemBuilder: (context, index) {
-                        final imageFile = realFiles[index];
-                        return Stack(
-                          children: [
-                            GestureDetector(
-                              onTap: () async {
-                                pp('$mm onTap, selected images: ${selectedImages.length} '
-                                    '🍎${await imageFile.length()}');
-                                if (!busySending) {
-                                  _fillSelected(images.elementAt(index));
-                                  _handlePageTapped(images.elementAt(index));
-                                  setState(() {});
-                                }
-                              },
-                              child: Padding(
-                                padding: const EdgeInsets.all(8.0),
-                                child: InteractiveViewer(
-
-                                  child: Image.file(
-                                    imageFile,
-                                    fit: BoxFit.cover,
-                                    height: double.infinity,
-                                    width: double.infinity, scale: 2.0,
+                    child: Card(
+                      elevation: 8,
+                      child: Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: PageView.builder(
+                          controller: _pageController,
+                          itemCount: realFiles.length,
+                          reverse: false,
+                          onPageChanged: (index) {
+                            _handlePageChanged(index);
+                          },
+                          itemBuilder: (context, index) {
+                            final imageFile = realFiles[index];
+                            return Stack(
+                              children: [
+                                GestureDetector(
+                                  onTap: () async {
+                                    pp('$mm onTap, selected images: ${selectedImages.length} '
+                                        '🍎${await imageFile.length()}');
+                                    if (!busySending) {
+                                      _fillSelected(images.elementAt(index));
+                                      _handlePageTapped(images.elementAt(index));
+                                      setState(() {});
+                                    }
+                                  },
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(8.0),
+                                    child: InteractiveViewer(
+                                      child: Image.file(
+                                        imageFile,
+                                        fit: BoxFit.cover,
+                                        height: double.infinity,
+                                        width: double.infinity,
+                                        scale: 2.0,
+                                      ),
+                                    ),
                                   ),
                                 ),
-                              ),
-                            ),
-                            busySending
-                                ? const Positioned(
-                                    top: 280,
-                                    right: 60,
-                                    left: 60,
-                                    child: BusyIndicator(
-                                      showClock: false,
-                                      caption:
-                                          'Waiting for SgelaAI to respond to the request ... This may take a minute or two. Please wait. ',
-                                    ),
-                                  )
-                                : gapW8,
-                          ],
-                        );
-                      },
+                                busySending
+                                    ? const Positioned(
+                                        top: 280,
+                                        right: 60,
+                                        left: 60,
+                                        child: BusyIndicator(
+                                          showClock: false,
+                                          caption:
+                                              'Waiting for SgelaAI to respond to the request ... This may take a minute or two. Please wait. ',
+                                        ),
+                                      )
+                                    : gapW8,
+                              ],
+                            );
+                          },
+                        ),
+                      ),
                     ),
                   ),
             Positioned(
-                bottom: 12,
-                left: 12,
+                bottom: 24,
+                left: 32,
                 child: Text(
                   '${currentPageIndex + 1}',
                   style: myTextStyle(context, Colors.blue, 24, FontWeight.w900),
@@ -496,11 +501,14 @@ class ExamPaperPagesState extends State<ExamPaperPages> {
         floatingActionButton: Visibility(
           visible: _shouldSendButtonBeVisible(),
           child: FloatingActionButton.extended(
+            backgroundColor: Theme.of(context).primaryColor,
             onPressed: () {
               _onSubmit();
             },
-            elevation: 16, label: Icon(Icons.send, size: 24, color: Theme.of(context).primaryColor),
-
+            elevation: 16,
+            label: const Icon(Icons.send,
+                size: 24,
+                color: Colors.white),
           ),
         ),
       ),

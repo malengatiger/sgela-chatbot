@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:archive/archive.dart';
+import 'package:edu_chatbot/services/downloader_isolate.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:mime/mime.dart';
 import 'package:path_provider/path_provider.dart';
@@ -8,10 +9,11 @@ import 'package:path_provider/path_provider.dart';
 import '../data/exam_link.dart';
 import 'package:http/http.dart' as http;
 
+import '../data/exam_page_image.dart';
 import 'functions.dart';
 
 class ImageFileUtil {
-  static const mm = '🌿🌿🌿 ImageFileUtil 💦';
+  static const mm = '🌿🌿🌿 ImageFileUtil 😎😎';
 
   static Future<List<File>> getFiles(ExamLink examLink) async {
     return await downloadFile(examLink.pageImageZipUrl!);
@@ -66,6 +68,53 @@ class ImageFileUtil {
     return files;
   }
 
+  static Future<List<File>> getPageImageFiles(ExamLink examLink, DownloaderService downloaderService) async {
+    var images = await downloaderService.getExamImages(examLink);
+    pp('$mm examPageImages found for conversion: ${images.length}');
+    int index = 0;
+    final appDir = await getApplicationDocumentsDirectory();
+    List<File> realFiles = [];
+
+    for (var img in images) {
+      var pathSuffix = '/image_${examLink.id!}_${img.pageIndex}.png';
+      var path0 = '${appDir.path}$pathSuffix';
+      File x = File(path0);
+      if (x.existsSync()) {
+        realFiles.add(x);
+      } else {
+        var mFile =
+        await ImageFileUtil.createImageFileFromBytes(img.bytes!, pathSuffix);
+        realFiles.add(mFile);
+      }
+      index++;
+    }
+    pp('$mm examPageImages turned into files: ${realFiles.length}');
+    return realFiles;
+  }
+
+  static Future<List<File>> convertPageImageFiles(ExamLink examLink, List<ExamPageImage> images) async {
+    pp('$mm examPageImages found for conversion: ${images.length}');
+    int index = 0;
+    final appDir = await getApplicationDocumentsDirectory();
+    List<File> realFiles = [];
+
+    for (var img in images) {
+      var pathSuffix = '/image_${examLink.id!}_${img.pageIndex}.png';
+      var path0 = '${appDir.path}$pathSuffix';
+      File x = File(path0);
+      if (x.existsSync()) {
+        realFiles.add(x);
+      } else {
+        var mFile =
+        await ImageFileUtil.createImageFileFromBytes(img.bytes!, pathSuffix);
+        realFiles.add(mFile);
+      }
+      index++;
+    }
+    pp('$mm examPageImages turned into files: ${realFiles.length}');
+    return realFiles;
+  }
+
   static Future<File> createImageFileFromBytes(List<int> bytes, String filePath) async {
     final appDir = await getApplicationSupportDirectory();
     final file = File('${appDir.path}/$filePath');
@@ -87,9 +136,7 @@ class ImageFileUtil {
 
     // Append the file extension to the file path
     String finalFilePath = filePath + fileExtension;
-
     await file.writeAsBytes(bytes);
-
     // Create a copy of the file with the desired file path
     File copiedFile = await file.copy('${appDir.path}/$finalFilePath');
 
@@ -115,6 +162,21 @@ class ImageFileUtil {
     return multipartFile;
   }
 
+  static Future<File> getFileFromBytes(List<int> bytes, String path) async {
+    Directory dir = await getApplicationDocumentsDirectory();
+    final file = File('${dir.path}/$path');
+    file.writeAsBytesSync(bytes);
+    return file;
+
+  }
+  static Future<File> getFileFromString(String content, String path) async {
+    Directory dir = await getApplicationDocumentsDirectory();
+    final file = File('${dir.path}/$path');
+    file.writeAsStringSync(content, mode: FileMode.write);
+    pp('$mm getFileFromString: ${file.path} - ${await file.length()} bytes');
+    return file;
+
+  }
   Future<File> scaleDownImage(File imageFile) async {
     pp('$mm Compress file size: ${await imageFile.length()}');
 

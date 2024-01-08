@@ -9,6 +9,7 @@ import 'package:edu_chatbot/ui/busy_indicator.dart';
 import 'package:edu_chatbot/ui/exam_paper_pages.dart';
 import 'package:edu_chatbot/ui/text_chat.dart';
 import 'package:edu_chatbot/ui/you_tube_searcher.dart';
+import 'package:edu_chatbot/util/dark_light_control.dart';
 import 'package:flutter/material.dart';
 import 'package:focused_menu/focused_menu.dart';
 import 'package:focused_menu/modals.dart';
@@ -17,6 +18,8 @@ import '../data/exam_document.dart';
 import '../services/local_data_service.dart';
 import '../util/functions.dart';
 import '../util/navigation_util.dart';
+import '../util/prefs.dart';
+import 'color_gallery.dart';
 
 class ExamLinkListWidget extends StatefulWidget {
   final Subject subject;
@@ -26,6 +29,8 @@ class ExamLinkListWidget extends StatefulWidget {
   final YouTubeService youTubeService;
   final DownloaderService downloaderService;
   final ExamDocument examDocument;
+  final Prefs prefs;
+  final ColorWatcher colorWatcher;
 
   const ExamLinkListWidget({
     super.key,
@@ -35,7 +40,7 @@ class ExamLinkListWidget extends StatefulWidget {
     required this.chatService,
     required this.youTubeService,
     required this.downloaderService,
-    required this.examDocument,
+    required this.examDocument, required this.prefs, required this.colorWatcher,
   });
 
   @override
@@ -115,6 +120,12 @@ class ExamLinkListWidgetState extends State<ExamLinkListWidget> {
 
     return list;
   }
+  void _navigateToColorGallery() {
+    NavigationUtils.navigateToPage(
+        context: context,
+        widget: ColorGallery(
+            prefs: widget.prefs, colorWatcher: widget.colorWatcher));
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -134,7 +145,14 @@ class ExamLinkListWidgetState extends State<ExamLinkListWidget> {
               onPressed: () {
                 _navigateToYouTube();
               },
-              icon: const Icon(Icons.video_collection))
+              icon: Icon(Icons.video_collection,
+                  color: Theme.of(context).primaryColor)),
+          IconButton(
+              onPressed: () {
+                _navigateToColorGallery();
+              },
+              icon: Icon(Icons.color_lens_outlined,
+                  color: Theme.of(context).primaryColor))
         ],
       ),
       body: Padding(
@@ -241,7 +259,8 @@ class ExamLinkListWidgetState extends State<ExamLinkListWidget> {
         widget: YouTubeSearcher(
           youTubeService: widget.youTubeService,
           subject: widget.subject,
-          showSearchBox: true,
+          prefs: widget.prefs,
+          colorWatcher: widget.colorWatcher,
         ));
   }
 }
@@ -262,8 +281,7 @@ class ExamLinkWidget extends StatelessWidget {
               fontWeight: FontWeight.bold,
             );
     final TextStyle idStyle = Theme.of(context).textTheme.bodyLarge!.copyWith(
-          fontWeight: FontWeight.w900,
-        );
+        fontWeight: FontWeight.w900, color: Theme.of(context).primaryColor);
     return Card(
       elevation: 2,
       child: ListTile(

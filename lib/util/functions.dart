@@ -40,7 +40,21 @@ pp(dynamic msg) {
     }
   }
 }
+
 final List<Color> _colors = [
+  Colors.red[200]!,
+  Colors.green[200]!,
+  Colors.blue[200]!,
+  Colors.yellow[200]!,
+  Colors.pink[200]!,
+  Colors.teal[200]!,
+  Colors.indigo[200]!,
+  Colors.brown[200]!,
+  Colors.deepPurple[200]!,
+  Colors.amber[200]!,
+  Colors.lightGreen[200]!,
+  Colors.orange[200]!,
+  Colors.cyan[200]!,
   Colors.red,
   Colors.green,
   Colors.blue,
@@ -54,9 +68,11 @@ final List<Color> _colors = [
   Colors.lightGreen,
   Colors.orange,
   Colors.cyan,
+
 ];
 
 List<Color> getColors() {
+  pp('functions: getColors delivered: ${_colors.length}');
   return _colors;
 }
 bool isValidLaTeXString(String text) {
@@ -230,8 +246,13 @@ void showErrorDialog(BuildContext context, String errorMessage) {
     context: context,
     builder: (BuildContext context) {
       return AlertDialog(
-        title: const Text('Error'),
-        content: Text(errorMessage),
+        title: Text('Error',
+          style: myTextStyle(context,
+              Theme.of(context).primaryColor, 24,
+              FontWeight.w900),),
+        content: Text(errorMessage, style: myTextStyle(context,
+            Theme.of(context).primaryColor, 16,
+            FontWeight.normal),),
         actions: [
           TextButton(
             onPressed: () {

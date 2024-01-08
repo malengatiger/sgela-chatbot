@@ -103,7 +103,7 @@ class _BusyIndicatorState extends State<BusyIndicator> {
                     gapW16,
                     Text(elapsedTime,
                         style: myTextStyle(
-                            context, bright == Brightness.light? Colors.red: Colors.yellow, 18, FontWeight.bold)),
+                            context, Theme.of(context).primaryColor, 18, FontWeight.bold)),
                   ],
                 ),
                 gapH8,

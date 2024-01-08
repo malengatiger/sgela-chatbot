@@ -81,13 +81,11 @@ class ExamPaperHeader extends StatelessWidget {
                       ],
                     ),
                   ),
-                  gapH16,
-                  Padding(
-                    padding: const EdgeInsets.all(4.0),
-                    child: Text(
-                      '${examLink.documentTitle}',
-                      style: myTextStyleMediumBold(context),
-                    ),
+                  gapH8,
+                  Text(
+                    '${examLink.documentTitle}',
+                    style: myTextStyle(context, Theme.of(context).primaryColor,
+                    14, FontWeight.normal),
                   ),
                 ],
               ),

@@ -118,7 +118,7 @@ class ChatService {
         url,
         data: formData,
       );
-      pp('$mm ............................ response returned ....');
+      pp('$mm ..........sendTextImagePrompt: response returned ...');
       if (response.statusCode == 200 || response.statusCode == 201) {
         fun.pp(
             '$mm .... multiPart request is OK! status: ${response.statusCode} '
@@ -142,10 +142,11 @@ class ChatService {
               '👿👿SgelaAI could not handle your request at this time. Please try again!');
         }
       } else {
+        pp('$mm 👿👿👿👿ERROR: status: ${response.statusCode} - data: ${response.data}');
         throw Exception('$mm 👿👿👿👿Failed to send multipart request');
       }
     } catch (e) {
-      throw Exception('$mm 👿👿👿👿Error sending multipart request: $e');
+      throw Exception('$mm 👿👿👿👿Error sending multipart request: $e 👿👿👿👿');
     }
   }
 

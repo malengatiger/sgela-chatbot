@@ -4,12 +4,16 @@ import 'package:edu_chatbot/services/downloader_isolate.dart';
 import 'package:edu_chatbot/services/local_data_service.dart';
 import 'package:edu_chatbot/services/you_tube_service.dart';
 import 'package:edu_chatbot/ui/exam_link_list_widget.dart';
+import 'package:edu_chatbot/ui/you_tube_searcher.dart';
 import 'package:edu_chatbot/util/navigation_util.dart';
 import 'package:flutter/material.dart';
 
 import '../data/subject.dart';
 import '../services/chat_service.dart';
+import '../util/dark_light_control.dart';
 import '../util/functions.dart';
+import '../util/prefs.dart';
+import 'color_gallery.dart';
 
 class ExamsDocumentList extends StatefulWidget {
   const ExamsDocumentList(
@@ -19,7 +23,7 @@ class ExamsDocumentList extends StatefulWidget {
       required this.localDataService,
       required this.chatService,
       required this.youTubeService,
-      required this.downloaderService});
+      required this.downloaderService, required this.prefs, required this.colorWatcher});
 
   final Repository repository;
   final Subject subject;
@@ -27,6 +31,8 @@ class ExamsDocumentList extends StatefulWidget {
   final ChatService chatService;
   final YouTubeService youTubeService;
   final DownloaderService downloaderService;
+  final Prefs prefs;
+  final ColorWatcher colorWatcher;
 
   @override
   ExamsDocumentListState createState() => ExamsDocumentListState();
@@ -72,8 +78,25 @@ class ExamsDocumentListState extends State<ExamsDocumentList> {
           chatService: widget.chatService,
           youTubeService: widget.youTubeService,
           downloaderService: widget.downloaderService,
-          examDocument: examDocument,
+          examDocument: examDocument, prefs: widget.prefs, colorWatcher: widget.colorWatcher,
         ));
+  }
+  void _navigateToYouTube() {
+    pp('$mm _navigateToYouTube ... widget.subject.id: ${widget.subject.id}');
+    NavigationUtils.navigateToPage(
+        context: context,
+        widget: YouTubeSearcher(
+          youTubeService: widget.youTubeService,
+          subject: widget.subject,
+          prefs: widget.prefs,
+          colorWatcher: widget.colorWatcher,
+        ));
+  }
+  void _navigateToColorGallery() {
+    NavigationUtils.navigateToPage(
+        context: context,
+        widget: ColorGallery(
+            prefs: widget.prefs, colorWatcher: widget.colorWatcher));
   }
 
   @override
@@ -83,6 +106,20 @@ class ExamsDocumentListState extends State<ExamsDocumentList> {
             appBar: AppBar(
               title:  Text('Examination Periods',
               style: myTextStyleSmall(context)),
+              actions: [
+                IconButton(
+                    onPressed: () {
+                      _navigateToYouTube();
+                    },
+                    icon: Icon(Icons.video_collection,
+                        color: Theme.of(context).primaryColor)),
+                IconButton(
+                    onPressed: () {
+                      _navigateToColorGallery();
+                    },
+                    icon: Icon(Icons.color_lens_outlined,
+                        color: Theme.of(context).primaryColor))
+              ],
             ),
             body: Stack(
               children: [
