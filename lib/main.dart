@@ -61,12 +61,13 @@ Future<void> main() async {
   ]);
   pp('$mx Firebase Auth providers have been setup!!');
   pp('${app.options.asMap}');
-  // Register services
-  await registerServices();
+
   Gemini.init(apiKey: ChatbotEnvironment.getGeminiAPIKey(),
       enableDebugging: ChatbotEnvironment.isChatDebuggingEnabled());
   pp('$mx Gemini AI API has been initialized!! $mx'
       ' Gemini apiKey: ${ChatbotEnvironment.getGeminiAPIKey()}');
+  // Register services
+  await registerServices();
   //
   var prefs = GetIt.instance<Prefs>();
   var mode = prefs.getMode();
@@ -96,7 +97,7 @@ class MyApp extends StatelessWidget {
     var youTubeService = GetIt.instance<YouTubeService>();
     var downloaderService = GetIt.instance<DownloaderService>();
     var dlc = GetIt.instance<DarkLightControl>();
-
+    var gemini = GetIt.instance<Gemini>();
 
     return GestureDetector(
       onTap: () {
@@ -119,6 +120,7 @@ class MyApp extends StatelessWidget {
               theme: _getTheme(context),
               home: SubjectSearch(
                 repository: repository,
+                gemini: gemini,
                 prefs: GetIt.instance<Prefs>(),
                 downloaderService: GetIt.instance<DownloaderService>(),
                 localDataService: GetIt.instance<LocalDataService>(),

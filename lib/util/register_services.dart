@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:edu_chatbot/services/registration_service.dart';
 import 'package:edu_chatbot/util/dark_light_control.dart';
 import 'package:edu_chatbot/util/prefs.dart';
+import 'package:flutter_gemini/flutter_gemini.dart';
 import 'package:get_it/get_it.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -50,8 +51,8 @@ Future<void> registerServices() async {
           () => cWatcher);
   GetIt.instance.registerLazySingleton<DarkLightControl>(
           () => dlc);
-  GetIt.instance.registerLazySingleton<RegistrationService>(
-          () => RegistrationService(dioUtil));
+  GetIt.instance.registerLazySingleton<Gemini>(
+          () => Gemini.instance);
 
   pp('🍎🍎🍎🍎🍎🍎 registerServices: GetIt has registered 14 services. 🍎 Cool!! 🍎🍎🍎');
 }

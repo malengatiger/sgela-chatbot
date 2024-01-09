@@ -8,6 +8,7 @@ import 'package:edu_chatbot/ui/exam_document_list.dart';
 import 'package:edu_chatbot/util/dark_light_control.dart';
 import 'package:edu_chatbot/util/functions.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_gemini/flutter_gemini.dart';
 
 import '../services/chat_service.dart';
 import '../services/local_data_service.dart';
@@ -25,6 +26,7 @@ class SubjectSearch extends StatefulWidget {
   final DownloaderService downloaderService;
   final ColorWatcher colorWatcher;
   final DarkLightControl darkLightControl;
+  final Gemini gemini;
 
   const SubjectSearch(
       {super.key,
@@ -35,7 +37,7 @@ class SubjectSearch extends StatefulWidget {
       required this.downloaderService,
       required this.prefs,
       required this.colorWatcher,
-      required this.darkLightControl});
+      required this.darkLightControl, required this.gemini});
 
   @override
   SubjectSearchState createState() => SubjectSearchState();
@@ -99,6 +101,7 @@ class SubjectSearchState extends State<SubjectSearch> {
             chatService: widget.chatService,
             youTubeService: widget.youTubeService,
             colorWatcher: widget.colorWatcher,
+            gemini: widget.gemini,
             prefs: widget.prefs));
   }
 

@@ -1,18 +1,17 @@
 import 'package:badges/badges.dart' as bd;
 import 'package:edu_chatbot/data/exam_link.dart';
 import 'package:edu_chatbot/data/subject.dart';
+import 'package:edu_chatbot/gemini/sections/multi_turn_chat_stream.dart';
 import 'package:edu_chatbot/repositories/repository.dart';
 import 'package:edu_chatbot/services/chat_service.dart';
 import 'package:edu_chatbot/services/downloader_isolate.dart';
 import 'package:edu_chatbot/services/you_tube_service.dart';
 import 'package:edu_chatbot/ui/busy_indicator.dart';
 import 'package:edu_chatbot/ui/exam_paper_pages.dart';
-import 'package:edu_chatbot/ui/text_chat.dart';
 import 'package:edu_chatbot/ui/you_tube_searcher.dart';
 import 'package:edu_chatbot/util/dark_light_control.dart';
 import 'package:flutter/material.dart';
-import 'package:focused_menu/focused_menu.dart';
-import 'package:focused_menu/modals.dart';
+import 'package:flutter_gemini/flutter_gemini.dart';
 
 import '../data/exam_document.dart';
 import '../services/local_data_service.dart';
@@ -31,6 +30,7 @@ class ExamLinkListWidget extends StatefulWidget {
   final ExamDocument examDocument;
   final Prefs prefs;
   final ColorWatcher colorWatcher;
+  final Gemini gemini;
 
   const ExamLinkListWidget({
     super.key,
@@ -40,7 +40,10 @@ class ExamLinkListWidget extends StatefulWidget {
     required this.chatService,
     required this.youTubeService,
     required this.downloaderService,
-    required this.examDocument, required this.prefs, required this.colorWatcher,
+    required this.examDocument,
+    required this.prefs,
+    required this.colorWatcher,
+    required this.gemini,
   });
 
   @override
@@ -93,33 +96,41 @@ class ExamLinkListWidgetState extends State<ExamLinkListWidget> {
     });
   }
 
-  List<FocusedMenuItem> _getMenuItems(ExamLink examLink, BuildContext context) {
-    List<FocusedMenuItem> list = [];
+  ExamLink? selectedExamLink;
 
-    list.add(FocusedMenuItem(
-        title:
-            Text('Use Image and Text', style: myTextStyleSmallBlack(context)),
-        // backgroundColor: Theme.of(context).primaryColor,
-        trailingIcon: Icon(
-          Icons.camera_alt,
-          color: Theme.of(context).primaryColor,
-        ),
-        onPressed: () {
-          _navigateToExamPaperPages(examLink);
-        }));
-    list.add(FocusedMenuItem(
-        title: Text('Use Text Search', style: myTextStyleSmallBlack(context)),
-        // backgroundColor: Theme.of(context).primaryColor,
-        trailingIcon: Icon(
-          Icons.search,
-          color: Theme.of(context).primaryColor,
-        ),
-        onPressed: () {
-          _navigateToChat(examLink);
-        }));
-
-    return list;
+  _showChooserDialog() {
+    showDialog(
+        context: context,
+        builder: (_) {
+          return AlertDialog(
+            title: Column(
+              children: [
+                Text(
+                  selectedExamLink!.title!,
+                  style: myTextStyleSmall(context),
+                ),
+                gapH16,
+                Text(
+                  'What do you want to do?',
+                  style: myTextStyle(context, Theme.of(context).primaryColor,
+                      16, FontWeight.w900),
+                ),
+              ],
+            ),
+            elevation: 12,
+            content: ChatTypeChooser(onChatTypeChosen: (type) {
+              //Navigator.of(context).pop();
+              if ((type == CHAT_TYPE_MULTI_TURN)) {
+                _navigateToMultiTurnStreamChat(selectedExamLink!);
+              }
+              if ((type == CHAT_TYPE_IMAGE)) {
+                _navigateToExamPaperPages(selectedExamLink!);
+              }
+            }),
+          );
+        });
   }
+
   void _navigateToColorGallery() {
     NavigationUtils.navigateToPage(
         context: context,
@@ -195,21 +206,18 @@ class ExamLinkListWidgetState extends State<ExamLinkListWidget> {
                       elevation: 12),
                   child: busy
                       ? const BusyIndicator(
-                          caption: 'Loading subject exams ... gimme a second ...',
+                          caption:
+                              'Loading subject exams ... gimme a second ...',
                           showClock: true,
                         )
                       : ListView.builder(
                           itemCount: filteredExamLinks.length,
                           itemBuilder: (context, index) {
                             ExamLink examLink = filteredExamLinks[index];
-                            return FocusedMenuHolder(
-                              menuItems: _getMenuItems(examLink, context),
-                              menuOffset: 20,
-                              duration: const Duration(milliseconds: 300),
-                              animateMenuItems: true,
-                              openWithTap: true,
-                              onPressed: () {
-                                pp('💛️💛️💛💛️💛️💛💛️💛️💛️ tapped FocusedMenuHolder ...');
+                            return GestureDetector(
+                              onTap: () {
+                                selectedExamLink = examLink;
+                                _showChooserDialog();
                               },
                               child: ExamLinkWidget(
                                 examLink: examLink,
@@ -226,15 +234,13 @@ class ExamLinkListWidgetState extends State<ExamLinkListWidget> {
     );
   }
 
-  void _navigateToChat(ExamLink examLink) {
-    pp('$mm _navigateToChat ...');
+  void _navigateToMultiTurnStreamChat(ExamLink examLink) {
+    pp('$mm _navigateToMultiTurnStreamChat ...');
     NavigationUtils.navigateToPage(
         context: context,
-        widget: TextChat(
-          examLink: examLink,
-          chatService: widget.chatService,
-          repository: widget.repository,
-          subject: widget.subject,
+        widget: MultiTurnStreamChat(
+          gemini: widget.gemini,
+          examLink: selectedExamLink!,
         ));
   }
 
@@ -310,3 +316,69 @@ class ExamLinkWidget extends StatelessWidget {
     );
   }
 }
+
+class ChatTypeChooser extends StatelessWidget {
+  const ChatTypeChooser({super.key, required this.onChatTypeChosen});
+
+  final Function(int) onChatTypeChosen;
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      elevation: 2,
+      child: SizedBox(
+        height: 120,
+        child: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              GestureDetector(
+                onTap: () {
+                  onChatTypeChosen(CHAT_TYPE_IMAGE);
+                },
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.image_search,
+                      size: 20,
+                      color: Theme.of(context).primaryColor,
+                    ),
+                    gapW16,
+                    Text(
+                      'Search using exam paper',
+                      style: myTextStyleSmall(context),
+                    )
+                  ],
+                ),
+              ),
+              gapH32,
+              GestureDetector(
+                onTap: () {
+                  onChatTypeChosen(CHAT_TYPE_MULTI_TURN);
+                },
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.text_fields_sharp,
+                      size: 20,
+                      color: Theme.of(context).primaryColor,
+                    ),
+                    gapW16,
+                    Text(
+                      'Search using text',
+                      style: myTextStyleSmall(context),
+                    )
+                  ],
+                ),
+              )
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+const CHAT_TYPE_IMAGE = 1, CHAT_TYPE_MULTI_TURN = 2;

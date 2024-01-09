@@ -9,6 +9,7 @@ import 'package:edu_chatbot/util/prefs.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_gemini/flutter_gemini.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:flutter_sim_country_code/flutter_sim_country_code.dart';
 import 'package:fluttertoast/fluttertoast.dart';
@@ -235,11 +236,11 @@ String getGenericPromptContext() {
 String getPromptContext() {
   StringBuffer sb = StringBuffer();
   sb.write('My name is SgelaAI and I am a super tutor who knows everything. '
-      '\nI am here to help you study for all your high school and freshman college courses and subjects\n');
+      '\nI am here to help you study and practice for all your high school and college courses and subjects\n');
   sb.write('Answer questions that relates to the subject provided. \n');
   sb.write('Example is Subject: Mathematics\n');
   sb.write(
-      'Keep answers and responses suitable to the high school or college freshman level\n');
+      'Keep answers and responses suitable to the high school or college level\n');
   sb.write(
       'Return responses in markdown format when there are no mathematical equations in the text.\n');
   sb.write(
@@ -248,6 +249,27 @@ String getPromptContext() {
   sb.write(
       'Where appropriate use headings, paragraphs and sections to enhance readability when displayed.\n');
   return sb.toString();
+}
+
+List<Parts> getMultiTurnContext() {
+  List<Parts> partsList = [];
+  var p1 = Parts(text: 'My name is SgelaAI and I am a super tutor who knows everything. '
+      '\nI am here to help you study and practice for all your high school and college courses and subjects');
+  partsList.add(p1);
+  var p2 = Parts(text:'Answer questions that relates to the subject provided.');
+  partsList.add(p2);
+  var p3 = Parts(text:'Example is Subject: Mathematics');
+  partsList.add(p3);
+  var p4 = Parts(text:'For Mathematics, Physics, return responses in LaTex format');
+  partsList.add(p4);
+  var p5 = Parts(text:'In all other subjects, return responses in Markdown format');
+  partsList.add(p5);
+  var p6 = Parts(text:'Your response must not mix Markdown and LaTex formats. It should be one or the other');
+  partsList.add(p6);
+  var p7 = Parts(text:'Where appropriate use headings, paragraphs and sections to enhance readability when displayed.');
+  partsList.add(p7);
+
+  return partsList;
 }
 
 void showErrorDialog(BuildContext context, String errorMessage) {

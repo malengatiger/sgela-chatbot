@@ -8,6 +8,7 @@ import 'package:edu_chatbot/ui/exam_link_list_widget.dart';
 import 'package:edu_chatbot/ui/you_tube_searcher.dart';
 import 'package:edu_chatbot/util/navigation_util.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_gemini/flutter_gemini.dart';
 
 import '../data/subject.dart';
 import '../services/chat_service.dart';
@@ -26,7 +27,7 @@ class ExamsDocumentList extends StatefulWidget {
       required this.youTubeService,
       required this.downloaderService,
       required this.prefs,
-      required this.colorWatcher});
+      required this.colorWatcher, required this.gemini});
 
   final Repository repository;
   final Subject subject;
@@ -36,6 +37,7 @@ class ExamsDocumentList extends StatefulWidget {
   final DownloaderService downloaderService;
   final Prefs prefs;
   final ColorWatcher colorWatcher;
+  final Gemini gemini;
 
   @override
   ExamsDocumentListState createState() => ExamsDocumentListState();
@@ -82,6 +84,7 @@ class ExamsDocumentListState extends State<ExamsDocumentList> {
           youTubeService: widget.youTubeService,
           downloaderService: widget.downloaderService,
           examDocument: examDocument,
+          gemini: widget.gemini,
           prefs: widget.prefs,
           colorWatcher: widget.colorWatcher,
         ));

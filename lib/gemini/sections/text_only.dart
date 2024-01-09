@@ -3,7 +3,7 @@ import 'package:flutter_gemini/flutter_gemini.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:lottie/lottie.dart';
 
-import '../../widgets/chat_input_box.dart';
+import 'package:edu_chatbot/gemini/widgets/chat_input_box.dart';
 
 class SectionTextInput extends StatefulWidget {
   const SectionTextInput({super.key});

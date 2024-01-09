@@ -6,7 +6,7 @@ import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:lottie/lottie.dart';
 
-import '../../widgets/chat_input_box.dart';
+import 'package:edu_chatbot/gemini/widgets/chat_input_box.dart';
 
 class SectionTextAndImageInput extends StatefulWidget {
   const SectionTextAndImageInput({super.key});
