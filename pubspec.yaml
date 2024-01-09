@@ -19,11 +19,13 @@ dependencies:
   firebase_messaging: ^14.7.9
   firebase_analytics: ^10.7.4
   firebase_crashlytics: ^3.4.8
+  firebase_ui_auth: ^1.12.0
+  firebase_ui_oauth_google: ^1.2.16
   dio: ^5.4.0
   sqflite: ^2.3.0
   cached_network_image: ^3.3.1
   infinite_carousel: ^1.0.3
-  intl: ^0.19.0
+  intl: ^0.18.1
   path: ^1.8.3
   path_provider: ^2.1.1
   flutter_file_downloader: ^1.2.0
@@ -63,12 +65,13 @@ dependencies:
   flutter_rating_bar: ^4.0.1
   image_picker: ^1.0.6
   share_plus: ^7.2.1
-  flutter_gemini: ^2.0.0
   flutter_markdown: ^0.6.18+3
   flutter_image_compress: ^2.1.0
   http_parser: ^4.0.2
   pdf: ^3.10.7
   printing: ^5.11.1
+  flutter_gemini: ^2.0.1
+  lottie: ^2.7.0
 
 dev_dependencies:
   flutter_test:

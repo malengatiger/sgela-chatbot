@@ -1,91 +1,86 @@
 import 'dart:convert';
 
-
+import 'package:edu_chatbot/data/organization.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../data/user.dart';
 import '../data/country.dart';
-import 'functions.dart';
-
-final Prefs prefs = Prefs();
+import '../data/user.dart';
 
 class Prefs {
-  Future saveUser(User user) async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
+  final SharedPreferences sharedPreferences;
 
+  Prefs(this.sharedPreferences);
+
+  Future saveUser(User user) async {
     Map mJson = user.toJson();
     var jx = json.encode(mJson);
-    prefs.setString('user', jx);
-    // pp("🌽 🌽 🌽 Prefs: saveUser:  SAVED: 🌽 ${user.toJson()} 🌽 🌽 🌽");
+    sharedPreferences.setString('user', jx);
     return null;
   }
 
-  Future<User?> getUser() async {
-    var prefs = await SharedPreferences.getInstance();
-    var string = prefs.getString('user');
+  User? getUser() {
+    var string = sharedPreferences.getString('user');
     if (string == null) {
       return null;
     }
     var jx = json.decode(string);
     var user = User.fromJson(jx);
-    pp("🌽 🌽 🌽 Prefs: getUser 🧩  ${user.firstName} retrieved");
     return user;
   }
 
-  Future saveCountry(Country country) async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-
+  void saveCountry(Country country) {
     Map mJson = country.toJson();
     var jx = json.encode(mJson);
-    prefs.setString('country', jx);
-    pp("🌽 🌽 🌽 Prefs: saveCountry:  SAVED: 🌽 ${country.toJson()} 🌽 🌽 🌽");
-    return null;
+    sharedPreferences.setString('country', jx);
   }
 
-  Future<Country?> getCountry() async {
-    var prefs = await SharedPreferences.getInstance();
-    var string = prefs.getString('country');
+  Country? getCountry() {
+    var string = sharedPreferences.getString('country');
     if (string == null) {
       return null;
     }
     var jx = json.decode(string);
-    var country =Country.fromJson(jx);
-    pp("🌽 🌽 🌽 Prefs: getCountry 🧩  ${country.name} retrieved");
+    var country = Country.fromJson(jx);
     return country;
   }
-
-   Future saveMode(int mode) async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    prefs.setInt('mode', mode);
-    pp("🌽🌽🌽 Prefs: saveMode: 🌽 ${mode == 1? 'DARK':'LIGHT'} 🌽🌽🌽");
-    return null;
+  void saveOrganization(Organization organization) {
+    Map mJson = organization.toJson();
+    var jx = json.encode(mJson);
+    sharedPreferences.setString('Organization', jx);
   }
 
-   Future<int> getMode() async {
-    var prefs = await SharedPreferences.getInstance();
-    var mode = prefs.getInt('mode');
+  Organization? getOrganization() {
+    var string = sharedPreferences.getString('Organization');
+    if (string == null) {
+      return null;
+    }
+    var jx = json.decode(string);
+    var org = Organization.fromJson(jx);
+    return org;
+  }
+
+  void saveMode(int mode) {
+    sharedPreferences.setInt('mode', mode);
+  }
+
+  int getMode() {
+    var mode = sharedPreferences.getInt('mode');
     if (mode == null) {
       return -1;
     }
-    pp("🌽🌽🌽 Prefs: getMode: 🌽 ${mode == 1? 'DARK':'LIGHT'} 🌽🌽🌽");
     return mode;
   }
 
-   Future saveColorIndex(int index) async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    prefs.setInt('color', index);
-    pp("🌽🌽🌽 Prefs: saveColor: 🌽 $index 🌽🌽🌽");
+  void saveColorIndex(int index) async {
+    sharedPreferences.setInt('color', index);
     return null;
   }
 
-   Future<int> getColorIndex() async {
-    var prefs = await SharedPreferences.getInstance();
-    var color = prefs.getInt('color');
+  int getColorIndex() {
+    var color = sharedPreferences.getInt('color');
     if (color == null) {
       return 0;
     }
-    pp("🌽🌽🌽 Prefs: getColor: 🌽 $color 🌽🌽🌽");
     return color;
   }
-
 }

@@ -19,7 +19,7 @@ class LocalDataService {
     pp('$mm initialize sqlite ...');
 
     db = await openDatabase(
-      join(await getDatabasesPath(), 'skunk040db'),
+      join(await getDatabasesPath(), 'skunk042db'),
       version: 1,
     );
     pp('$mm SQLite Database is open: ${db.isOpen} 🔵🔵 ${db.path}');

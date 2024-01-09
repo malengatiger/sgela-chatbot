@@ -55,4 +55,23 @@ class ChatbotEnvironment {
     return '$part0$part1$part2';
 
   }
+
+  static const _devClientId = "";
+  static const _prodClientId = "";
+  static String getGoogleClientId() {
+    if (kDebugMode) {
+      return _devClientId;
+    } else {
+      return _prodClientId;
+    }
+  }
+
+  static bool isChatDebuggingEnabled() {
+    if (kDebugMode) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+
 }

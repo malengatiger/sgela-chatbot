@@ -84,6 +84,7 @@ class SubjectSearchState extends State<SubjectSearch> {
         context: context,
         widget: ImagePickerWidget(
           chatService: widget.chatService,
+          examLink: null,
         ));
   }
 
@@ -91,15 +92,14 @@ class SubjectSearchState extends State<SubjectSearch> {
     NavigationUtils.navigateToPage(
         context: context,
         widget: ExamsDocumentList(
-          subject: subject,
-          downloaderService: widget.downloaderService,
-          repository: widget.repository,
-          localDataService: widget.localDataService,
-          chatService: widget.chatService,
-          youTubeService: widget.youTubeService,
-          colorWatcher: widget.colorWatcher,
-          prefs: widget.prefs
-        ));
+            subject: subject,
+            downloaderService: widget.downloaderService,
+            repository: widget.repository,
+            localDataService: widget.localDataService,
+            chatService: widget.chatService,
+            youTubeService: widget.youTubeService,
+            colorWatcher: widget.colorWatcher,
+            prefs: widget.prefs));
   }
 
   @override
@@ -116,7 +116,8 @@ class SubjectSearchState extends State<SubjectSearch> {
         Theme.of(context).textTheme.bodySmall!.copyWith(
               fontWeight: FontWeight.w900,
             );
-    var bright = MediaQuery.of(context).platformBrightness;
+    var isDark =
+        isDarkMode(widget.prefs, MediaQuery.of(context).platformBrightness);
     return GestureDetector(
       onTap: () {
         FocusScope.of(context).unfocus();
@@ -127,28 +128,36 @@ class SubjectSearchState extends State<SubjectSearch> {
             title: Text(
               'SgelaAI',
               style: myTextStyle(
-                  context, Theme.of(context).primaryColor, 32, FontWeight.w900),
+                  context,
+                  isDark ? Theme.of(context).primaryColor : Colors.black,
+                  32,
+                  FontWeight.w900),
             ),
             actions: [
               IconButton(
-                onPressed: () async {
-                  await _handleMode(bright);
+                onPressed: () {
+                  _handleMode(MediaQuery.of(context).platformBrightness);
                 },
-                icon: Icon(mode == DARK ? Icons.light_mode : Icons.dark_mode,
-                    color: Theme.of(context).primaryColor),
+                icon: Icon(isDark ? Icons.light_mode : Icons.dark_mode,
+                    color:
+                        isDark ? Theme.of(context).primaryColor : Colors.black),
               ),
               IconButton(
-                onPressed: () {
-                  _navigateToAI(context);
-                },
-                icon: Icon(Icons.camera, color: Theme.of(context).primaryColor),
-              ),
+                  onPressed: () {
+                    _navigateToAI(context);
+                  },
+                  icon: Icon(Icons.camera,
+                      color: isDark
+                          ? Theme.of(context).primaryColor
+                          : Colors.black)),
               IconButton(
                 onPressed: () {
                   _navigateToColorGallery();
                 },
-                icon: Icon(Icons.color_lens_outlined,
-                    color: Theme.of(context).primaryColor),
+                icon: Icon(
+                  Icons.color_lens_outlined,
+                  color: isDark ? Theme.of(context).primaryColor : Colors.black,
+                ),
               )
             ],
           ),
@@ -188,7 +197,8 @@ class SubjectSearchState extends State<SubjectSearch> {
                         badgeColor: Colors.pink.shade800,
                         elevation: 12),
                     child: busy
-                        ? const BusyIndicator(caption: 'Loading subjects')
+                        ? const BusyIndicator(
+                            caption: 'Loading subjects ... just a second ...')
                         : ListView.builder(
                             itemCount: _filteredSubjects.length,
                             itemBuilder: (context, index) {
@@ -222,25 +232,12 @@ class SubjectSearchState extends State<SubjectSearch> {
     );
   }
 
-  Future<void> _handleMode(Brightness bright) async {
-    mode = await prefs.getMode();
-    if (mode > -1) {
-      switch (mode) {
-        case DARK:
-          widget.darkLightControl.setLightMode();
-          prefs.saveMode(LIGHT);
-          break;
-        case LIGHT:
-          widget.darkLightControl.setDarkMode();
-          prefs.saveMode(DARK);
-          break;
-      }
+  _handleMode(Brightness bright) {
+    var isDark = isDarkMode(widget.prefs, bright);
+    if (isDark) {
+      widget.darkLightControl.setLightMode();
     } else {
-      if (bright == Brightness.dark) {
-        widget.darkLightControl.setLightMode();
-      } else {
-        widget.darkLightControl.setDarkMode();
-      }
+      widget.darkLightControl.setDarkMode();
     }
   }
 

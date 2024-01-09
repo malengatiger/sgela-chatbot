@@ -3,6 +3,7 @@ import 'package:edu_chatbot/repositories/repository.dart';
 import 'package:edu_chatbot/services/downloader_isolate.dart';
 import 'package:edu_chatbot/services/local_data_service.dart';
 import 'package:edu_chatbot/services/you_tube_service.dart';
+import 'package:edu_chatbot/ui/busy_indicator.dart';
 import 'package:edu_chatbot/ui/exam_link_list_widget.dart';
 import 'package:edu_chatbot/ui/you_tube_searcher.dart';
 import 'package:edu_chatbot/util/navigation_util.dart';
@@ -23,7 +24,9 @@ class ExamsDocumentList extends StatefulWidget {
       required this.localDataService,
       required this.chatService,
       required this.youTubeService,
-      required this.downloaderService, required this.prefs, required this.colorWatcher});
+      required this.downloaderService,
+      required this.prefs,
+      required this.colorWatcher});
 
   final Repository repository;
   final Subject subject;
@@ -78,9 +81,12 @@ class ExamsDocumentListState extends State<ExamsDocumentList> {
           chatService: widget.chatService,
           youTubeService: widget.youTubeService,
           downloaderService: widget.downloaderService,
-          examDocument: examDocument, prefs: widget.prefs, colorWatcher: widget.colorWatcher,
+          examDocument: examDocument,
+          prefs: widget.prefs,
+          colorWatcher: widget.colorWatcher,
         ));
   }
+
   void _navigateToYouTube() {
     pp('$mm _navigateToYouTube ... widget.subject.id: ${widget.subject.id}');
     NavigationUtils.navigateToPage(
@@ -92,6 +98,7 @@ class ExamsDocumentListState extends State<ExamsDocumentList> {
           colorWatcher: widget.colorWatcher,
         ));
   }
+
   void _navigateToColorGallery() {
     NavigationUtils.navigateToPage(
         context: context,
@@ -104,8 +111,8 @@ class ExamsDocumentListState extends State<ExamsDocumentList> {
     return SafeArea(
         child: Scaffold(
             appBar: AppBar(
-              title:  Text('Examination Periods',
-              style: myTextStyleSmall(context)),
+              title:
+                  Text('Examination Periods', style: myTextStyleSmall(context)),
               actions: [
                 IconButton(
                     onPressed: () {
@@ -134,27 +141,32 @@ class ExamsDocumentListState extends State<ExamsDocumentList> {
                               18,
                               FontWeight.w900)),
                       Expanded(
-                        child: ListView.builder(
-                            itemCount: examDocs.length,
-                            itemBuilder: (_, index) {
-                              var doc = examDocs.elementAt(index);
-                              return GestureDetector(
-                                onTap: () {
-                                  _navigateToExamLinks(doc);
-                                },
-                                child: Card(
-                                  elevation: 8,
-                                  child: ListTile(
-                                    title: Text(
-                                      '${doc.title}',
-                                      style: myTextStyleSmall(context),
+                        child: busy
+                            ? const BusyIndicator(
+                                caption: "Loading exam documents. Gimme a second ...",
+                              )
+                            : ListView.builder(
+                                itemCount: examDocs.length,
+                                itemBuilder: (_, index) {
+                                  var doc = examDocs.elementAt(index);
+                                  return GestureDetector(
+                                    onTap: () {
+                                      _navigateToExamLinks(doc);
+                                    },
+                                    child: Card(
+                                      elevation: 8,
+                                      child: ListTile(
+                                        title: Text(
+                                          '${doc.title}',
+                                          style: myTextStyleSmall(context),
+                                        ),
+                                        leading: Icon(Icons.edit_note,
+                                            color:
+                                                Theme.of(context).primaryColor),
+                                      ),
                                     ),
-                                    leading: Icon(Icons.edit_note,
-                                        color: Theme.of(context).primaryColor),
-                                  ),
-                                ),
-                              );
-                            }),
+                                  );
+                                }),
                       )
                     ],
                   ),

@@ -29,8 +29,8 @@ class ColorGalleryState extends State<ColorGallery> {
     pp('colors available: ${colors.length}');
   }
 
-  void _setColorIndex(int index) async {
-    await widget.prefs.saveColorIndex(index);
+  void _setColorIndex(int index)  {
+    widget.prefs.saveColorIndex(index);
     widget.colorWatcher.setColor(index);
   }
 

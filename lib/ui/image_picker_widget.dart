@@ -7,13 +7,17 @@ import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
 
+import '../data/exam_link.dart';
+import '../data/gemini/parts.dart';
 import '../services/chat_service.dart';
 import '../util/functions.dart';
 
 class ImagePickerWidget extends StatefulWidget {
-  const ImagePickerWidget({super.key, required this.chatService});
+  const ImagePickerWidget(
+      {super.key, required this.chatService, this.examLink});
 
   final ChatService chatService;
+  final ExamLink? examLink;
 
   @override
   ImagePickerWidgetState createState() => ImagePickerWidgetState();
@@ -23,12 +27,13 @@ class ImagePickerWidgetState extends State<ImagePickerWidget> {
   final List<File> _images = [];
   static const mm = '🥦🥦🥦🥦 ImagePickerWidget 🍐';
   bool busy = false;
+  bool _useCamera = true;
 
   @override
   void initState() {
     super.initState();
-    Future.delayed(const Duration(milliseconds: 500), () {
-      _pickImage(ImageSource.gallery);
+    Future.delayed(const Duration(milliseconds: 100), () {
+      _pickImage(_useCamera? ImageSource.camera : ImageSource.gallery);
     });
   }
 
@@ -60,13 +65,24 @@ class ImagePickerWidgetState extends State<ImagePickerWidget> {
       busy = true;
     });
     try {
-      var responseText = await widget.chatService.sendGenericImageTextPrompt(
-          _images.first,
-          '${_getPromptContext()}. \n'
-          '${textEditingController.value.text}');
+      var response = await widget.chatService.sendExamPageImageAndText(
+          prompt: '${_getPromptContext()}. \n'
+              '${textEditingController.value.text}',
+          linkResponse: 'false',
+          file: _images.first,
+          examLinkId: 12345);
       pp('$mm _sendImageToAI: ...... Gemini AI has responded! ');
-      _navigateToGenericImageResponse(_images.first, responseText);
-      pp('$mm ... response: $responseText');
+      var sb = StringBuffer();
+      for (var candidate in response.candidates!) {
+        var content = candidate.content;
+        List<MyParts>? parts = content?.parts!;
+        parts?.forEach((MyParts p) {
+          sb.write(p.text);
+          sb.write('\n');
+        });
+      }
+      _navigateToGenericImageResponse(_images.first, sb.toString());
+      pp('$mm ... response: $response');
     } catch (e) {
       pp('$mm _sendImageToAI: ERROR $e');
       if (e is CompressError) {
@@ -74,7 +90,7 @@ class ImagePickerWidgetState extends State<ImagePickerWidget> {
         pp('${e.stackTrace}');
       }
       if (mounted) {
-        showErrorDialog(context, 'Fell down, Boss! 🍎 $e');
+        showErrorDialog(context, 'Fell down the stairs, Boss! 🍎 $e');
       }
     }
     setState(() {
@@ -105,11 +121,10 @@ class ImagePickerWidgetState extends State<ImagePickerWidget> {
     sb.write(
         'If it is any other subject return response in markdown format. \n');
     sb.write('Focus on educational aspects of the image contents. \n');
-    sb.write('Use headings and paragraphs in markdown formatted response');
+    sb.write('Use headings and paragraphs in markdown or LaTex formatted response');
     return sb.toString();
   }
 
-  bool _useCamera = false;
   final List<String> _captions = [];
   TextEditingController textEditingController = TextEditingController();
 
@@ -180,7 +195,7 @@ class ImagePickerWidgetState extends State<ImagePickerWidget> {
             },
           ),
           Positioned(
-            bottom: 8,
+            bottom: 48,
             child: Center(
               child: ToolBar(
                 onCamera: () {

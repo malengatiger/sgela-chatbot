@@ -142,56 +142,14 @@ class _MathViewerState extends State<MathViewer> {
                         context: context);
                   }
                 }),
-            title: const Text('Mathematics'),
+            title:  Text('Mathematics', style: myTextStyle(context,
+                Theme.of(context).primaryColor, 16,
+                FontWeight.w900),),
             actions: [
-              PopupMenuButton(
-                onSelected: (value) async {
-                  switch (value) {
-                    case '/share':
-                      pp('${MathViewer.mm} ... share required ... images: ${list.length}');
-                      widget.onShare(list);
-                      break;
-                    case '/rating':
-                      pp('${MathViewer.mm} ... rating required, will set _showRatingBar true');
-                      setState(() {
-                        _showRatingBar = true;
-                      });
-                      break;
-                    case '/rerun':
-                      pp('${MathViewer.mm} ... rerun required, images: ${list.length}');
-                      widget.onRerun(list);
-                      Navigator.of(context).pop(rating);
-                      break;
-                  }
-                },
-                itemBuilder: (BuildContext bc) {
-                  return [
-                    PopupMenuItem(
-                      value: '/rating',
-                      child: Icon(
-                        Icons.star,
-                        color: bright == Brightness.light
-                            ? Colors.black
-                            : Colors.yellow,
-                      ),
-                    ),
-                    PopupMenuItem(
-                      value: '/share',
-                      child: Icon(
-                        Icons.share,
-                        color: Theme.of(context).primaryColor,
-                      ),
-                    ),
-                    PopupMenuItem(
-                      value: '/rerun',
-                      child: Icon(
-                        Icons.search,
-                        color: Theme.of(context).primaryColor,
-                      ),
-                    )
-                  ];
-                },
-              )
+              IconButton(onPressed: (){
+                pp('${MathViewer.mm} ... share required ... images: ${list.length}');
+                widget.onShare(list);
+              }, icon:  Icon(Icons.share, color: Theme.of(context).primaryColor)),
             ]),
         body: Stack(
           children: [
@@ -300,7 +258,7 @@ class Holder extends StatelessWidget {
                 "SgelaAI Response",
                 style: myTextStyle(
                   context,
-                  bright == Brightness.light ? Colors.black : Colors.white,
+                  Theme.of(context).primaryColor,
                   24,
                   FontWeight.w900,
                 ),
@@ -311,11 +269,11 @@ class Holder extends StatelessWidget {
                   child: TeXView(
                     style: TeXViewStyle(
                       contentColor: bright == Brightness.light
-                          ? Colors.black
+                          ? Colors.black54
                           : Colors.white,
                       backgroundColor: bright == Brightness.light
                           ? Colors.white
-                          : Colors.black,
+                          : Colors.black54,
                       padding: const TeXViewPadding.all(8),
                     ),
                     renderingEngine: const TeXViewRenderingEngine.katex(),

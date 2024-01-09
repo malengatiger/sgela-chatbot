@@ -124,7 +124,7 @@ class YouTubeSearcherState extends State<YouTubeSearcher> {
           body: Stack(
             children: [
               bd.Badge(
-                position: bd.BadgePosition.topEnd(top: 6, end: 12),
+                position: bd.BadgePosition.topEnd(top:24, end: 12),
                 badgeContent: Text(
                   '${videos.length}',
                   style:
@@ -134,47 +134,53 @@ class YouTubeSearcherState extends State<YouTubeSearcher> {
                   padding: EdgeInsets.all(12),
                   elevation: 16,
                 ),
-                child: Column(
-                  children: [
-                    gapH16,
-                    gapH16,
-                    showSearch
-                        ? Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: TextField(
-                              controller: textEditingController,
-                              onChanged: (value) {
-                                pp('... search text: $value');
-                              },
-                              decoration: InputDecoration(
-                                labelText: 'Search',
-                                border: const OutlineInputBorder(),
-                                suffixIcon: IconButton(
-                                  icon: const Icon(Icons.search),
-                                  onPressed: () {
-                                    _search();
+                child: Card(
+                  elevation: 8,
+                  child: Padding(
+                    padding: const EdgeInsets.all(12.0),
+                    child: Column(
+                      children: [
+                        gapH16,
+                        gapH16,
+                        showSearch
+                            ? Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: TextField(
+                                  controller: textEditingController,
+                                  onChanged: (value) {
+                                    pp('... search text: $value');
                                   },
+                                  decoration: InputDecoration(
+                                    labelText: 'Search',
+                                    border: const OutlineInputBorder(),
+                                    suffixIcon: IconButton(
+                                      icon: const Icon(Icons.search),
+                                      onPressed: () {
+                                        _search();
+                                      },
+                                    ),
+                                  ),
                                 ),
+                              )
+                            : gapW8,
+                        busy
+                            ? const Expanded(
+                                child: BusyIndicator(
+                                  caption: 'Searching for videos ... please wait',
+                                ),
+                              )
+                            : Expanded(
+                                child: videos.isEmpty
+                                    ? gapW8
+                                    : YouTubeGallery(
+                                        videos: videos,
+                                        onTapped: (video) {
+                                          _launchVideo(video.videoUrl!);
+                                        }),
                               ),
-                            ),
-                          )
-                        : gapW8,
-                    busy
-                        ? const Expanded(
-                            child: BusyIndicator(
-                              caption: 'Searching for videos ... please wait',
-                            ),
-                          )
-                        : Expanded(
-                            child: videos.isEmpty
-                                ? gapW8
-                                : YouTubeGallery(
-                                    videos: videos,
-                                    onTapped: (video) {
-                                      _launchVideo(video.videoUrl!);
-                                    }),
-                          ),
-                  ],
+                      ],
+                    ),
+                  ),
                 ),
               )
             ],

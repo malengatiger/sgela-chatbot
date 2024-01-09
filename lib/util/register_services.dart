@@ -1,7 +1,9 @@
 import 'package:dio/dio.dart';
+import 'package:edu_chatbot/services/registration_service.dart';
 import 'package:edu_chatbot/util/dark_light_control.dart';
 import 'package:edu_chatbot/util/prefs.dart';
 import 'package:get_it/get_it.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../repositories/repository.dart';
 import '../services/accounting_service.dart';
@@ -24,7 +26,7 @@ Future<void> registerServices() async {
   Dio dio = Dio();
   var dioUtil = DioUtil(dio, lds);
   var repository = Repository(dioUtil, lds, dio);
-  var prefs = Prefs();
+  var prefs = Prefs(await SharedPreferences.getInstance());
   var dlc = DarkLightControl(prefs);
   var cWatcher = ColorWatcher(dlc, prefs);
   GetIt.instance.registerLazySingleton<MathService>(() => MathService());
@@ -43,11 +45,13 @@ Future<void> registerServices() async {
   GetIt.instance.registerLazySingleton<DownloaderService>(
           () => DownloaderService(repository, lds));
   GetIt.instance.registerLazySingleton<Prefs>(
-          () => Prefs());
+          () => prefs);
   GetIt.instance.registerLazySingleton<ColorWatcher>(
           () => cWatcher);
   GetIt.instance.registerLazySingleton<DarkLightControl>(
           () => dlc);
+  GetIt.instance.registerLazySingleton<RegistrationService>(
+          () => RegistrationService(dioUtil));
 
-  pp('🍎🍎🍎🍎🍎🍎 registerServices: GetIt has registered 13 services. 🍎 Cool!! 🍎🍎🍎');
+  pp('🍎🍎🍎🍎🍎🍎 registerServices: GetIt has registered 14 services. 🍎 Cool!! 🍎🍎🍎');
 }

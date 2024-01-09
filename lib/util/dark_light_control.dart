@@ -39,8 +39,8 @@ class ColorWatcher {
 
   void setColor(int colorIndex) async {
     _streamController.sink.add(colorIndex);
-    int mode = await prefs.getMode();
-    await prefs.saveColorIndex(colorIndex);
+    int mode = prefs.getMode();
+    prefs.saveColorIndex(colorIndex);
 
     if (mode == LIGHT) {
       darkLightControl.setLightMode();

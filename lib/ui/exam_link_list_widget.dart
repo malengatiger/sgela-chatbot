@@ -195,7 +195,7 @@ class ExamLinkListWidgetState extends State<ExamLinkListWidget> {
                       elevation: 12),
                   child: busy
                       ? const BusyIndicator(
-                          caption: 'Loading subject exams',
+                          caption: 'Loading subject exams ... gimme a second ...',
                           showClock: true,
                         )
                       : ListView.builder(

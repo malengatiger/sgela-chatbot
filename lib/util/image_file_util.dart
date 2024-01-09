@@ -1,8 +1,10 @@
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:archive/archive.dart';
 import 'package:edu_chatbot/services/downloader_isolate.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
+import 'package:image/image.dart';
 import 'package:mime/mime.dart';
 import 'package:path_provider/path_provider.dart';
 
@@ -115,6 +117,42 @@ class ImageFileUtil {
     return realFiles;
   }
 
+  Future<File> trimImage(String imagePath) async {
+    File file = File(imagePath);
+    List<int> bytes = file.readAsBytesSync();
+    Uint8List uint8List = Uint8List.fromList(bytes);
+    Image? image = decodeImage(uint8List);
+    File? outFile;
+    if (image != null) {
+      int trimHeight = (image.height * 0.1).round(); // Trim about 10% of the image height from top and bottom
+      int croppedHeight = image.height - (2 * trimHeight);
+
+      Image topCroppedImage = copyCrop(image, x: 0, y: trimHeight,
+          width: image.width, height: croppedHeight);
+      Image trimmedImage = copyCrop(topCroppedImage, x:0, y:0,
+          width:image.width, height:croppedHeight);
+
+      Directory dir = await getApplicationSupportDirectory();
+      String outputPath = '${dir.path}${Platform.pathSeparator}'
+          'trimmed-${DateTime.now().millisecondsSinceEpoch}.png';
+      File mOutFile = File(outputPath);
+      mOutFile.writeAsBytesSync(encodePng(trimmedImage));
+      pp('$mm Trimmed image saved to: $outputPath');
+      return mOutFile;
+    } else {
+      pp('$mm Invalid image mOutFile: $imagePath');
+      throw Exception('Failed to crop image');
+    }
+  }
+
+  void main(List<String> args) {
+    if (args.isNotEmpty) {
+      String imagePath = args[0];
+      trimImage(imagePath);
+    } else {
+      print('Please provide the path to the image file as an argument.');
+    }
+  }
   static Future<File> createImageFileFromBytes(List<int> bytes, String filePath) async {
     final appDir = await getApplicationSupportDirectory();
     final file = File('${appDir.path}/$filePath');

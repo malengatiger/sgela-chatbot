@@ -60,11 +60,11 @@ class _BusyIndicatorState extends State<BusyIndicator> {
 
   @override
   Widget build(BuildContext context) {
-    var height = 180.0;
+    var height = 210.0;
     var show = false;
     if (widget.showClock != null) {
       if (widget.showClock!) {
-        height = 300.0;
+        height = 340.0;
         show = widget.showClock!;
       }
     }
@@ -101,43 +101,52 @@ class _BusyIndicatorState extends State<BusyIndicator> {
                   children: [
                     const Text('Elapsed Time: '),
                     gapW16,
-                    Text(elapsedTime,
-                        style: myTextStyle(
-                            context, Theme.of(context).primaryColor, 18, FontWeight.bold)),
+                    Text(
+                      elapsedTime,
+                      style: myTextStyle(
+                        context,
+                        Theme.of(context).primaryColor,
+                        18,
+                        FontWeight.bold,
+                      ),
+                    ),
                   ],
                 ),
                 gapH8,
                 show
-                    ? SizedBox(
-                        height: 120,
-                        width: 120,
-                        child: Card(
-                          elevation: 8,
-                          shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(80.0)),
-                          // Adjust the value as needed
-                          child: Padding(
-                            padding: const EdgeInsets.all(12.0),
-                            child: AnalogClock(
-                              secondHandColor: Colors.red,
-                              dateTime: DateTime.now(),
-                              dialBorderColor: Colors.green,
-                              isKeepTime: true,
-                              child: const Align(
-                                alignment: FractionalOffset(0.5, 0.75),
-                                child: Text(
-                                    'GMT+2'), //todo - use country db to set this
-                              ),
-                            ),
+                    ? Expanded(
+                  child: SizedBox(
+                    height: 160,
+                    width: 160,
+                    child: Card(
+                      elevation: 8,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(80.0),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: AnalogClock(
+                          secondHandColor: Colors.red,
+                          dateTime: DateTime.now(),
+                          dialBorderColor: Colors.green,
+                          isKeepTime: true,
+                          child: const Align(
+                            alignment: FractionalOffset(0.5, 0.75),
+                            child: Text(
+                              'GMT+2',
+                            ), //todo - use country db to set this
                           ),
                         ),
-                      )
+                      ),
+                    ),
+                  ),
+                )
                     : gapW8,
               ],
             ),
           ),
         ),
-      ),
+      )
     );
   }
 }

@@ -225,6 +225,7 @@ class ExamPaperPagesState extends State<ExamPaperPages> {
       MaterialPageRoute(
         builder: (context) => PDFViewer(
           pdfUrl: widget.examLink.link!,
+          examLink: widget.examLink,
         ),
       ),
     );
@@ -372,7 +373,7 @@ class ExamPaperPagesState extends State<ExamPaperPages> {
     return SafeArea(
       child: Scaffold(
         appBar: AppBar(
-          title: Column(
+          title: Column(mainAxisAlignment: MainAxisAlignment.start,
             children: [
               Text(
                 '${widget.examLink.subjectTitle}',
@@ -380,6 +381,10 @@ class ExamPaperPagesState extends State<ExamPaperPages> {
               ),
               Text(
                 '${widget.examLink.title}',
+                style: myTextStyleSmall(context),
+              ),
+              Text(
+                '${widget.examLink.documentTitle}',
                 style: myTextStyleSmall(context),
               ),
             ],
@@ -480,7 +485,7 @@ class ExamPaperPagesState extends State<ExamPaperPages> {
                 left: 32,
                 child: Text(
                   '${currentPageIndex + 1}',
-                  style: myTextStyle(context, Colors.blue, 24, FontWeight.w900),
+                  style: myTextStyle(context, Theme.of(context).primaryColor, 24, FontWeight.w900),
                 )),
             if (isHeaderVisible) // Conditionally show the ExamPaperHeader
               Positioned(
@@ -502,6 +507,7 @@ class ExamPaperPagesState extends State<ExamPaperPages> {
           visible: _shouldSendButtonBeVisible(),
           child: FloatingActionButton.extended(
             backgroundColor: Theme.of(context).primaryColor,
+            tooltip: 'Tap to send your request to SgelaAI',
             onPressed: () {
               _onSubmit();
             },

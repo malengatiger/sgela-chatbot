@@ -9,6 +9,7 @@ import 'package:edu_chatbot/util/prefs.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:flutter_sim_country_code/flutter_sim_country_code.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -20,10 +21,8 @@ import 'package:intl_phone_field/countries.dart' as cc;
 import 'package:path_provider/path_provider.dart';
 import 'package:pretty_json/pretty_json.dart';
 import 'package:video_thumbnail/video_thumbnail.dart' as vt;
-import 'package:flutter_image_compress/flutter_image_compress.dart';
 
 import '../data/gemini/gemini_response.dart';
-import '../main.dart';
 import 'dark_light_control.dart';
 import 'emojis.dart';
 
@@ -68,13 +67,13 @@ final List<Color> _colors = [
   Colors.lightGreen,
   Colors.orange,
   Colors.cyan,
-
 ];
 
 List<Color> getColors() {
   pp('functions: getColors delivered: ${_colors.length}');
   return _colors;
 }
+
 bool isValidLaTeXString(String text) {
   // Define a list of special characters or phrases to check for
   List<String> specialCharacters = [
@@ -99,21 +98,14 @@ bool isValidLaTeXString(String text) {
 Future<File?> compressImage({required File file, required int quality}) async {
   final tempDir = await getTemporaryDirectory();
   final tempPath = tempDir.path;
-  final fileName = file.path
-      .split('/')
-      .last;
-  final fileType = fileName
-      .split('.')
-      .last;
-  final compressedFile = File('$tempPath/f_${DateTime
-      .now()
-      .millisecondsSinceEpoch}.$fileType');
-  pp('🌍🌍🌍🌍compressing file, size: ${await file
-      .length()} bytes, quality: $quality');
+  final fileName = file.path.split('/').last;
+  final fileType = fileName.split('.').last;
+  final compressedFile =
+      File('$tempPath/f_${DateTime.now().millisecondsSinceEpoch}.$fileType');
+  pp('🌍🌍🌍🌍compressing file, size: ${await file.length()} bytes, quality: $quality');
   final fileSize = await file.length();
   if (fileSize < 2 * 1024 * 1024) {
-    pp('🌍🌍🌍🌍file NOT compressed, no need to, size: ${await file
-        .length()} bytes');
+    pp('🌍🌍🌍🌍file NOT compressed, no need to, size: ${await file.length()} bytes');
     return file;
   }
   File? resultFile;
@@ -128,9 +120,7 @@ Future<File?> compressImage({required File file, required int quality}) async {
       var size = await resultFile.length();
       pp('🌍🌍🌍🌍compressed file, size: $size bytes');
       if (size > 3 * 1024 * 1024) {
-        pp(
-            '🌍🌍🌍🌍compressed file still too big, bigger than 3MB: ${await resultFile
-                .length()} bytes');
+        pp('🌍🌍🌍🌍compressed file still too big, bigger than 3MB: ${await resultFile.length()} bytes');
         return compressImage(file: resultFile, quality: 60);
       }
       return resultFile;
@@ -147,8 +137,7 @@ Future<File?> compressImage({required File file, required int quality}) async {
         pp('Compressed file, size: $size bytes');
 
         if (size > 3 * 1024 * 1024) {
-          pp('Compressed file still too big, bigger than 3MB: ${await resultFile
-              .length()} bytes');
+          pp('Compressed file still too big, bigger than 3MB: ${await resultFile.length()} bytes');
           return compressImage(file: resultFile, quality: 60);
         }
       }
@@ -204,6 +193,20 @@ bool isMarkdownFormat(String text) {
   return false;
 }
 
+bool isDarkMode(Prefs prefs, Brightness brightness)  {
+  var mode = prefs.getMode();
+  if (mode == DARK) {
+    return true;
+  }
+  if (mode == LIGHT) {
+    return false;
+  }
+  if (brightness == Brightness.dark) {
+    return true;
+  } else {
+    return false;
+  }
+}
 
 String replaceTextInPlace(String text) {
   const pattern = r'\*{1,2}';
@@ -211,33 +214,39 @@ String replaceTextInPlace(String text) {
 
   return text.replaceAll(regex, '\n');
 }
+
 String getGenericPromptContext() {
   StringBuffer sb = StringBuffer();
-  sb.write(
-      'My name is SgelaAI and I am a super tutor who knows everything. '
-          '\nI am here to help you study for all your high school and freshman college courses and subjects\n');
+  sb.write('My name is SgelaAI and I am a super tutor who knows everything. '
+      '\nI am here to help you study for all your high school and freshman college courses and subjects\n');
 
-  sb.write('Keep answers and responses suitable to the high school or college freshman level\n');
+  sb.write(
+      'Keep answers and responses suitable to the high school or college freshman level\n');
   sb.write(
       'Return responses in markdown format when there are no mathematical equations in the text.\n');
-  sb.write('If there are LaTex strings(math and physics equations) in the text, '
+  sb.write(
+      'If there are LaTex strings(math and physics equations) in the text, '
       'then return response in LaTex format\n');
-  sb.write('Where appropriate use headings, paragraphs and sections to enhance readability when displayed.\n');
+  sb.write(
+      'Where appropriate use headings, paragraphs and sections to enhance readability when displayed.\n');
   return sb.toString();
 }
+
 String getPromptContext() {
   StringBuffer sb = StringBuffer();
-  sb.write(
-      'My name is SgelaAI and I am a super tutor who knows everything. '
-          '\nI am here to help you study for all your high school and freshman college courses and subjects\n');
+  sb.write('My name is SgelaAI and I am a super tutor who knows everything. '
+      '\nI am here to help you study for all your high school and freshman college courses and subjects\n');
   sb.write('Answer questions that relates to the subject provided. \n');
   sb.write('Example is Subject: Mathematics\n');
-  sb.write('Keep answers and responses suitable to the high school or college freshman level\n');
+  sb.write(
+      'Keep answers and responses suitable to the high school or college freshman level\n');
   sb.write(
       'Return responses in markdown format when there are no mathematical equations in the text.\n');
-  sb.write('If there are LaTex strings(math and physics equations) in the text, '
+  sb.write(
+      'If there are LaTex strings(math and physics equations) in the text, '
       'then return in LaTex format\n');
-  sb.write('Where appropriate use headings, paragraphs and sections to enhance readability when displayed.\n');
+  sb.write(
+      'Where appropriate use headings, paragraphs and sections to enhance readability when displayed.\n');
   return sb.toString();
 }
 
@@ -246,13 +255,16 @@ void showErrorDialog(BuildContext context, String errorMessage) {
     context: context,
     builder: (BuildContext context) {
       return AlertDialog(
-        title: Text('Error',
-          style: myTextStyle(context,
-              Theme.of(context).primaryColor, 24,
-              FontWeight.w900),),
-        content: Text(errorMessage, style: myTextStyle(context,
-            Theme.of(context).primaryColor, 16,
-            FontWeight.normal),),
+        title: Text(
+          'Error',
+          style: myTextStyle(
+              context, Theme.of(context).primaryColor, 24, FontWeight.w900),
+        ),
+        content: Text(
+          errorMessage,
+          style: myTextStyle(
+              context, Theme.of(context).primaryColor, 16, FontWeight.normal),
+        ),
         actions: [
           TextButton(
             onPressed: () {
@@ -381,9 +393,7 @@ Color getColor(String stringColor) {
   }
 }
 
-Random random = Random(DateTime
-    .now()
-    .millisecondsSinceEpoch);
+Random random = Random(DateTime.now().millisecondsSinceEpoch);
 
 (Color, String) getRandomColor() {
   final colors = [
@@ -440,9 +450,7 @@ Future<File> getPhotoThumbnail({required File file}) async {
   const slash = '/thumbnail_';
 
   final File mFile = File(
-      '${directory.path}$slash${DateTime
-          .now()
-          .millisecondsSinceEpoch}.jpg');
+      '${directory.path}$slash${DateTime.now().millisecondsSinceEpoch}.jpg');
   var thumb = mFile..writeAsBytesSync(img.encodeJpg(thumbnail, quality: 100));
   var len = await thumb.length();
   pp('🔷🔷 photo thumbnail generated: 😡 ${(len / 1024).toStringAsFixed(1)} KB');
@@ -583,65 +591,41 @@ getDefaultRoundedBorder() {
 
 TextStyle myTextStyleSmall(BuildContext context) {
   return GoogleFonts.lato(
-    textStyle: Theme
-        .of(context)
-        .textTheme
-        .bodySmall,
+    textStyle: Theme.of(context).textTheme.bodySmall,
   );
 }
 
 TextStyle myTextStyleSmallBlackBold(BuildContext context) {
   return GoogleFonts.roboto(
-      textStyle: Theme
-          .of(context)
-          .textTheme
-          .bodySmall,
+      textStyle: Theme.of(context).textTheme.bodySmall,
       // fontWeight: FontWeight.w200,
-      color: Theme
-          .of(context)
-          .primaryColor);
+      color: Theme.of(context).primaryColor);
 }
 
 TextStyle myTextStyleSmallBold(BuildContext context) {
   return GoogleFonts.lato(
-    textStyle: Theme
-        .of(context)
-        .textTheme
-        .bodySmall,
+    textStyle: Theme.of(context).textTheme.bodySmall,
     fontWeight: FontWeight.w600,
   );
 }
 
 TextStyle myTextStyleSmallBoldPrimaryColor(BuildContext context) {
   return GoogleFonts.lato(
-      textStyle: Theme
-          .of(context)
-          .textTheme
-          .bodySmall,
+      textStyle: Theme.of(context).textTheme.bodySmall,
       fontWeight: FontWeight.w900,
-      color: Theme
-          .of(context)
-          .primaryColor);
+      color: Theme.of(context).primaryColor);
 }
 
 TextStyle myTextStyleSmallPrimaryColor(BuildContext context) {
   return GoogleFonts.lato(
-      textStyle: Theme
-          .of(context)
-          .textTheme
-          .bodySmall,
+      textStyle: Theme.of(context).textTheme.bodySmall,
       fontWeight: FontWeight.normal,
-      color: Theme
-          .of(context)
-          .primaryColor);
+      color: Theme.of(context).primaryColor);
 }
 
 TextStyle myTextStyleTiny(BuildContext context) {
   return GoogleFonts.lato(
-    textStyle: Theme
-        .of(context)
-        .textTheme
-        .bodySmall,
+    textStyle: Theme.of(context).textTheme.bodySmall,
     fontWeight: FontWeight.normal,
     fontSize: 10,
   );
@@ -649,10 +633,7 @@ TextStyle myTextStyleTiny(BuildContext context) {
 
 TextStyle myTextStyleTiniest(BuildContext context) {
   return GoogleFonts.lato(
-    textStyle: Theme
-        .of(context)
-        .textTheme
-        .bodySmall,
+    textStyle: Theme.of(context).textTheme.bodySmall,
     fontWeight: FontWeight.normal,
     fontSize: 8,
   );
@@ -660,10 +641,7 @@ TextStyle myTextStyleTiniest(BuildContext context) {
 
 TextStyle myTextStyleTinyBold(BuildContext context) {
   return GoogleFonts.lato(
-    textStyle: Theme
-        .of(context)
-        .textTheme
-        .bodySmall,
+    textStyle: Theme.of(context).textTheme.bodySmall,
     fontWeight: FontWeight.bold,
     fontSize: 10,
   );
@@ -671,66 +649,44 @@ TextStyle myTextStyleTinyBold(BuildContext context) {
 
 TextStyle myTextStyleTinyBoldPrimaryColor(BuildContext context) {
   return GoogleFonts.lato(
-      textStyle: Theme
-          .of(context)
-          .textTheme
-          .bodySmall,
+      textStyle: Theme.of(context).textTheme.bodySmall,
       fontWeight: FontWeight.bold,
       fontSize: 10,
-      color: Theme
-          .of(context)
-          .primaryColor);
+      color: Theme.of(context).primaryColor);
 }
 
 TextStyle myTextStyleTinyPrimaryColor(BuildContext context) {
   return GoogleFonts.lato(
-      textStyle: Theme
-          .of(context)
-          .textTheme
-          .bodySmall,
+      textStyle: Theme.of(context).textTheme.bodySmall,
       fontWeight: FontWeight.normal,
       fontSize: 10,
-      color: Theme
-          .of(context)
-          .primaryColor);
+      color: Theme.of(context).primaryColor);
 }
 
 TextStyle myTextStyleSmallBlack(BuildContext context) {
   return GoogleFonts.lato(
-      textStyle: Theme
-          .of(context)
-          .textTheme
-          .bodyMedium,
+      textStyle: Theme.of(context).textTheme.bodyMedium,
       fontWeight: FontWeight.normal,
       color: Colors.black);
 }
 
 TextStyle myTextStyleMedium(BuildContext context) {
   return GoogleFonts.lato(
-    textStyle: Theme
-        .of(context)
-        .textTheme
-        .bodyMedium,
+    textStyle: Theme.of(context).textTheme.bodyMedium,
     fontWeight: FontWeight.normal,
   );
 }
 
 TextStyle myTextStyleMediumBlack(BuildContext context) {
   return GoogleFonts.lato(
-      textStyle: Theme
-          .of(context)
-          .textTheme
-          .bodyMedium,
+      textStyle: Theme.of(context).textTheme.bodyMedium,
       fontWeight: FontWeight.normal,
       color: Colors.black);
 }
 
 TextStyle myTextStyleSubtitle(BuildContext context) {
   return GoogleFonts.roboto(
-    textStyle: Theme
-        .of(context)
-        .textTheme
-        .titleMedium,
+    textStyle: Theme.of(context).textTheme.titleMedium,
     fontWeight: FontWeight.w600,
     fontSize: 20,
   );
@@ -738,55 +694,36 @@ TextStyle myTextStyleSubtitle(BuildContext context) {
 
 TextStyle myTextStyleSubtitleSmall(BuildContext context) {
   return GoogleFonts.roboto(
-      textStyle: Theme
-          .of(context)
-          .textTheme
-          .titleMedium,
+      textStyle: Theme.of(context).textTheme.titleMedium,
       fontWeight: FontWeight.w600,
       fontSize: 12);
 }
 
 TextStyle myTextStyleMediumGrey(BuildContext context) {
   return GoogleFonts.lato(
-      textStyle: Theme
-          .of(context)
-          .textTheme
-          .bodyMedium,
+      textStyle: Theme.of(context).textTheme.bodyMedium,
       fontWeight: FontWeight.normal,
       color: Colors.grey.shade600);
 }
 
 TextStyle myTextStyleMediumPrimaryColor(BuildContext context) {
   return GoogleFonts.lato(
-      textStyle: Theme
-          .of(context)
-          .textTheme
-          .bodyMedium,
+      textStyle: Theme.of(context).textTheme.bodyMedium,
       fontWeight: FontWeight.normal,
-      color: Theme
-          .of(context)
-          .primaryColor);
+      color: Theme.of(context).primaryColor);
 }
 
 TextStyle myTextStyleMediumBoldPrimaryColor(BuildContext context) {
   return GoogleFonts.lato(
-      textStyle: Theme
-          .of(context)
-          .textTheme
-          .bodyMedium,
+      textStyle: Theme.of(context).textTheme.bodyMedium,
       fontWeight: FontWeight.w900,
       fontSize: 20,
-      color: Theme
-          .of(context)
-          .primaryColor);
+      color: Theme.of(context).primaryColor);
 }
 
 TextStyle myTextStyleMediumBold(BuildContext context) {
   return GoogleFonts.lato(
-    textStyle: Theme
-        .of(context)
-        .textTheme
-        .headlineMedium,
+    textStyle: Theme.of(context).textTheme.headlineMedium,
     fontWeight: FontWeight.w900,
     fontSize: 16.0,
   );
@@ -795,10 +732,7 @@ TextStyle myTextStyleMediumBold(BuildContext context) {
 TextStyle myTextStyleMediumBoldWithColor(
     {required BuildContext context, required Color color, double? fontSize}) {
   return GoogleFonts.lato(
-    textStyle: Theme
-        .of(context)
-        .textTheme
-        .headlineMedium,
+    textStyle: Theme.of(context).textTheme.headlineMedium,
     fontWeight: FontWeight.w900,
     fontSize: fontSize ?? 18.0,
     color: color,
@@ -807,10 +741,7 @@ TextStyle myTextStyleMediumBoldWithColor(
 
 TextStyle myTextStyleMediumWithColor(BuildContext context, Color color) {
   return GoogleFonts.lato(
-    textStyle: Theme
-        .of(context)
-        .textTheme
-        .headlineMedium,
+    textStyle: Theme.of(context).textTheme.headlineMedium,
     fontWeight: FontWeight.normal,
     fontSize: 20.0,
     color: color,
@@ -819,10 +750,7 @@ TextStyle myTextStyleMediumWithColor(BuildContext context, Color color) {
 
 TextStyle myTitleTextStyle(BuildContext context, Color color) {
   return GoogleFonts.lato(
-    textStyle: Theme
-        .of(context)
-        .textTheme
-        .headlineMedium,
+    textStyle: Theme.of(context).textTheme.headlineMedium,
     fontWeight: FontWeight.w900,
     color: color,
     fontSize: 20.0,
@@ -831,20 +759,14 @@ TextStyle myTitleTextStyle(BuildContext context, Color color) {
 
 TextStyle myTextStyleSmallWithColor(BuildContext context, Color color) {
   return GoogleFonts.lato(
-    textStyle: Theme
-        .of(context)
-        .textTheme
-        .bodySmall,
+    textStyle: Theme.of(context).textTheme.bodySmall,
     color: color,
   );
 }
 
 TextStyle myTextStyleMediumBoldGrey(BuildContext context) {
   return GoogleFonts.lato(
-    textStyle: Theme
-        .of(context)
-        .textTheme
-        .bodyMedium,
+    textStyle: Theme.of(context).textTheme.bodyMedium,
     fontWeight: FontWeight.w900,
     color: Colors.grey.shade600,
     fontSize: 13.0,
@@ -853,20 +775,14 @@ TextStyle myTextStyleMediumBoldGrey(BuildContext context) {
 
 TextStyle myTextStyleLarge(BuildContext context) {
   return GoogleFonts.roboto(
-      textStyle: Theme
-          .of(context)
-          .textTheme
-          .headlineLarge,
+      textStyle: Theme.of(context).textTheme.headlineLarge,
       fontWeight: FontWeight.w900,
       fontSize: 28);
 }
 
 TextStyle myTextStyleLargeWithColor(BuildContext context, Color color) {
   return GoogleFonts.roboto(
-      textStyle: Theme
-          .of(context)
-          .textTheme
-          .headlineLarge,
+      textStyle: Theme.of(context).textTheme.headlineLarge,
       fontWeight: FontWeight.w900,
       color: color,
       fontSize: 28);
@@ -874,174 +790,114 @@ TextStyle myTextStyleLargeWithColor(BuildContext context, Color color) {
 
 TextStyle myTextStyleMediumLarge(BuildContext context, double? size) {
   return GoogleFonts.roboto(
-      textStyle: Theme
-          .of(context)
-          .textTheme
-          .headlineLarge,
+      textStyle: Theme.of(context).textTheme.headlineLarge,
       fontWeight: FontWeight.w900,
       fontSize: size ?? 24);
 }
 
 TextStyle myTextStyleMediumLargeWithSize(BuildContext context, double size) {
   return GoogleFonts.roboto(
-      textStyle: Theme
-          .of(context)
-          .textTheme
-          .headlineLarge,
+      textStyle: Theme.of(context).textTheme.headlineLarge,
       fontWeight: FontWeight.w900,
       fontSize: size);
 }
 
-TextStyle myTextStyle(BuildContext context, Color color, double size,
-    FontWeight? fontWeight) {
+TextStyle myTextStyle(
+    BuildContext context, Color color, double size, FontWeight? fontWeight) {
   return GoogleFonts.roboto(
-      textStyle: Theme
-          .of(context)
-          .textTheme
-          .headlineLarge,
+      textStyle: Theme.of(context).textTheme.headlineLarge,
       fontWeight: fontWeight ?? FontWeight.w900,
       color: color,
       fontSize: size);
 }
 
-TextStyle myTextStyleMediumLargeWithOpacity(BuildContext context,
-    double opacity) {
+TextStyle myTextStyleMediumLargeWithOpacity(
+    BuildContext context, double opacity) {
   return GoogleFonts.roboto(
-      textStyle: Theme
-          .of(context)
-          .textTheme
-          .bodyMedium,
+      textStyle: Theme.of(context).textTheme.bodyMedium,
       fontWeight: FontWeight.normal,
-      color: Theme
-          .of(context)
-          .primaryColor
-          .withOpacity(opacity),
+      color: Theme.of(context).primaryColor.withOpacity(opacity),
       fontSize: 16);
 }
 
 TextStyle myTextStyleMediumLargePrimaryColor(BuildContext context) {
   return GoogleFonts.roboto(
-      textStyle: Theme
-          .of(context)
-          .textTheme
-          .headlineLarge,
+      textStyle: Theme.of(context).textTheme.headlineLarge,
       fontWeight: FontWeight.w900,
-      color: Theme
-          .of(context)
-          .primaryColor,
+      color: Theme.of(context).primaryColor,
       fontSize: 24);
 }
 
 TextStyle myTextStyleTitlePrimaryColor(BuildContext context) {
   return GoogleFonts.roboto(
-      textStyle: Theme
-          .of(context)
-          .textTheme
-          .headlineLarge,
+      textStyle: Theme.of(context).textTheme.headlineLarge,
       fontWeight: FontWeight.w900,
-      color: Theme
-          .of(context)
-          .primaryColor,
+      color: Theme.of(context).primaryColor,
       fontSize: 20);
 }
 
 TextStyle myTextStyleHeader(BuildContext context) {
   return GoogleFonts.roboto(
-      textStyle: Theme
-          .of(context)
-          .textTheme
-          .headlineLarge,
+      textStyle: Theme.of(context).textTheme.headlineLarge,
       fontWeight: FontWeight.w900,
       fontSize: 34);
 }
 
 TextStyle myTextStyleLargePrimaryColor(BuildContext context) {
   return GoogleFonts.roboto(
-      textStyle: Theme
-          .of(context)
-          .textTheme
-          .headlineLarge,
+      textStyle: Theme.of(context).textTheme.headlineLarge,
       fontWeight: FontWeight.w900,
-      color: Theme
-          .of(context)
-          .primaryColor);
+      color: Theme.of(context).primaryColor);
 }
 
 TextStyle myTextStyleLargerPrimaryColor(BuildContext context) {
   return GoogleFonts.roboto(
-      textStyle: Theme
-          .of(context)
-          .textTheme
-          .headlineLarge,
+      textStyle: Theme.of(context).textTheme.headlineLarge,
       fontWeight: FontWeight.w900,
       fontSize: 32,
-      color: Theme
-          .of(context)
-          .primaryColor);
+      color: Theme.of(context).primaryColor);
 }
 
 TextStyle myNumberStyleSmall(BuildContext context) {
   return GoogleFonts.secularOne(
-    textStyle: Theme
-        .of(context)
-        .textTheme
-        .bodyMedium,
+    textStyle: Theme.of(context).textTheme.bodyMedium,
     fontWeight: FontWeight.w900,
   );
 }
 
 TextStyle myNumberStyleMedium(BuildContext context) {
   return GoogleFonts.secularOne(
-    textStyle: Theme
-        .of(context)
-        .textTheme
-        .bodyMedium,
+    textStyle: Theme.of(context).textTheme.bodyMedium,
     fontWeight: FontWeight.w900,
   );
 }
 
 TextStyle myNumberStyleMediumPrimaryColor(BuildContext context) {
   return GoogleFonts.secularOne(
-      textStyle: Theme
-          .of(context)
-          .textTheme
-          .bodyMedium,
+      textStyle: Theme.of(context).textTheme.bodyMedium,
       fontWeight: FontWeight.w900,
-      color: Theme
-          .of(context)
-          .primaryColor);
+      color: Theme.of(context).primaryColor);
 }
 
 TextStyle myNumberStyleLarge(BuildContext context) {
   return GoogleFonts.secularOne(
-    textStyle: Theme
-        .of(context)
-        .textTheme
-        .bodyLarge,
+    textStyle: Theme.of(context).textTheme.bodyLarge,
     fontWeight: FontWeight.w900,
   );
 }
 
 TextStyle myNumberStyleLargerPrimaryColor(BuildContext context) {
   return GoogleFonts.secularOne(
-      textStyle: Theme
-          .of(context)
-          .textTheme
-          .titleLarge,
-      color: Theme
-          .of(context)
-          .primaryColor,
+      textStyle: Theme.of(context).textTheme.titleLarge,
+      color: Theme.of(context).primaryColor,
       fontWeight: FontWeight.w900,
       fontSize: 28);
 }
 
-TextStyle myNumberStyleLargerWithColor(Color color, double fontSize,
-    BuildContext context) {
+TextStyle myNumberStyleLargerWithColor(
+    Color color, double fontSize, BuildContext context) {
   return GoogleFonts.secularOne(
-      textStyle: Theme
-          .of(context)
-          .textTheme
-          .titleLarge,
+      textStyle: Theme.of(context).textTheme.titleLarge,
       color: color,
       fontWeight: FontWeight.w900,
       fontSize: fontSize);
@@ -1049,47 +905,31 @@ TextStyle myNumberStyleLargerWithColor(Color color, double fontSize,
 
 TextStyle myNumberStyleLargerPrimaryColorLight(BuildContext context) {
   return GoogleFonts.secularOne(
-      textStyle: Theme
-          .of(context)
-          .textTheme
-          .titleLarge,
+      textStyle: Theme.of(context).textTheme.titleLarge,
       fontWeight: FontWeight.w900,
-      color: Theme
-          .of(context)
-          .primaryColorLight,
+      color: Theme.of(context).primaryColorLight,
       fontSize: 28);
 }
 
 TextStyle myNumberStyleLargerPrimaryColorDark(BuildContext context) {
   return GoogleFonts.secularOne(
-      textStyle: Theme
-          .of(context)
-          .textTheme
-          .titleLarge,
+      textStyle: Theme.of(context).textTheme.titleLarge,
       fontWeight: FontWeight.w900,
-      color: Theme
-          .of(context)
-          .primaryColorDark,
+      color: Theme.of(context).primaryColorDark,
       fontSize: 28);
 }
 
 TextStyle myNumberStyleLargest(BuildContext context) {
   return GoogleFonts.secularOne(
-      textStyle: Theme
-          .of(context)
-          .textTheme
-          .headlineLarge,
+      textStyle: Theme.of(context).textTheme.headlineLarge,
       fontWeight: FontWeight.w900,
       fontSize: 36);
 }
 
-TextStyle myNumberStyleWithSizeColor(BuildContext context, double fontSize,
-    Color color) {
+TextStyle myNumberStyleWithSizeColor(
+    BuildContext context, double fontSize, Color color) {
   return GoogleFonts.secularOne(
-      textStyle: Theme
-          .of(context)
-          .textTheme
-          .headlineLarge,
+      textStyle: Theme.of(context).textTheme.headlineLarge,
       fontWeight: FontWeight.w900,
       color: color,
       fontSize: fontSize);
@@ -1097,10 +937,7 @@ TextStyle myNumberStyleWithSizeColor(BuildContext context, double fontSize,
 
 TextStyle myNumberStyleBig(BuildContext context) {
   return GoogleFonts.secularOne(
-      textStyle: Theme
-          .of(context)
-          .textTheme
-          .titleLarge,
+      textStyle: Theme.of(context).textTheme.titleLarge,
       fontWeight: FontWeight.w900);
 }
 
@@ -1158,18 +995,17 @@ myPrint(element) {
   }
 }
 
-showSnackBar({required String message,
-  required BuildContext context,
-  Color? backgroundColor,
-  TextStyle? textStyle,
-  Duration? duration,
-  double? padding,
-  double? elevation}) {
+showSnackBar(
+    {required String message,
+    required BuildContext context,
+    Color? backgroundColor,
+    TextStyle? textStyle,
+    Duration? duration,
+    double? padding,
+    double? elevation}) {
   ScaffoldMessenger.of(context).showSnackBar(SnackBar(
     duration: duration ?? const Duration(seconds: 5),
-    backgroundColor: backgroundColor ?? Theme
-        .of(context)
-        .primaryColor,
+    backgroundColor: backgroundColor ?? Theme.of(context).primaryColor,
     showCloseIcon: true,
     elevation: elevation ?? 8,
     content: Padding(
@@ -1182,11 +1018,12 @@ showSnackBar({required String message,
   ));
 }
 
-showErrorSnackBar({required String message,
-  required BuildContext context,
-  Duration? duration,
-  double? padding,
-  double? elevation}) {
+showErrorSnackBar(
+    {required String message,
+    required BuildContext context,
+    Duration? duration,
+    double? padding,
+    double? elevation}) {
   ScaffoldMessenger.of(context).showSnackBar(SnackBar(
     duration: duration ?? const Duration(seconds: 5),
     backgroundColor: Colors.red,
@@ -1202,10 +1039,11 @@ showErrorSnackBar({required String message,
   ));
 }
 
-Future<BitmapDescriptor> getTaxiMapIcon({required double iconSize,
-  required String text,
-  required TextStyle style,
-  required String path}) async {
+Future<BitmapDescriptor> getTaxiMapIcon(
+    {required double iconSize,
+    required String text,
+    required TextStyle style,
+    required String path}) async {
   final ByteData byteData = await rootBundle.load(path);
   final imageData = byteData.buffer.asUint8List();
 
@@ -1242,10 +1080,10 @@ Future<BitmapDescriptor> getTaxiMapIcon({required double iconSize,
 
 Future<BitmapDescriptor> getVehicleMarkerBitmap(int size,
     {String? text,
-      required String color,
-      required Color borderColor,
-      required double fontSize,
-      required FontWeight fontWeight}) async {
+    required String color,
+    required Color borderColor,
+    required double fontSize,
+    required FontWeight fontWeight}) async {
   if (kIsWeb) size = (size / 2).floor();
   var textColor = Colors.white;
   switch (color) {
@@ -1269,10 +1107,8 @@ Future<BitmapDescriptor> getVehicleMarkerBitmap(int size,
 
   final ui.PictureRecorder pictureRecorder = ui.PictureRecorder();
   final Canvas canvas = Canvas(pictureRecorder);
-  final Paint paint1 = Paint()
-    ..color = mainColor;
-  final Paint paint2 = Paint()
-    ..color = borderColor;
+  final Paint paint1 = Paint()..color = mainColor;
+  final Paint paint2 = Paint()..color = borderColor;
 
   canvas.drawCircle(Offset(size / 2, size / 2), size / 2.0, paint1);
   canvas.drawCircle(Offset(size / 2, size / 2), size / 2.2, paint2);
@@ -1299,10 +1135,10 @@ Future<BitmapDescriptor> getVehicleMarkerBitmap(int size,
 
 Future<BitmapDescriptor> getMarkerBitmap(int size,
     {String? text,
-      required String color,
-      Color? borderColor,
-      required double fontSize,
-      required FontWeight fontWeight}) async {
+    required String color,
+    Color? borderColor,
+    required double fontSize,
+    required FontWeight fontWeight}) async {
   if (kIsWeb) size = (size / 2).floor();
   if (borderColor == null) {
     borderColor = Colors.black;
@@ -1335,10 +1171,8 @@ Future<BitmapDescriptor> getMarkerBitmap(int size,
 
   final ui.PictureRecorder pictureRecorder = ui.PictureRecorder();
   final Canvas canvas = Canvas(pictureRecorder);
-  final Paint paint1 = Paint()
-    ..color = mainColor;
-  final Paint paint2 = Paint()
-    ..color = borderColor;
+  final Paint paint1 = Paint()..color = mainColor;
+  final Paint paint2 = Paint()..color = borderColor;
 
   canvas.drawCircle(Offset(size / 2, size / 2), size / 2.0, paint1);
   canvas.drawCircle(Offset(size / 2, size / 2), size / 2.2, paint2);
@@ -1363,14 +1197,15 @@ Future<BitmapDescriptor> getMarkerBitmap(int size,
   return BitmapDescriptor.fromBytes(data.buffer.asUint8List());
 }
 
-Future<BitmapDescriptor> getRectangularMarkerIcon({String? text,
-  required String color,
-  required Color borderColor,
-  required Color textColor,
-  required double width,
-  required double height,
-  required double fontSize,
-  required FontWeight fontWeight}) async {
+Future<BitmapDescriptor> getRectangularMarkerIcon(
+    {String? text,
+    required String color,
+    required Color borderColor,
+    required Color textColor,
+    required double width,
+    required double height,
+    required double fontSize,
+    required FontWeight fontWeight}) async {
   Size size = Size(width, height);
 
   final recorder = ui.PictureRecorder();
@@ -1383,11 +1218,10 @@ Future<BitmapDescriptor> getRectangularMarkerIcon({String? text,
 
   final Rect rect = Rect.fromLTWH(0, 0, size.width, size.height);
   final RRect roundedRect =
-  RRect.fromRectAndRadius(rect, const Radius.circular(10));
+      RRect.fromRectAndRadius(rect, const Radius.circular(10));
   canvas.drawRRect(roundedRect, borderPaint);
 
-  final Paint fillPaint = Paint()
-    ..color = Colors.black;
+  final Paint fillPaint = Paint()..color = Colors.black;
   canvas.drawRRect(roundedRect.deflate(4), fillPaint);
 
   final TextPainter textPainter = TextPainter(
@@ -1475,13 +1309,14 @@ const gapH12 = SizedBox(height: 12.0);
 const gapH16 = SizedBox(height: 16.0);
 const gapH32 = SizedBox(height: 32.0);
 
-showToast({required String message,
-  required BuildContext context,
-  Color? backgroundColor,
-  TextStyle? textStyle,
-  Duration? duration,
-  double? padding,
-  ToastGravity? toastGravity}) {
+showToast(
+    {required String message,
+    required BuildContext context,
+    Color? backgroundColor,
+    TextStyle? textStyle,
+    Duration? duration,
+    double? padding,
+    ToastGravity? toastGravity}) {
   FToast fToast = FToast();
   const mm = 'FunctionsAndShit: 💀 💀 💀 💀 💀 : ';
   try {
@@ -1523,13 +1358,14 @@ showToast({required String message,
   }
 }
 
-showOKToast({required String message,
-  required BuildContext context,
-  Color? backgroundColor,
-  TextStyle? textStyle,
-  Duration? duration,
-  double? padding,
-  ToastGravity? toastGravity}) {
+showOKToast(
+    {required String message,
+    required BuildContext context,
+    Color? backgroundColor,
+    TextStyle? textStyle,
+    Duration? duration,
+    double? padding,
+    ToastGravity? toastGravity}) {
   FToast fToast = FToast();
   const mm = 'FunctionsAndShit: 💀 💀 💀 💀 💀 : ';
   try {
@@ -1574,8 +1410,7 @@ showOKToast({required String message,
 Future<String> getStringFromAssets(String path) async {
   final mPath = 'assets/l10n/$path.json';
 
-  pp('${E.blueDot}${E.blueDot}${E
-      .blueDot} getStringFromAssets: locale: $mPath');
+  pp('${E.blueDot}${E.blueDot}${E.blueDot} getStringFromAssets: locale: $mPath');
   final stringData = await rootBundle.loadString(mPath);
   // pp('${E.blueDot}${E.blueDot}${E.blueDot} getStringFromAssets: stringData: $stringData');
 

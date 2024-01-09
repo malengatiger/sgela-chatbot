@@ -13,9 +13,36 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gemini/flutter_gemini.dart';
 import 'package:get_it/get_it.dart';
+import 'package:firebase_auth/firebase_auth.dart'
+    hide PhoneAuthProvider, EmailAuthProvider;
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_ui_auth/firebase_ui_auth.dart';
+import 'package:firebase_auth/firebase_auth.dart'
+    hide PhoneAuthProvider, EmailAuthProvider;
+import 'package:firebase_ui_oauth_google/firebase_ui_oauth_google.dart';
+// import 'package:firebase_ui_localizations/firebase_ui_localizations.dart';
+// import 'package:firebase_ui_oauth_apple/firebase_ui_oauth_apple.dart';
+// import 'package:firebase_ui_oauth_facebook/firebase_ui_oauth_facebook.dart';
+// import 'package:firebase_ui_oauth_google/firebase_ui_oauth_google.dart';
+// import 'package:firebase_ui_oauth_twitter/firebase_ui_oauth_twitter.dart';
+import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+
+import 'firebase_options.dart';
 
 import 'firebase_options.dart';
 const String mx = '🍎 🍎 🍎 main: ';
+final actionCodeSettings = ActionCodeSettings(
+  url: 'https://sgela-ai-33.firebaseapp.com',
+  handleCodeInApp: true,
+  androidMinimumVersion: '1',
+  androidPackageName: 'com.boha.edu_chatbot',
+  iOSBundleId: 'io.flutter.plugins.fireabaseUiExample',
+);
+final emailLinkProviderConfig = EmailLinkAuthProvider(
+  actionCodeSettings: actionCodeSettings,
+);
 Future<void> main() async {
   pp('$mx SgelaAI Chatbot starting .... $mx');
   WidgetsFlutterBinding.ensureInitialized();
@@ -23,17 +50,27 @@ Future<void> main() async {
     name: ChatbotEnvironment.getFirebaseName(),
     options: DefaultFirebaseOptions.currentPlatform,
   );
+  await FirebaseAuth.instance.useAuthEmulator('localhost', 9099);
   pp('$mx Firebase has been initialized!! $mx name: ${app.name}');
+
+  FirebaseUIAuth.configureProviders([
+    EmailAuthProvider(),
+    emailLinkProviderConfig,
+    PhoneAuthProvider(),
+
+  ]);
+  pp('$mx Firebase Auth providers have been setup!!');
   pp('${app.options.asMap}');
   // Register services
   await registerServices();
-  Gemini.init(apiKey: ChatbotEnvironment.getGeminiAPIKey());
+  Gemini.init(apiKey: ChatbotEnvironment.getGeminiAPIKey(),
+      enableDebugging: ChatbotEnvironment.isChatDebuggingEnabled());
   pp('$mx Gemini AI API has been initialized!! $mx'
       ' Gemini apiKey: ${ChatbotEnvironment.getGeminiAPIKey()}');
   //
-  var prefs = Prefs();
-  var mode = await prefs.getMode();
-  var colorIndex = await prefs.getColorIndex();
+  var prefs = GetIt.instance<Prefs>();
+  var mode = prefs.getMode();
+  var colorIndex = prefs.getColorIndex();
   modeAndColor = ModeAndColor(mode, colorIndex);
   //
   runApp(const MyApp());

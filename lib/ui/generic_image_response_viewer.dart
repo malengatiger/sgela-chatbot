@@ -32,7 +32,7 @@ class _GenericImageResponseViewerState
     return SafeArea(
         child: Scaffold(
       appBar: AppBar(
-        title: const Text('Result from Image'),
+        title:  Text('Result from Image', style: myTextStyleSmall(context)),
         actions: [
           showThumbnail? gapW8: IconButton(onPressed: (){
             if (mounted) {
@@ -43,7 +43,6 @@ class _GenericImageResponseViewerState
           }, icon: const Icon(Icons.camera_alt))
         ],
       ),
-      backgroundColor: Colors.brown[100],
       body: Stack(
         children: [
           Padding(

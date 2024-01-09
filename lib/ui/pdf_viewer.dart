@@ -1,11 +1,15 @@
 
+import 'package:edu_chatbot/data/exam_link.dart';
 import 'package:flutter/material.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
+import '../util/functions.dart';
+
 class PDFViewer extends StatefulWidget {
   final String pdfUrl;
+  final ExamLink examLink;
 
-  const PDFViewer({super.key, required this.pdfUrl});
+  const PDFViewer({super.key, required this.pdfUrl, required this.examLink});
 
   @override
   PDFViewerState createState() => PDFViewerState();
@@ -44,7 +48,13 @@ class PDFViewerState extends State<PDFViewer> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Exam Paper Viewer'),
+        title: Column(
+          children: [
+            Text('${widget.examLink.title}', style: myTextStyleSmall(context)),
+            Text('${widget.examLink.subjectTitle}', style: myTextStyleSmallPrimaryColor(context)),
+            Text('${widget.examLink.documentTitle}', style: myTextStyleSmall(context)),
+          ],
+        ),
       ),
       body: WebViewWidget(
         controller: webController,
