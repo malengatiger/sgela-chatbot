@@ -68,7 +68,7 @@ class ChatbotEnvironment {
 
   static bool isChatDebuggingEnabled() {
     if (kDebugMode) {
-      return true;
+      return false;  //todo - change back to true in production
     } else {
       return false;
     }

@@ -101,6 +101,7 @@ class ExamLinkListWidgetState extends State<ExamLinkListWidget> {
   _showChooserDialog() {
     showDialog(
         context: context,
+        barrierDismissible: true,
         builder: (_) {
           return AlertDialog(
             title: Column(
@@ -112,8 +113,7 @@ class ExamLinkListWidgetState extends State<ExamLinkListWidget> {
                 gapH16,
                 Text(
                   'What do you want to do?',
-                  style: myTextStyle(context, Theme.of(context).primaryColor,
-                      16, FontWeight.w900),
+                  style: myTextStyleMedium(context),
                 ),
               ],
             ),
@@ -324,58 +324,74 @@ class ChatTypeChooser extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      elevation: 2,
-      child: SizedBox(
-        height: 120,
-        child: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              GestureDetector(
-                onTap: () {
-                  onChatTypeChosen(CHAT_TYPE_IMAGE);
-                },
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.image_search,
-                      size: 20,
-                      color: Theme.of(context).primaryColor,
-                    ),
-                    gapW16,
-                    Text(
+    return SizedBox(
+      height: 120,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          GestureDetector(
+            onTap: () {
+              onChatTypeChosen(CHAT_TYPE_IMAGE);
+            },
+            child: Row(
+              children: [
+                // IconButton(
+                //   onPressed: () {
+                //     onChatTypeChosen(CHAT_TYPE_IMAGE);
+                //   },
+                //   icon: Icon(
+                //     Icons.image_search,
+                //     size: 16,
+                //     color: Theme.of(context).primaryColor,
+                //   ),
+                // ),
+                // gapW8,
+                TextButton(
+                  onPressed: () {
+                    onChatTypeChosen(CHAT_TYPE_IMAGE);
+                  },
+                  child: Flexible(
+                    child: Text(
                       'Search using exam paper',
-                      style: myTextStyleSmall(context),
-                    )
-                  ],
-                ),
-              ),
-              gapH32,
-              GestureDetector(
-                onTap: () {
-                  onChatTypeChosen(CHAT_TYPE_MULTI_TURN);
-                },
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.text_fields_sharp,
-                      size: 20,
-                      color: Theme.of(context).primaryColor,
+                      style: myTextStyle(
+                          context,
+                          Theme.of(context).primaryColor,
+                          16,
+                          FontWeight.normal),
                     ),
-                    gapW16,
-                    Text(
-                      'Search using text',
-                      style: myTextStyleSmall(context),
-                    )
-                  ],
-                ),
-              )
-            ],
+                  ),
+                )
+              ],
+            ),
           ),
-        ),
+          gapH8,
+          GestureDetector(
+            onTap: () {
+              onChatTypeChosen(CHAT_TYPE_MULTI_TURN);
+            },
+            child: Row(
+              children: [
+
+                TextButton(
+                  onPressed: () {
+                    onChatTypeChosen(CHAT_TYPE_MULTI_TURN);
+                  },
+                  child: Flexible(
+                    child: Text(
+                      'Search with text',
+                      style: myTextStyle(
+                          context,
+                          Theme.of(context).primaryColor,
+                          16,
+                          FontWeight.normal),
+                    ),
+                  ),
+                )
+              ],
+            ),
+          )
+        ],
       ),
     );
   }

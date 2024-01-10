@@ -160,7 +160,7 @@ class _MathViewerState extends State<MathViewer> {
                   width: double.infinity,
                   // height: h,
                   padding: const EdgeInsets.all(2.0),
-                  child: Holder(text: getFormattedText()),
+                  child: LaTexViewer(text: getFormattedText()),
                 ),
               ),
             ),
@@ -237,10 +237,11 @@ class _MathViewerState extends State<MathViewer> {
 //
 }
 
-class Holder extends StatelessWidget {
-  const Holder({super.key, required this.text});
+class LaTexViewer extends StatelessWidget {
+  const LaTexViewer({super.key, required this.text, this.showHeader = true});
 
   final String text;
+  final bool? showHeader;
 
   @override
   Widget build(BuildContext context) {
@@ -254,7 +255,7 @@ class Holder extends StatelessWidget {
           height: 600,
           child: Column(
             children: [
-              Text(
+              showHeader!?Text(
                 "SgelaAI Response",
                 style: myTextStyle(
                   context,
@@ -262,7 +263,7 @@ class Holder extends StatelessWidget {
                   24,
                   FontWeight.w900,
                 ),
-              ),
+              ): gapW4,
               gapH16,
               Expanded(
                 child: SingleChildScrollView(

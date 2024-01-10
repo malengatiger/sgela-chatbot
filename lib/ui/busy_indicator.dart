@@ -11,6 +11,9 @@ class BusyIndicator extends StatefulWidget {
   final double? elevation;
   final bool? showElapsedTime;
   final bool? showClock;
+  final bool? showTimerOnly;
+
+  final double? textSize;
 
   const BusyIndicator(
       {super.key,
@@ -18,7 +21,7 @@ class BusyIndicator extends StatefulWidget {
       this.color = Colors.blue,
       this.elevation = 8.0,
       this.showClock = true,
-      this.showElapsedTime = true});
+      this.showElapsedTime = true, this.showTimerOnly, this.textSize = 14});
 
   @override
   State<BusyIndicator> createState() => _BusyIndicatorState();
@@ -63,12 +66,43 @@ class _BusyIndicatorState extends State<BusyIndicator> {
     var height = 210.0;
     var show = false;
     if (widget.showClock != null) {
-      if (widget.showClock!) {
+      if (widget.showClock != null) {
         height = 340.0;
         show = widget.showClock!;
       }
     }
-    var bright = MediaQuery.of(context).platformBrightness;
+    if (widget.showTimerOnly != null) {
+      return Card(
+        elevation: 16,
+        child: Padding(
+          padding: const EdgeInsets.all(2.0),
+          child: Column(
+            children: [
+              gapH8,
+              const SizedBox(height: 10, width: 10,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  backgroundColor: Colors.red,
+                ),
+              ),
+              gapH8,
+              Padding(
+                padding: const EdgeInsets.only(left:8.0,right: 8.0),
+                child: Text(
+                    elapsedTime,
+                    style: myTextStyle(
+                      context,
+                      Theme.of(context).primaryColor,
+                      widget.textSize!,
+                      FontWeight.normal,
+                    ),
+                      ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
 
     return Card(
       elevation: widget.elevation,

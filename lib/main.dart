@@ -138,25 +138,20 @@ class MyApp extends StatelessWidget {
     var brightness = MediaQuery.of(context).platformBrightness;
     if ( modeAndColor.mode > -1) {
       if (modeAndColor.mode == 0) {
-        pp('... we are in own LIGHT mode ... ');
         return ThemeData.light().copyWith(
           primaryColor: getColors().elementAt(modeAndColor.colorIndex), // Set the primary color
         );
       } else {
-        pp('... we are in own DARK mode ... ');
-        //return ThemeData.dark(useMaterial3: true,);
         return ThemeData.dark().copyWith(
           primaryColor: getColors().elementAt(modeAndColor.colorIndex), // Set the primary color
         );
       }
     }
     if (brightness == Brightness.dark) {
-      pp('... we are in device DARK mode ... ');
       return ThemeData.dark().copyWith(
         primaryColor: getColors().elementAt(modeAndColor.colorIndex), // Set the primary color
       );
     } else {
-      pp('... we are in device LIGHT mode ... ');
       return ThemeData.light().copyWith(
         primaryColor: getColors().elementAt(modeAndColor.colorIndex), // Set the primary color
       );    }

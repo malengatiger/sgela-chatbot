@@ -45,6 +45,7 @@ class ChatInputBox extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.all(4),
             child: FloatingActionButton.small(
+              backgroundColor: Theme.of(context).primaryColor,
               onPressed: onSend,
               child: const Icon(Icons.send_rounded),
             ),

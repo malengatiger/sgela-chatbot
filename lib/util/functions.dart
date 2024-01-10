@@ -71,7 +71,6 @@ final List<Color> _colors = [
 ];
 
 List<Color> getColors() {
-  pp('functions: getColors delivered: ${_colors.length}');
   return _colors;
 }
 
