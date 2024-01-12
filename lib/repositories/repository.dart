@@ -9,7 +9,6 @@ import 'package:edu_chatbot/services/local_data_service.dart';
 import 'package:edu_chatbot/util/dio_util.dart';
 import 'package:edu_chatbot/util/environment.dart';
 import 'package:http/http.dart' as http;
-import 'package:mime/mime.dart';
 import 'package:path/path.dart' as path;
 
 import '../data/exam_document.dart';
@@ -42,9 +41,9 @@ class Repository {
       var imageFiles = await ImageFileUtil.getFiles(examLink);
       int index = 1;
       for (var imgFile in imageFiles) {
-        var img = ExamPageImage(examLink.id!, null,
-            examLink.pageImageZipUrl, imgFile.readAsBytesSync(),
-            index, ImageFileUtil.getMimeType(imgFile));
+        var img = ExamPageImage(examLinkId: examLink.id!,
+            id: null, bytes: imgFile.readAsBytesSync(),
+            pageIndex: index, mimeType: ImageFileUtil.getMimeType(imgFile));
         await localDataService.addExamImage(img);
         images.add(img);
         index++;
@@ -62,43 +61,6 @@ class Repository {
     }
   }
 
-  Future<List<GeminiResponseRating>> getRatings(int examLinkId) async {
-    pp('$mm ... getRatings ....');
-    List<GeminiResponseRating> ratings = [];
-    try {
-      String urlPrefix = ChatbotEnvironment.getSkunkUrl();
-      var path = '${urlPrefix}links/getResponseRatings';
-      List res = await dioUtil.sendGetRequest(path, {'examLinkId': examLinkId});
-      for (var r in res) {
-        ratings.add(GeminiResponseRating.fromJson(r));
-      }
-
-      pp('$mm ... getRatings .... from remote store: ${ratings.length}');
-      return ratings;
-    } catch (e) {
-      // Handle any errors
-      pp('Error calling addExamImage API: $e');
-      rethrow;
-    }
-  }
-
-  Future<List<dynamic>> addRating(GeminiResponseRating rating) async {
-    pp('$mm .......... addRating: ${rating.rating}');
-    String urlPrefix = ChatbotEnvironment.getSkunkUrl();
-    var path = '${urlPrefix}links/addResponseRating';
-    try {
-      List res = await dioUtil.sendPostRequest(path, rating.toJson());
-      for (var value in res) {
-        pp('$mm .......... addRating response is Firestore id: $value');
-
-      }
-      return res;
-    } catch (e) {
-      // Handle any errors
-      pp('Error calling addResponseRating API: $e');
-      rethrow;
-    }
-  }
 
   final StreamController<int> _streamController = StreamController.broadcast();
 
@@ -118,161 +80,169 @@ class Repository {
     }
   }
 
-  Future<List<Subject>> getSubjects(bool refresh) async {
-    var list = <Subject>[];
-    try {
-      if (refresh) {
-        list = await _downloadSubjects();
-      } else {
-        list = await localDataService.getSubjects();
-        if (list.isEmpty) {
-          list = await _downloadSubjects();
-        }
-      }
-
-      pp("$mm Subjects found: ${list.length} ");
-
-      return list;
-    } catch (e) {
-      pp(e);
-      rethrow;
-    }
-  }
-
-  Future<List<ExamLink>> getExamLinks(int subjectId, bool refresh) async {
-    List<ExamLink> list = [];
-    try {
-      if (refresh) {
-        list = await _downloadExamLinks(subjectId);
-      } else {
-        list = await localDataService.getExamLinksBySubject(subjectId);
-        if (list.isEmpty) {
-          list = await _downloadExamLinks(subjectId);
-        }
-      }
-
-      pp("$mm  Exam links found: ${list.length}, "
-          "subjectId: $subjectId ");
-
-      return list;
-    } catch (e) {
-      pp(e);
-      rethrow;
-    }
-  }
-  Future<List<ExamDocument>> getExamDocuments(bool refresh) async {
-    if (refresh) {
-      return _downloadExamDocuments();
-    } else {
-      var list = await localDataService.getExamDocuments();
-      if (list.isEmpty) {
-        return _downloadExamDocuments();
-      }
-      return list;
-    }
-  }
-
-    Future<List<ExamLink>> getExamLinksByDocument(Subject subject, String documentTitle, bool refresh) async {
-    List<ExamLink> list = [];
-    List<ExamLink> filtered = [];
-    pp("$mm  getExamLinksByDocument ... $documentTitle");
-    try {
-      if (refresh) {
-        list = await _downloadExamLinks(subject.id!);
-      } else {
-        list = await localDataService.getExamLinksBySubject(subject.id!);
-        if (list.isEmpty) {
-          list = await _downloadExamLinks(subject.id!);
-        }
-      }
-      for (var link in list) {
-        if (link.documentTitle! == documentTitle) {
-          filtered.add(link);
-        }
-      }
-      pp("$mm  Exam links filtered; found: ${filtered.length}, "
-          "subject: ${subject.toJson()} ");
-
-      return list;
-    } catch (e) {
-      pp(e);
-      rethrow;
-    }
-  }
-
-  Future<List<ExamLink>> _downloadExamLinks(int subjectId) async {
-    pp('$mm downloading examLinks ...');
-
-    List<ExamLink> examLinks = [];
-    var url = ChatbotEnvironment.getSkunkUrl();
-    var res = await dioUtil.sendGetRequest(
-        '${url}links/getSubjectExamLinks', {'subjectId': subjectId});
-    // Assuming the response data is a list of examLinks
-
-    List<dynamic> responseData = res;
-    for (var linkData in responseData) {
-      var map = {
-        "id": linkData["id"],
-        "title": linkData["title"],
-        "link": linkData["link"],
-        "subjectTitle": linkData["subject"]["title"],
-        "subjectId": linkData["subject"]["id"],
-        "examText": linkData["examText"],
-        "pageImageZipUrl": linkData["pageImageZipUrl"],
-        "documentTitle": linkData["examDocument"]["title"]
-      };
-      ExamLink examLink = ExamLink.fromJson(map);
-      examLinks.add(examLink);
-    }
-
-    pp("$mm  Exam links found: ${examLinks.length}, "
-        "subjectId: $subjectId ");
-    if (examLinks.isNotEmpty) {
-      localDataService.addExamLinks(examLinks);
-    }
-    return examLinks;
-  }
-
-  Future<List<Subject>> _downloadSubjects() async {
-    pp('$mm downloading subjects ...');
-    List<Subject> subjects = [];
-    var url = ChatbotEnvironment.getSkunkUrl();
-    var res = await dioUtil.sendGetRequest('${url}links/getSubjects', {});
-    // Assuming the response data is a list of subjects
-
-    List<dynamic> responseData = res;
-    for (var linkData in responseData) {
-      Subject examLink = Subject.fromJson(linkData);
-      subjects.add(examLink);
-    }
-
-    pp("$mm  Subjects links found: ${subjects.length}, ");
-    if (subjects.isNotEmpty) {
-      localDataService.addSubjects(subjects);
-    }
-    return subjects;
-  }
-
-  Future<List<ExamDocument>> _downloadExamDocuments() async {
-    pp('$mm downloading docs ...');
-    List<ExamDocument> docs = [];
-    var url = ChatbotEnvironment.getSkunkUrl();
-    var res = await dioUtil.sendGetRequest('${url}links/getExamDocuments', {});
-    // Assuming the response data is a list of docs
-
-    List<dynamic> responseData = res;
-    for (var linkData in responseData) {
-      ExamDocument examLink = ExamDocument.fromJson(linkData);
-      docs.add(examLink);
-    }
-
-    pp("$mm  ExamDocuments found: ${docs.length}, ");
-    if (docs.isNotEmpty) {
-      localDataService.addExamDocuments(docs);
-    }
-    return docs;
-  }
-
+  // Future<List<Subject>> getSubjects(bool refresh) async {
+  //   var list = <Subject>[];
+  //   try {
+  //     if (refresh) {
+  //       list = await _downloadSubjects();
+  //     } else {
+  //       list = await localDataService.getSubjects();
+  //       if (list.isEmpty) {
+  //         list = await _downloadSubjects();
+  //       }
+  //     }
+  //
+  //     pp("$mm Subjects found: ${list.length} ");
+  //
+  //     return list;
+  //   } catch (e) {
+  //     pp(e);
+  //     rethrow;
+  //   }
+  // }
+  //
+  // Future<List<ExamLink>> getExamLinks(int subjectId, bool refresh) async {
+  //   List<ExamLink> list = [];
+  //   try {
+  //     if (refresh) {
+  //       list = await _downloadExamLinks(subjectId);
+  //     } else {
+  //       list = await localDataService.getExamLinksBySubject(subjectId);
+  //       if (list.isEmpty) {
+  //         list = await _downloadExamLinks(subjectId);
+  //       }
+  //     }
+  //
+  //     pp("$mm  Exam links found: ${list.length}, "
+  //         "subjectId: $subjectId ");
+  //
+  //     return list;
+  //   } catch (e) {
+  //     pp(e);
+  //     rethrow;
+  //   }
+  // }
+  //
+  // Future<List<ExamDocument>> getExamDocuments(bool refresh) async {
+  //   if (refresh) {
+  //     return _downloadExamDocuments();
+  //   } else {
+  //     var list = await localDataService.getExamDocuments();
+  //     if (list.isEmpty) {
+  //       return _downloadExamDocuments();
+  //     }
+  //     return list;
+  //   }
+  // }
+  //
+  // Future<List<ExamLink>> getExamLinksByDocumentAndSubject(
+  //     Subject subject, String documentTitle, bool refresh) async {
+  //   List<ExamLink> list = [];
+  //   pp("$mm  ...... getExamLinksByDocument ... $documentTitle");
+  //   try {
+  //     if (refresh) {
+  //       list = await _downloadExamLinks(subject.id!);
+  //     } else {
+  //       list = await localDataService.getExamLinksByDocumentAndSubjectTitle(
+  //           documentTitle: documentTitle, subjectTitle: subject.title!);
+  //       pp("$mm  ...... getExamLinksByDocument ... from local: ${list.length} examLinks");
+  //
+  //       if (list.isEmpty) {
+  //         var mList = await _downloadExamLinks(subject.id!);
+  //         pp("$mm  ...... getExamLinksByDocument: ... from remote, "
+  //             "by subject: ${mList.length} examLinks");
+  //         for (var link in mList) {
+  //           if (link.documentTitle == documentTitle) {
+  //             list.add(link);
+  //           }
+  //         }
+  //         pp("$mm  ...... getExamLinksByDocument:  "
+  //             "🔵🔵 by subject and document: ${list.length} examLinks, from local db");
+  //       }
+  //     }
+  //
+  //     pp("$mm  Exam links for eventual display; 🔵🔵 found: ${list.length}, "
+  //         "doc: $documentTitle ");
+  //
+  //     return list;
+  //   } catch (e) {
+  //     pp(e);
+  //     rethrow;
+  //   }
+  // }
+  //
+  // Future<List<ExamLink>> _downloadExamLinks(int subjectId) async {
+  //   pp('$mm downloading examLinks ...');
+  //
+  //   List<ExamLink> examLinks = [];
+  //   var url = ChatbotEnvironment.getSkunkUrl();
+  //   var res = await dioUtil.sendGetRequest(
+  //       '${url}links/getSubjectExamLinks', {'subjectId': subjectId});
+  //   // Assuming the response data is a list of examLinks
+  //
+  //   List<dynamic> responseData = res;
+  //   for (var linkData in responseData) {
+  //     var map = {
+  //       "id": linkData["id"],
+  //       "title": linkData["title"],
+  //       "link": linkData["link"],
+  //       "subjectTitle": linkData["subject"]["title"],
+  //       "subjectId": linkData["subject"]["id"],
+  //       "examText": linkData["examText"],
+  //       "pageImageZipUrl": linkData["pageImageZipUrl"],
+  //       "documentTitle": linkData["examDocument"]["title"]
+  //     };
+  //     ExamLink examLink = ExamLink.fromJson(map);
+  //     examLinks.add(examLink);
+  //   }
+  //
+  //   pp("$mm  Exam links found: ${examLinks.length}, "
+  //       "subjectId: $subjectId ");
+  //   if (examLinks.isNotEmpty) {
+  //     localDataService.addExamLinks(examLinks);
+  //   }
+  //   return examLinks;
+  // }
+  //
+  // Future<List<Subject>> _downloadSubjects() async {
+  //   pp('$mm downloading subjects ...');
+  //   List<Subject> subjects = [];
+  //   var url = ChatbotEnvironment.getSkunkUrl();
+  //   var res = await dioUtil.sendGetRequest('${url}links/getSubjects', {});
+  //   // Assuming the response data is a list of subjects
+  //
+  //   List<dynamic> responseData = res;
+  //   for (var linkData in responseData) {
+  //     Subject examLink = Subject.fromJson(linkData);
+  //     subjects.add(examLink);
+  //   }
+  //
+  //   pp("$mm  Subjects links found: ${subjects.length}, ");
+  //   if (subjects.isNotEmpty) {
+  //     localDataService.addSubjects(subjects);
+  //   }
+  //   return subjects;
+  // }
+  //
+  // Future<List<ExamDocument>> _downloadExamDocuments() async {
+  //   pp('$mm downloading docs ...');
+  //   List<ExamDocument> docs = [];
+  //   var url = ChatbotEnvironment.getSkunkUrl();
+  //   var res = await dioUtil.sendGetRequest('${url}links/getExamDocuments', {});
+  //   // Assuming the response data is a list of docs
+  //
+  //   List<dynamic> responseData = res;
+  //   for (var linkData in responseData) {
+  //     ExamDocument examLink = ExamDocument.fromJson(linkData);
+  //     docs.add(examLink);
+  //   }
+  //
+  //   pp("$mm  ExamDocuments found: ${docs.length}, ");
+  //   if (docs.isNotEmpty) {
+  //     localDataService.addExamDocuments(docs);
+  //   }
+  //   return docs;
+  // }
 
   Future<File> downloadOriginalExamPDF(ExamLink examLink) async {
     //todo - check if exists
@@ -330,5 +300,4 @@ class Repository {
 
     return files;
   }
-
 }

@@ -36,7 +36,7 @@ class ExamPaperHeader extends StatelessWidget {
                       children: [
                         Flexible(
                           child: Text(
-                            '${examLink.subjectTitle}',
+                            '${examLink.subject!.title}',
                             style: titleStyle,
                           ),
                         ),

@@ -169,9 +169,9 @@ class MultiTurnStreamChatState extends State<MultiTurnStreamChat> {
 
   Widget chatItem(BuildContext context, int index) {
     final Content content = chats[index];
-    final String text = content.parts?.lastOrNull?.text ??
+    var  text = content.parts?.lastOrNull?.text ??
         'Sgela cannot help with your request. Try changing it ...';
-    ;
+    text = modifyString(text);
     bool isLatex = false;
     isLatex = isValidLaTeXString(text);
     String role = 'You';
@@ -190,7 +190,7 @@ class MultiTurnStreamChatState extends State<MultiTurnStreamChat> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(role),
-              LaTexViewer(text: text),
+              LaTexViewer(text: text, showHeader: false,),
             ],
           ),
         ),
@@ -215,5 +215,8 @@ class MultiTurnStreamChatState extends State<MultiTurnStreamChat> {
         ),
       ),
     );
+  }
+  String modifyString(String input) {
+    return input.replaceAll('**', '\n');
   }
 }

@@ -1,19 +1,18 @@
 import 'dart:async';
 import 'dart:io';
-import 'dart:ui' as ui;
 
 import 'package:edu_chatbot/data/gemini_response_rating.dart';
 import 'package:edu_chatbot/repositories/repository.dart';
+import 'package:edu_chatbot/services/firestore_service.dart';
 import 'package:edu_chatbot/ui/rating_widget.dart';
 import 'package:edu_chatbot/util/functions.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 import 'package:flutter_tex/flutter_tex.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:share_plus/share_plus.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
-// import 'package:image/image.dart' as ui;
+import 'package:share_plus/share_plus.dart';
+
 import '../data/exam_link.dart';
 import '../data/exam_page_image.dart';
 
@@ -21,23 +20,22 @@ class MathViewer extends StatefulWidget {
   const MathViewer(
       {super.key,
       required this.text,
-      required this.onShare,
-      required this.onRerun,
-      required this.selectedImages,
-      required this.onExit,
+      required this.examPageImage,
       required this.repository,
       required this.prompt,
-      required this.examLink, required this.tokensUsed});
+      required this.examLink,
+      required this.tokensUsed,
+      this.showHeader});
 
   final String text, prompt;
   final int tokensUsed;
   static const mm = '💙💙💙💙 MathViewer 💙';
-  final Function(List<ExamPageImage>) onShare;
-  final Function(List<ExamPageImage>) onExit;
-  final Function(List<ExamPageImage>) onRerun;
-  final List<ExamPageImage> selectedImages;
-  final Repository repository;
+
+  final ExamPageImage examPageImage;
+  final FirestoreService repository;
   final ExamLink examLink;
+
+  final bool? showHeader;
 
   @override
   State<MathViewer> createState() => _MathViewerState();
@@ -46,13 +44,20 @@ class MathViewer extends StatefulWidget {
 class _MathViewerState extends State<MathViewer> {
   final GlobalKey _repaintBoundaryKey = GlobalKey();
 
-  bool _showRatingBar = true;
+  bool _showRatingBar = false;
   List<ExamPageImage> list = [];
 
   @override
   void initState() {
     super.initState();
-    _clone();
+    replaceMarkdownTags();
+  }
+
+  replaceMarkdownTags() {
+    responseText = widget.text;
+    responseText = responseText.replaceAll('##', '\n').replaceAll('#', '\n');
+    responseText = responseText.replaceAll('Blank Line', '\n');
+    setState(() {});
   }
 
   _share(GeminiResponseRating responseRating) async {
@@ -74,19 +79,11 @@ class _MathViewerState extends State<MathViewer> {
     } else {
       //todo - write formatted markdown text to pdf
     }
-    final result = await Share.shareXFiles([XFile('${directory.path}/response.pdf')],
+    final result = await Share.shareXFiles(
+        [XFile('${directory.path}/response.pdf')],
         text: 'Response from SgelaAI');
     if (result.status == ShareResultStatus.success) {
       pp('${MathViewer.mm} Thank you for sharing the response from SgelaAI!');
-    }
-  }
-
-  _clone() {
-    for (var value in widget.selectedImages) {
-      var m = ExamPageImage(value.examLinkId, value.id, value.downloadUrl,
-          value.bytes, value.pageIndex, value.mimeType);
-      list.add(m);
-      pp('${MathViewer.mm} ... _cloned images: ${list.length}');
     }
   }
 
@@ -140,17 +137,45 @@ class _MathViewerState extends State<MathViewer> {
                         textStyle: myTextStyle(
                             context, Colors.amber, 16, FontWeight.normal),
                         context: context);
+                    setState(() {
+                      _showRatingBar = true;
+                    });
                   }
                 }),
-            title:  Text('Mathematics', style: myTextStyle(context,
-                Theme.of(context).primaryColor, 16,
-                FontWeight.w900),),
             actions: [
-              IconButton(onPressed: (){
-                pp('${MathViewer.mm} ... share required ... images: ${list.length}');
-                widget.onShare(list);
-              }, icon:  Icon(Icons.share, color: Theme.of(context).primaryColor)),
-            ]),
+              IconButton(
+                  onPressed: () {
+                    pp('${MathViewer.mm} ... share required ... images: ${list.length}');
+                  },
+                  icon:
+                      Icon(Icons.share, color: Theme.of(context).primaryColor)),
+            ],
+          bottom: PreferredSize(preferredSize: const Size.fromHeight(64), child: Column(
+            children: [
+              gapH8,
+              Text(
+                '${widget.examLink.title}',
+                style: myTextStyle(
+                    context, Theme.of(context).primaryColor, 16, FontWeight.w900),
+              ),
+              Text(
+                '${widget.examLink.subject!.title}',
+                style: myTextStyle(
+                    context, Theme.of(context).primaryColor, 14, FontWeight.normal),
+              ),
+              Text(
+                '${widget.examLink.documentTitle}',
+                style: myTextStyle(
+                    context, Theme.of(context).primaryColor, 14, FontWeight.normal),
+              ),
+              Text(
+                '${widget.examPageImage.pageIndex}',
+                style: myTextStyle(
+                    context, Theme.of(context).primaryColor, 18, FontWeight.w900),
+              ),
+            ],
+          ),),
+        ),
         body: Stack(
           children: [
             Positioned.fill(
@@ -159,12 +184,12 @@ class _MathViewerState extends State<MathViewer> {
                 child: Container(
                   width: double.infinity,
                   // height: h,
-                  padding: const EdgeInsets.all(2.0),
-                  child: LaTexViewer(text: getFormattedText()),
+                  padding: const EdgeInsets.all(8.0),
+                  child: LaTexViewer(text: responseText),
                 ),
               ),
             ),
-            Positioned(
+            if (_showRatingBar)  Positioned(
                 bottom: 16,
                 right: 48,
                 child: GeminiRatingWidget(
@@ -178,63 +203,19 @@ class _MathViewerState extends State<MathViewer> {
                     this.rating = rating.round();
                     _sendRating(rating
                         .round()); // Convert the floating-point number to an integer
-                    Future.delayed(const Duration(seconds: 2), () {
+                    Future.delayed(const Duration(seconds: 1), () {
                       if (mounted) {
                         Navigator.of(context).pop(rating);
                       }
                     });
                   },
-                  visible: _showRatingBar,
-                  color: Colors.blue,
+                  visible: true,
                 )),
           ],
         ),
       ),
     );
   }
-
-  String getFormattedText() {
-    return widget.text;
-  }
-
-  Future<File> convertLatexToImage(
-      String latexString, BuildContext context) async {
-    final texView = TeXView(
-      renderingEngine: const TeXViewRenderingEngine.katex(),
-      child: TeXViewDocument(latexString),
-    );
-
-    final boundary = GlobalKey();
-    final widget = RepaintBoundary(
-      key: boundary,
-      child: texView,
-    );
-
-    final completer = Completer<File>();
-
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-      final renderObject =
-          boundary.currentContext?.findRenderObject() as RenderRepaintBoundary?;
-      if (renderObject != null) {
-        final image = await renderObject.toImage(pixelRatio: 3.0);
-        final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
-        final pngBytes = byteData!.buffer.asUint8List();
-
-        final file =
-            await File('${Directory.systemTemp.path}/latex_image.png').create();
-        await file.writeAsBytes(pngBytes);
-
-        completer.complete(file);
-      } else {
-        completer.completeError(
-            Exception('Failed to capture the rendered LaTeX as an image.'));
-      }
-    });
-
-    return completer.future;
-  }
-
-//
 }
 
 class LaTexViewer extends StatelessWidget {
@@ -249,45 +230,46 @@ class LaTexViewer extends StatelessWidget {
     return Card(
       // color: Colors.white,
       elevation: 8,
-      child: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: SizedBox(
-          height: 600,
-          child: Column(
-            children: [
-              showHeader!?Text(
-                "SgelaAI Response",
-                style: myTextStyle(
-                  context,
-                  Theme.of(context).primaryColor,
-                  24,
-                  FontWeight.w900,
-                ),
-              ): gapW4,
-              gapH16,
-              Expanded(
-                child: SingleChildScrollView(
-                  child: TeXView(
-                    style: TeXViewStyle(
-                      contentColor: bright == Brightness.light
-                          ? Colors.black54
-                          : Colors.white,
-                      backgroundColor: bright == Brightness.light
-                          ? Colors.white
-                          : Colors.black54,
-                      padding: const TeXViewPadding.all(8),
+      child: SizedBox(
+        height: 600,
+        child: Column(
+          children: [
+            gapH8,
+            showHeader!
+                ? Text(
+                    "SgelaAI Response",
+                    style: myTextStyle(
+                      context,
+                      Theme.of(context).primaryColor,
+                      24,
+                      FontWeight.w900,
                     ),
-                    renderingEngine: const TeXViewRenderingEngine.katex(),
-                    child: TeXViewColumn(
-                      children: [
-                        TeXViewDocument(text),
-                      ],
+                  )
+                : gapW4,
+            gapH16,
+            Expanded(
+              child: SingleChildScrollView(
+                child: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: SizedBox(height: 600,
+                    child: TeXView(
+                      style: TeXViewStyle(
+                        contentColor: Colors.white,
+                        backgroundColor: Colors.transparent,
+                        padding: const TeXViewPadding.all(8),
+                      ),
+                      renderingEngine: const TeXViewRenderingEngine.katex(),
+                      child: TeXViewColumn(
+                        children: [
+                          TeXViewDocument(text),
+                        ],
+                      ),
                     ),
                   ),
                 ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

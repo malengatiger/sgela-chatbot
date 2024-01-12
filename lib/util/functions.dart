@@ -73,26 +73,19 @@ final List<Color> _colors = [
 List<Color> getColors() {
   return _colors;
 }
-
+// bool isMarkdownFormat(String text) {
+//   RegExp markdownRegex = RegExp(
+//     r'^#|^\*|^\d+\.\s|^\[.*\]\(.*\)|^!\[.*\]\(.*\)|^>\s|^-\s|^\+\s|^=\s|^~\s|^`|^\|',
+//     multiLine: true,
+//   );
+//
+//   return markdownRegex.hasMatch(text);
+// }
 bool isValidLaTeXString(String text) {
-  // Define a list of special characters or phrases to check for
-  List<String> specialCharacters = [
-    '\\(',
-    '\\)',
-    '\\[',
-    '\\]',
-    '\\frac',
-    '\\cdot'
-  ];
-
-  // Check if the text contains any of the special characters or phrases
-  for (String character in specialCharacters) {
-    if (text.contains(character)) {
-      return true;
-    }
-  }
-
-  return false;
+  // Define a regular expression pattern to match special characters or phrases
+  final pattern = RegExp(r'\\(|\\)|\\[|\\]|\\frac|\\cdot');
+  // Check if the text matches the pattern
+  return pattern.hasMatch(text);
 }
 
 Future<File?> compressImage({required File file, required int quality}) async {
@@ -193,7 +186,7 @@ bool isMarkdownFormat(String text) {
   return false;
 }
 
-bool isDarkMode(Prefs prefs, Brightness brightness)  {
+bool isDarkMode(Prefs prefs, Brightness brightness) {
   var mode = prefs.getMode();
   if (mode == DARK) {
     return true;
@@ -232,40 +225,60 @@ String getGenericPromptContext() {
   return sb.toString();
 }
 
-String getPromptContext() {
+String getPromptContext(String subjectTitle) {
   StringBuffer sb = StringBuffer();
   sb.write('My name is SgelaAI and I am a super tutor who knows everything. '
-      '\nI am here to help you study and practice for all your high school and college courses and subjects\n');
+      '\nI am here to help you study and practice for all your high school and college courses and subjects.\n');
   sb.write('Answer questions that relates to the subject provided. \n');
-  sb.write('Example is Subject: Mathematics\n');
+  sb.write('Request relates to Subject: $subjectTitle\n');
   sb.write(
       'Keep answers and responses suitable to the high school or college level\n');
-  sb.write(
-      'Return responses in markdown format when there are no mathematical equations in the text.\n');
-  sb.write(
-      'If there are LaTex strings(math and physics equations) in the text, '
-      'then return in LaTex format\n');
+  if (subjectTitle.contains('MATH') ||
+      subjectTitle.contains('PHYSICS') ||
+      subjectTitle.contains('ENGIN')) {
+    sb.write(
+        'Return responses in LaTex format where text includes LaTex strings otherwise use Markdown\n');
+    sb.write(
+        'Return responses in Markdown format where text does not have LaTex strings.\n');
+  } else {
+    sb.write('Return responses in Markdown format \n');
+    sb.write(
+        'If there are LaTex strings(math and physics equations) in the text, '
+            'then return in LaTex format\n');
+  }
+  sb.write('Return all responses in English.\n');
   sb.write(
       'Where appropriate use headings, paragraphs and sections to enhance readability when displayed.\n');
+  sb.write(
+      'Insert \n after headings and paragraphs and sections');
+
   return sb.toString();
 }
 
 List<Parts> getMultiTurnContext() {
   List<Parts> partsList = [];
-  var p1 = Parts(text: 'My name is SgelaAI and I am a super tutor who knows everything. '
-      '\nI am here to help you study and practice for all your high school and college courses and subjects');
+  var p1 = Parts(
+      text: 'My name is SgelaAI and I am a super tutor who knows everything. '
+          '\nI am here to help you study and practice for all your high school and college courses and subjects');
   partsList.add(p1);
-  var p2 = Parts(text:'Answer questions that relates to the subject provided.');
+  var p2 =
+      Parts(text: 'Answer questions that relates to the subject provided.');
   partsList.add(p2);
-  var p3 = Parts(text:'Example is Subject: Mathematics');
+  var p3 = Parts(text: 'Example is Subject: Mathematics');
   partsList.add(p3);
-  var p4 = Parts(text:'For Mathematics, Physics, return responses in LaTex format');
+  var p4 =
+      Parts(text: 'For Mathematics, Physics, return responses in LaTex format');
   partsList.add(p4);
-  var p5 = Parts(text:'In all other subjects, return responses in Markdown format');
+  var p5 =
+      Parts(text: 'In all other subjects, return responses in Markdown format');
   partsList.add(p5);
-  var p6 = Parts(text:'Your response must not mix Markdown and LaTex formats. It should be one or the other');
+  var p6 = Parts(
+      text:
+          'Your response must not mix Markdown and LaTex formats. It should be one or the other');
   partsList.add(p6);
-  var p7 = Parts(text:'Where appropriate use headings, paragraphs and sections to enhance readability when displayed.');
+  var p7 = Parts(
+      text:
+          'Where appropriate use headings, paragraphs and sections to enhance readability when displayed.');
   partsList.add(p7);
 
   return partsList;

@@ -8,19 +8,17 @@ part of 'exam_page_image.dart';
 
 ExamPageImage _$ExamPageImageFromJson(Map<String, dynamic> json) =>
     ExamPageImage(
-      json['examLinkId'] as int?,
-      json['id'] as int?,
-      json['downloadUrl'] as String?,
-      (json['bytes'] as List<dynamic>?)?.map((e) => e as int).toList(),
-      json['pageIndex'] as int?,
-      json['mimeType'] as String?,
+      examLinkId: json['examLinkId'] as int?,
+      id: json['id'] as int?,
+      bytes: (json['bytes'] as List<dynamic>?)?.map((e) => e as int).toList(),
+      pageIndex: json['pageIndex'] as int?,
+      mimeType: json['mimeType'] as String?,
     );
 
 Map<String, dynamic> _$ExamPageImageToJson(ExamPageImage instance) =>
     <String, dynamic>{
       'examLinkId': instance.examLinkId,
       'id': instance.id,
-      'downloadUrl': instance.downloadUrl,
       'bytes': instance.bytes,
       'pageIndex': instance.pageIndex,
       'mimeType': instance.mimeType,

@@ -56,7 +56,7 @@ class TextChatState extends State<TextChat>
 
   Future<void> _sendChatPrompt() async {
     String prompt = textEditingController.value.text;
-    var promptContext = getPromptContext();
+    var promptContext = getPromptContext(widget.subject.title!);
     if (chatCount == 0) {
       prompt = '$promptContext \nSubject: ${widget.subject.title}. $prompt';
     } else {

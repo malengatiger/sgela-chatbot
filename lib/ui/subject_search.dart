@@ -1,7 +1,9 @@
 import 'package:badges/badges.dart' as bd;
 import 'package:edu_chatbot/data/subject.dart';
 import 'package:edu_chatbot/repositories/repository.dart';
+import 'package:edu_chatbot/services/chat_gpt_service.dart';
 import 'package:edu_chatbot/services/downloader_isolate.dart';
+import 'package:edu_chatbot/services/firestore_service.dart';
 import 'package:edu_chatbot/ui/busy_indicator.dart';
 import 'package:edu_chatbot/ui/color_gallery.dart';
 import 'package:edu_chatbot/ui/exam_document_list.dart';
@@ -9,6 +11,7 @@ import 'package:edu_chatbot/util/dark_light_control.dart';
 import 'package:edu_chatbot/util/functions.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gemini/flutter_gemini.dart';
+import 'package:get_it/get_it.dart';
 
 import '../services/chat_service.dart';
 import '../services/local_data_service.dart';
@@ -23,7 +26,7 @@ class SubjectSearch extends StatefulWidget {
   final ChatService chatService;
   final YouTubeService youTubeService;
   final Prefs prefs;
-  final DownloaderService downloaderService;
+  final FirestoreService firestoreService;
   final ColorWatcher colorWatcher;
   final DarkLightControl darkLightControl;
   final Gemini gemini;
@@ -34,7 +37,7 @@ class SubjectSearch extends StatefulWidget {
       required this.localDataService,
       required this.chatService,
       required this.youTubeService,
-      required this.downloaderService,
+      required this.firestoreService,
       required this.prefs,
       required this.colorWatcher,
       required this.darkLightControl, required this.gemini});
@@ -48,6 +51,7 @@ class SubjectSearchState extends State<SubjectSearch> {
   List<Subject> _subjects = [];
   List<Subject> _filteredSubjects = [];
   bool busy = false;
+  static const String mm = '🍎 🍎 🍎 SubjectSearch: ';
 
   @override
   void initState() {
@@ -60,7 +64,7 @@ class SubjectSearchState extends State<SubjectSearch> {
       busy = true;
     });
     try {
-      _subjects = await widget.repository.getSubjects(false);
+      _subjects = await widget.firestoreService.getSubjects();
       _subjects.sort((a, b) => a.title!.compareTo(b.title!));
       _filteredSubjects = _subjects;
     } catch (e) {
@@ -90,19 +94,23 @@ class SubjectSearchState extends State<SubjectSearch> {
         ));
   }
 
-  navigateToExamsDocumentList(BuildContext context, Subject subject) {
+  _callChatGPT() {
+    pp('$mm _callChatGPT ............');
+    var gpt = GetIt.instance<ChatGptService>();
+    gpt.sendPrompt('Help me study for a Math test');
+  }
+  _navigateToExamsDocumentList(BuildContext context, Subject subject) {
     NavigationUtils.navigateToPage(
         context: context,
         widget: ExamsDocumentList(
             subject: subject,
-            downloaderService: widget.downloaderService,
             repository: widget.repository,
             localDataService: widget.localDataService,
             chatService: widget.chatService,
             youTubeService: widget.youTubeService,
             colorWatcher: widget.colorWatcher,
             gemini: widget.gemini,
-            prefs: widget.prefs));
+            prefs: widget.prefs, firestoreService: widget.firestoreService,));
   }
 
   @override
@@ -128,13 +136,18 @@ class SubjectSearchState extends State<SubjectSearch> {
       child: SafeArea(
         child: Scaffold(
           appBar: AppBar(
-            title: Text(
-              'SgelaAI',
-              style: myTextStyle(
-                  context,
-                  isDark ? Theme.of(context).primaryColor : Colors.black,
-                  32,
-                  FontWeight.w900),
+            title: GestureDetector(
+              onTap: (){
+                _callChatGPT();
+              },
+              child: Text(
+                'SgelaAI',
+                style: myTextStyle(
+                    context,
+                    isDark ? Theme.of(context).primaryColor : Colors.black,
+                    32,
+                    FontWeight.w900),
+              ),
             ),
             actions: [
               IconButton(
@@ -208,7 +221,7 @@ class SubjectSearchState extends State<SubjectSearch> {
                               Subject subject = _filteredSubjects[index];
                               return GestureDetector(
                                 onTap: () {
-                                  navigateToExamsDocumentList(context, subject);
+                                  _navigateToExamsDocumentList(context, subject);
                                 },
                                 child: Card(
                                   elevation: 8,

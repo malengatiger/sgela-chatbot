@@ -6,8 +6,7 @@ import 'dart:isolate';
 import 'package:archive/archive.dart';
 import 'package:dio/dio.dart';
 import 'package:edu_chatbot/data/exam_page_image.dart';
-// import 'package:http/http.dart' as http;
-
+import 'package:edu_chatbot/services/firestore_service.dart';
 import '../data/exam_link.dart';
 import '../data/subject.dart';
 import '../repositories/repository.dart';
@@ -15,10 +14,10 @@ import '../util/functions.dart';
 import 'local_data_service.dart';
 
 class DownloaderService {
-  final Repository repository;
+  final FirestoreService firestoreService;
   final LocalDataService localDataService;
 
-  DownloaderService(this.repository, this.localDataService);
+  DownloaderService(this.firestoreService, this.localDataService);
 
   static const mm = '🐸🐸🐸🐸 DownloaderService(Isolate) 🐸';
 
@@ -28,7 +27,7 @@ class DownloaderService {
 
   Future<void> downloadSubjectExamPageImages(Subject subject) async {
     pp('$mm download examLink images for subject: ${subject.title} exams');
-    var links = await repository.getExamLinks(subject.id!, true);
+    var links = await firestoreService.getSubjectExamLinks(subject.id!);
     var examPageImages = await downloadExams(links);
     pp('$mm downloaded examLink images for subject:'
         ' ${subject.title} exams: 🍎🍎 ${examPageImages.length}');
@@ -49,53 +48,21 @@ class DownloaderService {
 
   Future<List<ExamPageImage>> getExamImages(ExamLink examLink) async {
     pp('$mm download examLink images for ${examLink.title} .....');
-    return await repository.getExamPageImages(examLink, false);
+    return await localDataService.getExamImages(examLink.id!);
 
   }
 
-  static Future<String> _heavyComputation(Map<String, dynamic> json) async {
-    pp('$mm 🌿🌿🌿_heavyComputation(called by Isolate.run) '
-        'starting ... 🌿🌿🌿🌿🌿🌿 json: $json');
-
-    List<ExamPageImage> examPageImages = [];
-    var url = json['pageImageZipUrl'];
-    var files = await downloadZippedFileWithDio(url);
-    int index = 0;
-    for (var file in files) {
-        var epi = ExamPageImage(json['id'], null,
-            json['pageImageZipUrl'], file.readAsBytesSync(),
-            index, 'png');
-        examPageImages.add(epi);
-        index++;
-    }
-    var jsonString = jsonEncode(examPageImages);
-    pp('$mm 🌿🌿🌿_heavyComputation(called by Isolate.run) '
-        'jsonString = ${jsonString.length} bytes ... 🌿🌿🌿🌿🌿🌿');
-    return jsonString;
-  }
-
-  //  static Future<List<File>> downloadZippedFile(String url) async {
-  //   pp('$mm .... downloading zipped file .......................... url: $url ');
-  //   try {
-  //     var response = await http.get(Uri.parse(url));
-  //     var bytes = response.bodyBytes;
-  //     final file = File('file_${DateTime.now().toIso8601String()}.png');
-  //     file.writeAsBytesSync(bytes);
-  //     return unpackZipFile(file);
-  //   } catch (e) {
-  //     pp('Error downloading file: $e');
-  //     rethrow;
-  //   }
-  // }
   static Future<dynamic> downloadZippedFileWithDio(
       String url) async {
+    pp('$mm downloadZippedFileWithDio: network call: 🥬🥬🥬 url: $url');
+
     try {
       var dio = Dio();
       Response response;
       response = await dio.download(url,
-          'file${DateTime.now().toIso8601String()}.png');
+          'file${DateTime.now().toIso8601String()}.zip');
 
-      pp('$mm dio network response: 🥬🥬🥬 status code: ${response.statusCode}');
+      pp('$mm downloadZippedFileWithDio: network response: 🥬🥬🥬 status code: ${response.statusCode}');
       return response.data;
     } catch (e) {
       pp(e);

@@ -25,7 +25,7 @@ class PdfMakerService {
             constraints: const pw.BoxConstraints.expand(),
             child: pw.FittedBox(
               child: pw.Text(
-                '${examLink.subjectTitle}',
+                '${examLink.subject!.title}',
                 style: pw.TextStyle(
                   color: PdfColors.black,
                   fontSize: 24,

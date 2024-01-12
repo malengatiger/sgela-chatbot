@@ -1,6 +1,6 @@
 import 'package:edu_chatbot/data/exam_document.dart';
 import 'package:edu_chatbot/repositories/repository.dart';
-import 'package:edu_chatbot/services/downloader_isolate.dart';
+import 'package:edu_chatbot/services/firestore_service.dart';
 import 'package:edu_chatbot/services/local_data_service.dart';
 import 'package:edu_chatbot/services/you_tube_service.dart';
 import 'package:edu_chatbot/ui/busy_indicator.dart';
@@ -25,19 +25,22 @@ class ExamsDocumentList extends StatefulWidget {
       required this.localDataService,
       required this.chatService,
       required this.youTubeService,
-      required this.downloaderService,
       required this.prefs,
-      required this.colorWatcher, required this.gemini});
+      required this.colorWatcher,
+      required this.gemini,
+      required this.firestoreService});
 
   final Repository repository;
   final Subject subject;
   final LocalDataService localDataService;
   final ChatService chatService;
   final YouTubeService youTubeService;
-  final DownloaderService downloaderService;
+
+  // final DownloaderService downloaderService;
   final Prefs prefs;
   final ColorWatcher colorWatcher;
   final Gemini gemini;
+  final FirestoreService firestoreService;
 
   @override
   ExamsDocumentListState createState() => ExamsDocumentListState();
@@ -60,7 +63,7 @@ class ExamsDocumentListState extends State<ExamsDocumentList> {
       setState(() {
         busy = true;
       });
-      examDocs = await widget.repository.getExamDocuments(false);
+      examDocs = await widget.firestoreService.getExamDocuments();
       examDocs.sort((b, a) => a.title!.compareTo(b.title!));
     } catch (e) {
       pp(e);
@@ -73,21 +76,23 @@ class ExamsDocumentListState extends State<ExamsDocumentList> {
     });
   }
 
-  _navigateToExamLinks(ExamDocument examDocument) {
-    NavigationUtils.navigateToPage(
-        context: context,
-        widget: ExamLinkListWidget(
-          subject: widget.subject,
-          repository: widget.repository,
-          localDataService: widget.localDataService,
-          chatService: widget.chatService,
-          youTubeService: widget.youTubeService,
-          downloaderService: widget.downloaderService,
-          examDocument: examDocument,
-          gemini: widget.gemini,
-          prefs: widget.prefs,
-          colorWatcher: widget.colorWatcher,
-        ));
+  _navigateToExamLinks(ExamDocument examDocument) async {
+    if (mounted) {
+      NavigationUtils.navigateToPage(
+          context: context,
+          widget: ExamLinkListWidget(
+            subject: widget.subject,
+            repository: widget.repository,
+            localDataService: widget.localDataService,
+            chatService: widget.chatService,
+            youTubeService: widget.youTubeService,
+            gemini: widget.gemini,
+            prefs: widget.prefs,
+            colorWatcher: widget.colorWatcher,
+            firestoreService: widget.firestoreService,
+            examDocument: examDocument,
+          ));
+    }
   }
 
   void _navigateToYouTube() {
@@ -146,21 +151,22 @@ class ExamsDocumentListState extends State<ExamsDocumentList> {
                       Expanded(
                         child: busy
                             ? const BusyIndicator(
-                                caption: "Loading exam documents. Gimme a second ...",
+                                caption:
+                                    "Loading exam documents. Gimme a second ...",
                               )
                             : ListView.builder(
                                 itemCount: examDocs.length,
                                 itemBuilder: (_, index) {
-                                  var doc = examDocs.elementAt(index);
+                                  var examDocument = examDocs.elementAt(index);
                                   return GestureDetector(
                                     onTap: () {
-                                      _navigateToExamLinks(doc);
+                                      _navigateToExamLinks(examDocument);
                                     },
                                     child: Card(
                                       elevation: 8,
                                       child: ListTile(
                                         title: Text(
-                                          '${doc.title}',
+                                          '${examDocument.title}',
                                           style: myTextStyleSmall(context),
                                         ),
                                         leading: Icon(Icons.edit_note,

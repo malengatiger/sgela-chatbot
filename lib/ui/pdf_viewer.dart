@@ -51,7 +51,7 @@ class PDFViewerState extends State<PDFViewer> {
         title: Column(
           children: [
             Text('${widget.examLink.title}', style: myTextStyleSmall(context)),
-            Text('${widget.examLink.subjectTitle}', style: myTextStyleSmallPrimaryColor(context)),
+            Text('${widget.examLink.subject!.title}', style: myTextStyleSmallPrimaryColor(context)),
             Text('${widget.examLink.documentTitle}', style: myTextStyleSmall(context)),
           ],
         ),

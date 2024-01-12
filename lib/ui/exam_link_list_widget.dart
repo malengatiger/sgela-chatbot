@@ -4,12 +4,13 @@ import 'package:edu_chatbot/data/subject.dart';
 import 'package:edu_chatbot/gemini/sections/multi_turn_chat_stream.dart';
 import 'package:edu_chatbot/repositories/repository.dart';
 import 'package:edu_chatbot/services/chat_service.dart';
-import 'package:edu_chatbot/services/downloader_isolate.dart';
+import 'package:edu_chatbot/services/firestore_service.dart';
 import 'package:edu_chatbot/services/you_tube_service.dart';
 import 'package:edu_chatbot/ui/busy_indicator.dart';
 import 'package:edu_chatbot/ui/exam_paper_pages.dart';
 import 'package:edu_chatbot/ui/you_tube_searcher.dart';
 import 'package:edu_chatbot/util/dark_light_control.dart';
+import 'package:edu_chatbot/util/image_file_util.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gemini/flutter_gemini.dart';
 
@@ -26,11 +27,13 @@ class ExamLinkListWidget extends StatefulWidget {
   final LocalDataService localDataService;
   final ChatService chatService;
   final YouTubeService youTubeService;
-  final DownloaderService downloaderService;
+
+  // final DownloaderService downloaderService;
   final ExamDocument examDocument;
   final Prefs prefs;
   final ColorWatcher colorWatcher;
   final Gemini gemini;
+  final FirestoreService firestoreService;
 
   const ExamLinkListWidget({
     super.key,
@@ -39,11 +42,12 @@ class ExamLinkListWidget extends StatefulWidget {
     required this.localDataService,
     required this.chatService,
     required this.youTubeService,
-    required this.downloaderService,
+    // required this.downloaderService,
     required this.examDocument,
     required this.prefs,
     required this.colorWatcher,
     required this.gemini,
+    required this.firestoreService,
   });
 
   @override
@@ -68,13 +72,14 @@ class ExamLinkListWidgetState extends State<ExamLinkListWidget> {
       setState(() {
         busy = true;
       });
-      List<ExamLink> fetchedExamLinks = await widget.repository
-          .getExamLinksByDocument(
-              widget.subject, widget.examDocument.title!, false);
-      pp('$mm fetchedExamLinks: ${fetchedExamLinks.length}');
-
-      examLinks = fetchedExamLinks;
-      filteredExamLinks = fetchedExamLinks;
+      examLinks = await widget.firestoreService
+          .getExamLinksByDocumentAndSubject(
+              subjectId: widget.subject.id!,
+              documentId: widget.examDocument.id!);
+      pp('$mm fetchedExamLinks: examLinks: ${examLinks.length}');
+      filteredExamLinks = examLinks;
+      await ImageFileUtil.createExamPageImages(
+          examLinks, widget.localDataService);
     } catch (e) {
       // Handle error
       pp('$mm 👿👿👿👿👿Error fetching exam links: $e');
@@ -91,7 +96,7 @@ class ExamLinkListWidgetState extends State<ExamLinkListWidget> {
     setState(() {
       filteredExamLinks = examLinks
           .where((examLink) =>
-              examLink.title!.toLowerCase().contains(query.toLowerCase()))
+              !examLink.title!.toLowerCase().contains(query.toLowerCase()))
           .toList();
     });
   }
@@ -108,7 +113,7 @@ class ExamLinkListWidgetState extends State<ExamLinkListWidget> {
               children: [
                 Text(
                   selectedExamLink!.title!,
-                  style: myTextStyleSmall(context),
+                  style: myTextStyleMediumLarge(context, 16),
                 ),
                 gapH16,
                 Text(
@@ -117,9 +122,9 @@ class ExamLinkListWidgetState extends State<ExamLinkListWidget> {
                 ),
               ],
             ),
-            elevation: 12,
+            elevation: 8,
             content: ChatTypeChooser(onChatTypeChosen: (type) {
-              //Navigator.of(context).pop();
+              Navigator.of(context).pop();
               if ((type == CHAT_TYPE_MULTI_TURN)) {
                 _navigateToMultiTurnStreamChat(selectedExamLink!);
               }
@@ -140,16 +145,24 @@ class ExamLinkListWidgetState extends State<ExamLinkListWidget> {
 
   @override
   Widget build(BuildContext context) {
-    pp('$mm .... build ...');
     final TextStyle titleStyle =
         Theme.of(context).textTheme.bodySmall!.copyWith(
               fontWeight: FontWeight.bold,
             );
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-          '${widget.subject.title}',
-          style: titleStyle,
+        title: Column(
+          children: [
+            Text(
+              '${widget.subject.title}',
+              style: titleStyle,
+            ),
+            gapH4,
+            Text(
+              '${widget.examDocument.title}',
+              style: myTextStyleSmall(context),
+            )
+          ],
         ),
         actions: [
           IconButton(
@@ -166,36 +179,28 @@ class ExamLinkListWidgetState extends State<ExamLinkListWidget> {
                   color: Theme.of(context).primaryColor))
         ],
       ),
+      // backgroundColor: Colors.teal,
       body: Padding(
         padding: const EdgeInsets.all(8.0),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Card(
-              elevation: 4,
-              child: Padding(
-                padding: const EdgeInsets.only(
-                  left: 8.0,
-                  right: 8,
-                  top: 4,
-                  bottom: 8,
-                ),
-                child: TextField(
-                  onChanged: _filterExamLinks,
-                  decoration: const InputDecoration(
-                    labelText: 'Search Exams',
-                  ),
-                ),
-              ),
+            Text(
+              'Exam Papers',
+              style: myTextStyle(
+                  context, Theme.of(context).primaryColor, 32, FontWeight.w900),
             ),
-            const SizedBox(height: 16),
-            Expanded(
+            const SizedBox(height: 24.0),
+            SizedBox(
+              height: filteredExamLinks.length < 5 ? 260 : 480,
               child: Card(
                 elevation: 8,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8.0),
                 ),
                 child: bd.Badge(
-                  position: bd.BadgePosition.topEnd(top: -8, end: -2),
+                  position: bd.BadgePosition.topEnd(top: -16, end: -2),
                   badgeContent: Text(
                     '${filteredExamLinks.length}',
                     style: const TextStyle(color: Colors.white),
@@ -210,20 +215,23 @@ class ExamLinkListWidgetState extends State<ExamLinkListWidget> {
                               'Loading subject exams ... gimme a second ...',
                           showClock: true,
                         )
-                      : ListView.builder(
-                          itemCount: filteredExamLinks.length,
-                          itemBuilder: (context, index) {
-                            ExamLink examLink = filteredExamLinks[index];
-                            return GestureDetector(
-                              onTap: () {
-                                selectedExamLink = examLink;
-                                _showChooserDialog();
-                              },
-                              child: ExamLinkWidget(
-                                examLink: examLink,
-                              ),
-                            );
-                          },
+                      : Align(
+                          alignment: Alignment.center,
+                          child: ListView.builder(
+                            itemCount: filteredExamLinks.length,
+                            itemBuilder: (context, index) {
+                              ExamLink examLink = filteredExamLinks[index];
+                              return GestureDetector(
+                                onTap: () {
+                                  selectedExamLink = examLink;
+                                  _showChooserDialog();
+                                },
+                                child: ExamLinkWidget(
+                                  examLink: examLink,
+                                ),
+                              );
+                            },
+                          ),
                         ),
                 ),
               ),
@@ -246,15 +254,15 @@ class ExamLinkListWidgetState extends State<ExamLinkListWidget> {
 
   void _navigateToExamPaperPages(ExamLink examLink) {
     pp('$mm _navigateToExamPaperPages ...');
-    examLink.subjectTitle = widget.subject.title;
-    examLink.subjectId = widget.subject.id;
+
     NavigationUtils.navigateToPage(
         context: context,
         widget: ExamPaperPages(
           examLink: examLink,
-          repository: widget.repository,
+          firestoreService: widget.firestoreService,
           chatService: widget.chatService,
-          downloaderService: widget.downloaderService,
+          gemini: widget.gemini,
+          localDataService: widget.localDataService,
         ));
   }
 
@@ -286,31 +294,37 @@ class ExamLinkWidget extends StatelessWidget {
         Theme.of(context).textTheme.bodyMedium!.copyWith(
               fontWeight: FontWeight.bold,
             );
-    final TextStyle idStyle = Theme.of(context).textTheme.bodyLarge!.copyWith(
+    final TextStyle idStyle = Theme.of(context).textTheme.bodyMedium!.copyWith(
         fontWeight: FontWeight.w900, color: Theme.of(context).primaryColor);
-    return Card(
-      elevation: 2,
-      child: ListTile(
-        title: Row(
-          children: [
-            SizedBox(
-              width: 60,
-              child: Text(
-                '${examLink.id}',
-                style: idStyle,
-              ),
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: Card(
+        elevation: 8,
+        child: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: ListTile(
+            title: Row(
+              children: [
+                SizedBox(
+                  width: 60,
+                  child: Text(
+                    '${examLink.id}',
+                    style: idStyle,
+                  ),
+                ),
+                Expanded(
+                  child: Text(
+                    examLink.title ?? '',
+                    style: titleStyle,
+                  ),
+                ),
+              ],
             ),
-            Expanded(
-              child: Text(
-                examLink.title ?? '',
-                style: titleStyle,
-              ),
+            subtitle: Text(
+              '${examLink.documentTitle}',
+              style: myTextStyleSmall(context),
             ),
-          ],
-        ),
-        subtitle: Text(
-          '${examLink.documentTitle}',
-          style: myTextStyleSmall(context),
+          ),
         ),
       ),
     );
@@ -325,70 +339,59 @@ class ChatTypeChooser extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 120,
+      height: 200,
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          GestureDetector(
-            onTap: () {
-              onChatTypeChosen(CHAT_TYPE_IMAGE);
-            },
-            child: Row(
-              children: [
-                // IconButton(
-                //   onPressed: () {
-                //     onChatTypeChosen(CHAT_TYPE_IMAGE);
-                //   },
-                //   icon: Icon(
-                //     Icons.image_search,
-                //     size: 16,
-                //     color: Theme.of(context).primaryColor,
-                //   ),
-                // ),
-                // gapW8,
-                TextButton(
-                  onPressed: () {
-                    onChatTypeChosen(CHAT_TYPE_IMAGE);
-                  },
-                  child: Flexible(
-                    child: Text(
-                      'Search using exam paper',
-                      style: myTextStyle(
-                          context,
-                          Theme.of(context).primaryColor,
-                          16,
-                          FontWeight.normal),
-                    ),
-                  ),
-                )
-              ],
+          SizedBox(
+            width: 300,
+            child: ElevatedButton(
+              style: const ButtonStyle(
+                elevation: MaterialStatePropertyAll(8),
+              ),
+              onPressed: () {
+                onChatTypeChosen(CHAT_TYPE_IMAGE);
+              },
+              child: Text(
+                'Search using exam paper',
+                style: myTextStyle(context, Theme.of(context).primaryColor, 16,
+                    FontWeight.normal),
+              ),
             ),
           ),
           gapH8,
-          GestureDetector(
-            onTap: () {
-              onChatTypeChosen(CHAT_TYPE_MULTI_TURN);
-            },
-            child: Row(
-              children: [
-
-                TextButton(
-                  onPressed: () {
-                    onChatTypeChosen(CHAT_TYPE_MULTI_TURN);
-                  },
-                  child: Flexible(
-                    child: Text(
-                      'Search with text',
-                      style: myTextStyle(
-                          context,
-                          Theme.of(context).primaryColor,
-                          16,
-                          FontWeight.normal),
-                    ),
-                  ),
-                )
-              ],
+          SizedBox(
+            width: 300,
+            child: ElevatedButton(
+              style: const ButtonStyle(
+                elevation: MaterialStatePropertyAll(8),
+              ),
+              onPressed: () {
+                onChatTypeChosen(CHAT_TYPE_MULTI_TURN);
+              },
+              child: Text(
+                'Search with text',
+                style: myTextStyle(context, Theme.of(context).primaryColor, 16,
+                    FontWeight.normal),
+              ),
+            ),
+          ),
+          gapH8,
+          SizedBox(
+            width: 300,
+            child: ElevatedButton(
+              style: const ButtonStyle(
+                elevation: MaterialStatePropertyAll(8),
+              ),
+              onPressed: () {
+                onChatTypeChosen(CHAT_TYPE_MULTI_TURN);
+              },
+              child: Text(
+                'Find Answers',
+                style: myTextStyle(context, Theme.of(context).primaryColor, 16,
+                    FontWeight.normal),
+              ),
             ),
           )
         ],

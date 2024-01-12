@@ -51,8 +51,15 @@ class ChatbotEnvironment {
   static String part1 = 'SyAUXc8lM1wPsR-Rrow0XLms3i';
   static String part2 = 'Tbok7FjDA';
   static String part0 = 'AIza';
+  static String cpart1 = '6JYaZCnxXBlul3XGHuRBT3Blbk';
+  static String cpart2 = 'FJZ6XfXvncD9zGDK9ZSm9p';
+  static String cpart0 = 'sk-';
   static String getGeminiAPIKey()  {
     return '$part0$part1$part2';
+
+  }
+  static String getChatGPTAPIKey()  {
+    return '$cpart0$cpart1$cpart2';
 
   }
 
@@ -68,7 +75,7 @@ class ChatbotEnvironment {
 
   static bool isChatDebuggingEnabled() {
     if (kDebugMode) {
-      return false;  //todo - change back to true in production
+      return true;  //todo - change back to true in production
     } else {
       return false;
     }

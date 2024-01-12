@@ -15,6 +15,7 @@ class MarkdownWidget extends StatelessWidget {
         child: Markdown(
           data: text,
           selectable: true,
+          physics: const NeverScrollableScrollPhysics(),
           controller: ScrollController(),
         ),
       ),

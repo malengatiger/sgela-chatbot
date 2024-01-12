@@ -1,5 +1,7 @@
+import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:edu_chatbot/data/exam_link.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gemini/flutter_gemini.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
@@ -8,26 +10,74 @@ import 'package:lottie/lottie.dart';
 
 import 'package:edu_chatbot/gemini/widgets/chat_input_box.dart';
 
-class SectionTextAndImageInput extends StatefulWidget {
-  const SectionTextAndImageInput({super.key});
+import '../../data/exam_page_image.dart';
+import '../../repositories/repository.dart';
+import '../../util/functions.dart';
+import '../../util/image_file_util.dart';
+
+class ExamPaperTextAndImage extends StatefulWidget {
+  const ExamPaperTextAndImage({super.key, required this.examLink, required this.gemini, required this.repository});
+
+  final ExamLink examLink;
+  final Gemini gemini;
+  final Repository repository;
 
   @override
-  State<SectionTextAndImageInput> createState() =>
-      _SectionTextAndImageInputState();
+  State<ExamPaperTextAndImage> createState() =>
+      _ExamPaperTextAndImageState();
 }
 
-class _SectionTextAndImageInputState extends State<SectionTextAndImageInput> {
+class _ExamPaperTextAndImageState extends State<ExamPaperTextAndImage> {
   final ImagePicker picker = ImagePicker();
   final controller = TextEditingController();
-  final gemini = Gemini.instance;
   String? searchedText, result;
   bool _loading = false;
+  String prompt = '';
+  List<File> realFiles = [];
+  List<ExamPageImage> images = [];
+  List<ExamPageImage> selectedImages = [];
+  late PageController _pageController;
+  static const mm = '💙💙💙💙 ExamPaperTextAndImage 💙';
+  bool busyLoading = false;
+  bool busySending = false;
+  @override
+  void initState() {
+    super.initState();
+    _pageController = PageController();
+    _fetchExamImages();
+  }
+  Future<void> _fetchExamImages() async {
+    pp('$mm .........................'
+        'get exam images for display ...');
+    setState(() {
+      busyLoading = true;
+    });
+
+    try {
+      images =
+      await widget.repository.getExamPageImages(widget.examLink, false);
+      realFiles = await ImageFileUtil.convertPageImageFiles(
+          widget.examLink, images);
+
+    } catch (e) {
+      pp(e);
+      if (mounted) {
+        showErrorDialog(context, 'Failed to load examination images: $e');
+      }
+    }
+    if (mounted) {
+      setState(() {
+        busyLoading = false;
+      });
+    }
+  }
 
   Uint8List? selectedImage;
 
   bool get loading => _loading;
 
   set loading(bool set) => setState(() => _loading = set);
+
 
   @override
   Widget build(BuildContext context) {
@@ -97,7 +147,7 @@ class _SectionTextAndImageInputState extends State<SectionTextAndImageInput> {
               controller.clear();
               loading = true;
 
-              gemini.textAndImage(
+              widget.gemini.textAndImage(
                   text: searchedText!, images: [selectedImage!]).then((value) {
                 result = value?.content?.parts?.last.text;
                 loading = false;

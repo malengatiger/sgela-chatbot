@@ -25,23 +25,5 @@ class UserRepository {
 
   }
 
-  Future<List<Subject>> _readSubjects() async {
-    var url = ChatbotEnvironment.getSkunkUrl();
-    var res = await dioUtil.sendGetRequest('${url}links/getSubjects', {});
-    // Assuming the response data is a list of subjects
-    pp(res);
-    List<dynamic> responseData = res;
-    List<Subject> subjects = [];
-
-    for (var subjectData in responseData) {
-      Subject subject = Subject.fromJson(subjectData);
-      subjects.add(subject);
-    }
-    pp("$mm Subjects found: ${subjects.length} ");
-    if (subjects.isNotEmpty) {
-      await localDataService.addSubjects(subjects);
-    }
-    return subjects;
-  }
 
 }
