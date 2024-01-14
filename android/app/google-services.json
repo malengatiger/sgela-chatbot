@@ -12,7 +12,20 @@
           "package_name": "com.boha.edu_chatbot"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "413705168066-hjrnikl476fb9baei10k36c523p81vih.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.boha.edu_chatbot",
+            "certificate_hash": "a1c6d044035fb9a0deea9c24a7c7f3dd85ed6950"
+          }
+        },
+        {
+          "client_id": "413705168066-52dr9s8la4qg92797bmqkkt10tb5f8ri.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyBjVYccOuUD9ucbwbkYTRHDHymoVTNBQsw"
@@ -20,7 +33,19 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "413705168066-52dr9s8la4qg92797bmqkkt10tb5f8ri.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "413705168066-8p01sbeu0ujo4tv6054va50m32pkqfko.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.boha.eduChatbot"
+              }
+            }
+          ]
         }
       }
     }

@@ -1,7 +1,6 @@
 import 'dart:io';
 
 import 'package:edu_chatbot/data/exam_page_image.dart';
-import 'package:edu_chatbot/repositories/repository.dart';
 import 'package:edu_chatbot/services/firestore_service.dart';
 import 'package:edu_chatbot/ui/rating_widget.dart';
 import 'package:edu_chatbot/util/functions.dart';
@@ -37,23 +36,20 @@ class GeminiResponseViewer extends StatefulWidget {
 class _GeminiResponseViewerState extends State<GeminiResponseViewer> {
   static const mm = '🍐🍐🍐🍐 GeminiResponseViewer 🍐';
 
-
-  final bool _showRatingBar = true;
+  bool _showRatingBar = false;
   String responseText = '';
 
   @override
   void initState() {
     super.initState();
     removeCenterTags(widget.geminiResponse);
-
   }
+
   removeCenterTags(String text) {
     responseText = text.replaceAll('<center>', '').replaceAll('</center>', '');
-    setState(() {
-
-    });
-
+    setState(() {});
   }
+
   _sendRating(int mRating) async {
     try {
       var gr = GeminiResponseRating(
@@ -88,7 +84,6 @@ class _GeminiResponseViewerState extends State<GeminiResponseViewer> {
 
     var shareResult = await Share.shareXFiles([xFile]);
     pp('$mm shareResult.status.name: ${shareResult.status.name}');
-
   }
 
   bool isRated = false;
@@ -105,8 +100,8 @@ class _GeminiResponseViewerState extends State<GeminiResponseViewer> {
             children: [
               Text(
                 "${widget.examLink.subject!.title}",
-                style: myTextStyle(
-                    context, Theme.of(context).primaryColor, 14, FontWeight.bold),
+                style: myTextStyle(context, Theme.of(context).primaryColor, 14,
+                    FontWeight.bold),
               ),
             ],
           ),
@@ -119,6 +114,9 @@ class _GeminiResponseViewerState extends State<GeminiResponseViewer> {
                 if (isRated) {
                   Navigator.of(context).pop(ratingUpdated);
                 } else {
+                  setState(() {
+                    _showRatingBar = true;
+                  });
                   showToast(
                       message: 'Please Rate the SgelaAI response',
                       textStyle: myTextStyle(
@@ -134,37 +132,33 @@ class _GeminiResponseViewerState extends State<GeminiResponseViewer> {
                 },
                 icon: Icon(Icons.share, color: Theme.of(context).primaryColor))
           ],
-          bottom: PreferredSize(preferredSize: const Size.fromHeight(80), child: Column(
-            children: [
-              // Text(
-              //   "${widget.examLink.subjectTitle}",
-              //   style: myTextStyle(
-              //       context, Theme.of(context).primaryColor, 14, FontWeight.bold),
-              // ),
-              Text(
-                "${widget.examLink.title}",
-                style: myTextStyle(
-                    context, Theme.of(context).primaryColor, 13, FontWeight.normal),
-              ),
-              Text(
-                "${widget.examLink.documentTitle}",
-                style: myTextStyle(
-                    context, Theme.of(context).primaryColor, 13, FontWeight.normal),
-              ),
-              Text(
-                "Page ${widget.examPageImage.pageIndex}",
-                style: myTextStyle(
-                    context, Theme.of(context).primaryColor, 18, FontWeight.w900),
-              ),
-            ],
-          )),
+          bottom: PreferredSize(
+              preferredSize: const Size.fromHeight(64),
+              child: Column(
+                children: [
+                  Text(
+                    "${widget.examLink.title}",
+                    style: myTextStyle(context, Theme.of(context).primaryColor,
+                        13, FontWeight.normal),
+                  ),
+                  Text(
+                    "${widget.examLink.documentTitle}",
+                    style: myTextStyle(context, Theme.of(context).primaryColor,
+                        13, FontWeight.normal),
+                  ),
+                  Text(
+                    "Page ${widget.examPageImage.pageIndex}",
+                    style: myTextStyle(context, Theme.of(context).primaryColor,
+                        18, FontWeight.w900),
+                  ),
+                ],
+              )),
         ),
-        // backgroundColor: bright == Brightness.light?Colors.brown.shade100:Colors.black26,
         body: Stack(
           children: [
             Column(
               children: [
-                gapH8,
+                gapH4,
                 Card(
                   elevation: 8,
                   // color: Theme.of(context).primaryColor,
@@ -174,24 +168,15 @@ class _GeminiResponseViewerState extends State<GeminiResponseViewer> {
                     child: Text('SgelaAI Response',
                         style: myTextStyle(
                             context,
-                             Theme.of(context).primaryColor,
+                            Theme.of(context).primaryColor,
                             20,
                             FontWeight.w900)),
                   ),
                 ),
                 Expanded(
-                  child: ListView(
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: SingleChildScrollView(
-                              child:
-                                  md.MarkdownWidget(text: responseText)),
-                        ),
-                      ),
-                    ],
+                  child: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: md.MarkdownWidget(text: responseText),
                   ),
                 ),
               ],

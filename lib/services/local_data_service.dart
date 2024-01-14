@@ -17,7 +17,7 @@ class LocalDataService {
     pp('$mm initialize sqlite ...');
 
     db = await openDatabase(
-      join(await getDatabasesPath(), 'skunk045db'),
+      join(await getDatabasesPath(), 'skunk046db'),
       version: 1,
     );
     pp('$mm SQLite Database is open: ${db.isOpen} 🔵🔵 ${db.path}');
@@ -83,7 +83,6 @@ class LocalDataService {
     return tables.isNotEmpty;
   }
 
-
   Future<void> addExamImage(ExamPageImage image) async {
     try {
       await db.insert('exam_images', image.toJson());
@@ -92,7 +91,6 @@ class LocalDataService {
       pp("$mm addExamImage: ERROR: 👿${e.toString()} 👿🏽");
     }
   }
-
 
   Future addYouTubeData(List<YouTubeData> youTubeData) async {
     pp('$mm addYouTubeData to sqlite ...  😎 ${youTubeData.length}  😎');
@@ -108,9 +106,6 @@ class LocalDataService {
       }
     }
   }
-
-
-
 
   Future<List<ExamPageImage>> getExamImages(int examLinkId) async {
     List<ExamPageImage> examImages = [];

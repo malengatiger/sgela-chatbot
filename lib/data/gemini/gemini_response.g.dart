@@ -16,6 +16,8 @@ MyGeminiResponse _$MyGeminiResponseFromJson(Map<String, dynamic> json) =>
           : MyPromptFeedback.fromJson(
               json['promptFeedback'] as Map<String, dynamic>),
       json['tokensUsed'] as int?,
+      json['responseIsOK'] as bool?,
+      json['message'] as String?,
     );
 
 Map<String, dynamic> _$MyGeminiResponseToJson(MyGeminiResponse instance) =>
@@ -23,4 +25,6 @@ Map<String, dynamic> _$MyGeminiResponseToJson(MyGeminiResponse instance) =>
       'candidates': instance.candidates,
       'promptFeedback': instance.promptFeedback,
       'tokensUsed': instance.tokensUsed,
+      'responseIsOK': instance.responseIsOK,
+      'message': instance.message,
     };

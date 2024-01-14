@@ -5,6 +5,7 @@ import 'package:edu_chatbot/services/local_data_service.dart';
 import 'package:edu_chatbot/services/you_tube_service.dart';
 import 'package:edu_chatbot/ui/busy_indicator.dart';
 import 'package:edu_chatbot/ui/exam_link_list_widget.dart';
+import 'package:edu_chatbot/ui/powered_by.dart';
 import 'package:edu_chatbot/ui/you_tube_searcher.dart';
 import 'package:edu_chatbot/util/navigation_util.dart';
 import 'package:flutter/material.dart';
@@ -176,7 +177,8 @@ class ExamsDocumentListState extends State<ExamsDocumentList> {
                                     ),
                                   );
                                 }),
-                      )
+                      ),
+                      PoweredBy(repository: widget.repository),
                     ],
                   ),
                 )

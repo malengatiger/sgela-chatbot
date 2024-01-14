@@ -17,6 +17,8 @@ Organization _$OrganizationFromJson(Map<String, dynamic> json) => Organization(
       json['city'] == null
           ? null
           : City.fromJson(json['city'] as Map<String, dynamic>),
+      json['logoUrl'] as String?,
+      json['splashUrl'] as String?,
     );
 
 Map<String, dynamic> _$OrganizationToJson(Organization instance) =>
@@ -27,4 +29,6 @@ Map<String, dynamic> _$OrganizationToJson(Organization instance) =>
       'id': instance.id,
       'country': instance.country,
       'city': instance.city,
+      'logoUrl': instance.logoUrl,
+      'splashUrl': instance.splashUrl,
     };

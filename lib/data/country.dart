@@ -5,7 +5,8 @@ part 'country.g.dart';
 @JsonSerializable()
 class Country {
   int? id;
-  String? name;
+  String? name, capital, currencyName, currencySymbol, emoji, iso2, iso3, phoneCode, region, subregion, numericCode;
+  double? latitude, longitude;
 
 
   Country(this.id, this.name);

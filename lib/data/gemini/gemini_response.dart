@@ -9,9 +9,12 @@ class MyGeminiResponse {
   List<MyCandidates>? candidates;
   MyPromptFeedback? promptFeedback;
   int? tokensUsed;
+  bool? responseIsOK;
+  String? message;
 
 
-  MyGeminiResponse(this.candidates, this.promptFeedback, this.tokensUsed);
+  MyGeminiResponse(this.candidates, this.promptFeedback, this.tokensUsed,
+      this.responseIsOK, this.message);
 
   factory MyGeminiResponse.fromJson(Map<String, dynamic> json) =>
       _$MyGeminiResponseFromJson(json);

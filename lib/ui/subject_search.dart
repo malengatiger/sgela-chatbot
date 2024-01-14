@@ -1,4 +1,5 @@
 import 'package:badges/badges.dart' as bd;
+import 'package:edu_chatbot/data/organization.dart';
 import 'package:edu_chatbot/data/subject.dart';
 import 'package:edu_chatbot/repositories/repository.dart';
 import 'package:edu_chatbot/services/chat_gpt_service.dart';
@@ -7,6 +8,7 @@ import 'package:edu_chatbot/services/firestore_service.dart';
 import 'package:edu_chatbot/ui/busy_indicator.dart';
 import 'package:edu_chatbot/ui/color_gallery.dart';
 import 'package:edu_chatbot/ui/exam_document_list.dart';
+import 'package:edu_chatbot/ui/powered_by.dart';
 import 'package:edu_chatbot/util/dark_light_control.dart';
 import 'package:edu_chatbot/util/functions.dart';
 import 'package:flutter/material.dart';
@@ -240,6 +242,7 @@ class SubjectSearchState extends State<SubjectSearch> {
                           ),
                   ),
                 ),
+                PoweredBy(repository: widget.repository,),
               ],
             ),
           ),

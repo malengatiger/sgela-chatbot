@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:archive/archive.dart';
 import 'package:dio/dio.dart';
 import 'package:edu_chatbot/data/gemini_response_rating.dart';
+import 'package:edu_chatbot/data/organization.dart';
 import 'package:edu_chatbot/data/subject.dart';
 import 'package:edu_chatbot/services/local_data_service.dart';
 import 'package:edu_chatbot/util/dio_util.dart';
@@ -26,6 +27,17 @@ class Repository {
   static const mm = '💦💦💦💦 Repository 💦';
 
   Repository(this.dioUtil, this.localDataService, this.dio);
+
+  Future<Organization?> getSgelaOrganization() async {
+
+    String prefix = ChatbotEnvironment.getSkunkUrl();
+    String url = '${prefix}organizations/getSgelaOrganization';
+    var result = await dioUtil.sendGetRequest(url, {});
+    pp('$mm ... response from call: $result');
+    Organization org = Organization.fromJson(result);
+    return org;
+
+  }
 
   Future<List<ExamPageImage>> getExamPageImages(
       ExamLink examLink, bool useStream) async {

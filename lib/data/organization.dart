@@ -11,9 +11,11 @@ class Organization {
   Country? country;
   City? city;
 
+  String? logoUrl, splashUrl;
 
-  Organization(
-      this.name, this.email, this.cellphone, this.id, this.country, this.city);
+
+  Organization(this.name, this.email, this.cellphone, this.id, this.country,
+      this.city, this.logoUrl, this.splashUrl);
 
   factory Organization.fromJson(Map<String, dynamic> json) =>
       _$OrganizationFromJson(json);

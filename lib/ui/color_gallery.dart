@@ -1,7 +1,10 @@
 import 'dart:async';
 
+import 'package:edu_chatbot/ui/powered_by.dart';
 import 'package:flutter/material.dart';
+import 'package:get_it/get_it.dart';
 
+import '../repositories/repository.dart';
 import '../util/dark_light_control.dart';
 import '../util/functions.dart';
 import '../util/prefs.dart';
@@ -32,6 +35,9 @@ class ColorGalleryState extends State<ColorGallery> {
   void _setColorIndex(int index)  {
     widget.prefs.saveColorIndex(index);
     widget.colorWatcher.setColor(index);
+    Future.delayed(const Duration(milliseconds: 1000), (){
+      Navigator.of(context).pop();
+    });
   }
 
   @override
@@ -85,6 +91,7 @@ class ColorGalleryState extends State<ColorGallery> {
                             }),
                       ),
                     ),
+                    PoweredBy(repository: GetIt.instance<Repository>()),
                   ],
                 ),
               ),

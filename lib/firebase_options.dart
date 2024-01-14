@@ -67,6 +67,8 @@ class DefaultFirebaseOptions {
     messagingSenderId: '413705168066',
     projectId: 'sgela-ai-33',
     storageBucket: 'sgela-ai-33.appspot.com',
+    androidClientId: '413705168066-hjrnikl476fb9baei10k36c523p81vih.apps.googleusercontent.com',
+    iosClientId: '413705168066-8p01sbeu0ujo4tv6054va50m32pkqfko.apps.googleusercontent.com',
     iosBundleId: 'com.boha.eduChatbot',
   );
 
@@ -76,6 +78,8 @@ class DefaultFirebaseOptions {
     messagingSenderId: '413705168066',
     projectId: 'sgela-ai-33',
     storageBucket: 'sgela-ai-33.appspot.com',
+    androidClientId: '413705168066-hjrnikl476fb9baei10k36c523p81vih.apps.googleusercontent.com',
+    iosClientId: '413705168066-ea6qsls5k85fp9cdps1r2e0i41npaqiu.apps.googleusercontent.com',
     iosBundleId: 'com.boha.eduChatbot.RunnerTests',
   );
 }

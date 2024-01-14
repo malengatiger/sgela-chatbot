@@ -73,7 +73,9 @@ dependencies:
   flutter_gemini: ^2.0.1
   lottie: ^2.7.0
   dart_openai: ^5.0.0
-  envied: ^0.5.3
+  pin_code_fields: ^8.0.1
+  reactive_forms: ^16.1.1
+
 
 dev_dependencies:
   flutter_test:

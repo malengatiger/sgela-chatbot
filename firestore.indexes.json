@@ -1,0 +1,28 @@
+{
+  "indexes": [
+    {
+      "collectionGroup": "User",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "organizationId", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "ExamLink",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "examDocumentId", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "City",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "countryId", "order": "ASCENDING" }
+      ]
+    }
+
+  ],
+  "fieldOverrides": []
+}
+

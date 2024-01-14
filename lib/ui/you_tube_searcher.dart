@@ -1,13 +1,16 @@
 import 'package:badges/badges.dart' as bd;
 import 'package:edu_chatbot/ui/busy_indicator.dart';
+import 'package:edu_chatbot/ui/powered_by.dart';
 import 'package:edu_chatbot/ui/you_tube_gallery.dart';
 import 'package:edu_chatbot/ui/you_tube_viewer.dart';
 import 'package:edu_chatbot/util/environment.dart';
 import 'package:flutter/material.dart';
+import 'package:get_it/get_it.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../data/subject.dart';
 import '../data/youtube_data.dart';
+import '../repositories/repository.dart';
 import '../services/you_tube_service.dart';
 import '../util/dark_light_control.dart';
 import '../util/functions.dart';
@@ -178,6 +181,7 @@ class YouTubeSearcherState extends State<YouTubeSearcher> {
                                           _launchVideo(video.videoUrl!);
                                         }),
                               ),
+                        PoweredBy(repository: GetIt.instance<Repository>()),
                       ],
                     ),
                   ),

@@ -78,6 +78,7 @@ class ExamLinkListWidgetState extends State<ExamLinkListWidget> {
               documentId: widget.examDocument.id!);
       pp('$mm fetchedExamLinks: examLinks: ${examLinks.length}');
       filteredExamLinks = examLinks;
+      filteredExamLinks.sort((a,b) => a.title!.compareTo(b.title!));
       await ImageFileUtil.createExamPageImages(
           examLinks, widget.localDataService);
     } catch (e) {
@@ -149,6 +150,30 @@ class ExamLinkListWidgetState extends State<ExamLinkListWidget> {
         Theme.of(context).textTheme.bodySmall!.copyWith(
               fontWeight: FontWeight.bold,
             );
+   double height = 0.0;
+    switch(filteredExamLinks.length) {
+      case 1:
+        height = 120;
+        break;
+      case 2:
+        height = 120*2;
+        break;
+      case 3:
+        height = 120*3;
+        break;
+      case 4:
+        height = 120*4;
+        break;
+      case 5:
+        height = 120*5;
+        break;
+      case 6:
+        height = 120*6;
+        break;
+      default:
+        height = 400;
+    }
+
     return Scaffold(
       appBar: AppBar(
         title: Column(
@@ -193,7 +218,7 @@ class ExamLinkListWidgetState extends State<ExamLinkListWidget> {
             ),
             const SizedBox(height: 24.0),
             SizedBox(
-              height: filteredExamLinks.length < 5 ? 260 : 480,
+              height: height,
               child: Card(
                 elevation: 8,
                 shape: RoundedRectangleBorder(

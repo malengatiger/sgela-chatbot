@@ -1,6 +1,5 @@
 import 'dart:io';
 
-import 'package:edu_chatbot/ui/chat_widget.dart';
 import 'package:edu_chatbot/util/functions.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_tex/flutter_tex.dart';
@@ -54,7 +53,7 @@ class _GenericImageResponseViewerState
                 children: [
                   gapH16,
                   Text(
-                    'SgelaAI Response',
+                    'SgelaAI Image Response',
                     style: myTextStyle(context, Theme.of(context).primaryColor,
                         24, FontWeight.w900),
                   ),
