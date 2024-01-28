@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:edu_chatbot/data/organization.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../data/branding.dart';
 import '../data/country.dart';
 import '../data/user.dart';
 
@@ -43,6 +44,23 @@ class Prefs {
     var country = Country.fromJson(jx);
     return country;
   }
+
+  void saveBrand(Branding brand) {
+    Map mJson = brand.toJson();
+    var jx = json.encode(mJson);
+    sharedPreferences.setString('brand', jx);
+  }
+
+  Branding? getBrand() {
+    var string = sharedPreferences.getString('brand');
+    if (string == null) {
+      return null;
+    }
+    var jx = json.decode(string);
+    var b = Branding.fromJson(jx);
+    return b;
+  }
+
   void saveOrganization(Organization organization) {
     Map mJson = organization.toJson();
     var jx = json.encode(mJson);
@@ -83,4 +101,47 @@ class Prefs {
     }
     return color;
   }
+
+  saveCountries(List<Country> countries) {
+    List<Map<String, dynamic>> countryStrings =
+    countries.map((pm) => pm.toJson()).toList();
+    List<String> countryJsonStrings =
+    countryStrings.map((pm) => json.encode(pm)).toList();
+    sharedPreferences.setStringList('countries', countryJsonStrings);
+  }
+
+  List<Country> getCountries() {
+    List<String>? paymentMethodJsonStrings =
+    sharedPreferences.getStringList('countries');
+    if (paymentMethodJsonStrings != null) {
+      List<Country> paymentMethods = paymentMethodJsonStrings
+          .map((pmJson) => Country.fromJson(json.decode(pmJson)))
+          .toList();
+      return paymentMethods;
+    } else {
+      return [];
+    }
+  }
+  //
+  saveBrandings(List<Branding> brandings) {
+    List<Map<String, dynamic>> brandingStrings =
+    brandings.map((pm) => pm.toJson()).toList();
+    List<String> brandingJsonStrings =
+    brandingStrings.map((pm) => json.encode(pm)).toList();
+    sharedPreferences.setStringList('brandings', brandingJsonStrings);
+  }
+
+  List<Branding> getBrandings() {
+    List<String>? brandingJsonStrings =
+    sharedPreferences.getStringList('brandings');
+    if (brandingJsonStrings != null) {
+      List<Branding> brandings = brandingJsonStrings
+          .map((pmJson) => Branding.fromJson(json.decode(pmJson)))
+          .toList();
+      return brandings;
+    } else {
+      return [];
+    }
+  }
+//
 }

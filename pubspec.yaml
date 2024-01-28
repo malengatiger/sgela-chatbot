@@ -75,6 +75,11 @@ dependencies:
   dart_openai: ^5.0.0
   pin_code_fields: ^8.0.1
   reactive_forms: ^16.1.1
+  geolocator: ^10.1.0
+  geocoding: ^2.1.1
+  permission_handler: ^11.2.0
+  crypto: ^3.0.3
+  convert: ^3.1.1
 
 
 dev_dependencies:

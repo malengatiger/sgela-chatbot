@@ -38,17 +38,20 @@ class YouTubeService {
     return youTubeDataList;
   }
 
+/*
+(@RequestParam("query") String query,
+                                               @RequestParam("maxResults") Long maxResults,
+                                               @RequestParam("subjectId") Long subjectId) throws Exception { */
   Future<List<YouTubeData>> searchByText(
       {required String query,
       required int subjectId,
-      required int maxResults,
-      required int tagType}) async {
+      required int maxResults}) async {
     pp('$mm searchByText: subjectId: $subjectId');
     String url = ChatbotEnvironment.getSkunkUrl();
     String mUrl = '${url}searchVideos';
     List<YouTubeData> youTubeDataList = [];
     var res = await dioUtil.sendGetRequest(mUrl,
-        {'subjectId': subjectId, 'maxResults': maxResults, 'tagType': tagType});
+        {'subjectId': subjectId, 'maxResults': maxResults, 'query': query});
     // Assuming the response data is a list of youTubeDataList
 
     List<dynamic> responseData = res;
@@ -58,7 +61,7 @@ class YouTubeService {
     }
 
     pp("$mm YouTubeData found: ${youTubeDataList.length}, "
-        "subjectId: $subjectId maxResults: $maxResults tagType: $tagType");
+        "subjectId: $subjectId maxResults: $maxResults query: $query");
     if (youTubeDataList.isNotEmpty) {
       localDataService.addYouTubeData(youTubeDataList);
     }

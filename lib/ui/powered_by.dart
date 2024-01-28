@@ -2,7 +2,11 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:edu_chatbot/data/organization.dart';
 import 'package:edu_chatbot/repositories/repository.dart';
 import 'package:edu_chatbot/util/functions.dart';
+import 'package:edu_chatbot/util/prefs.dart';
 import 'package:flutter/material.dart';
+import 'package:get_it/get_it.dart';
+
+import '../data/branding.dart';
 
 class PoweredBy extends StatefulWidget {
   const PoweredBy({
@@ -21,9 +25,11 @@ class PoweredBy extends StatefulWidget {
 class _PoweredByState extends State<PoweredBy> {
   static const String mm = '🍎🍎🍎 PoweredBy: ';
 
-  Organization? org;
+  Organization? sponsorOrganization, sgelaOrganization;
+  Branding? branding;
   bool busy = false;
-
+  Prefs prefs = GetIt.instance<Prefs>();
+  Repository repository = GetIt.instance<Repository>();
   @override
   void initState() {
     super.initState();
@@ -31,13 +37,15 @@ class _PoweredByState extends State<PoweredBy> {
   }
 
   Future<void> _getOrganization() async {
-    org = widget.organization;
+    sponsorOrganization = widget.organization;
     setState(() {
       busy = true;
     });
     try {
-      org ??= await widget.repository.getSgelaOrganization();
-      pp('$mm org: ${org!.toJson()}');
+      sponsorOrganization = prefs.getOrganization();
+      branding = prefs.getBrand();
+      sgelaOrganization = await repository.getSgelaOrganization();
+      pp('$mm org: ${sponsorOrganization!.toJson()}');
     } catch (e) {
       pp(e);
       if (mounted) {
@@ -59,17 +67,17 @@ class _PoweredByState extends State<PoweredBy> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             gapW4,
-            const Text('Powered by'),
+             Text('Powered by', style: myTextStyleTiny(context),),
             gapW4,
-            org == null ? gapW4 : Text('${org!.name}'),
-            gapW32,
-            org == null
+            sponsorOrganization == null ? gapW4 : Text('${sponsorOrganization!.name}'),
+            gapW8,
+            branding == null
                 ? gapW4
                 : Card(
                     elevation: 8,
                     child: CachedNetworkImage(
                       height: 32,
-                      imageUrl: org!.logoUrl!,
+                      imageUrl: branding!.logoUrl!,
                       placeholder: (context, url) => const CircularProgressIndicator(),
                       errorWidget: (context, url, error) => const Icon(Icons.error),
                     ),

@@ -2,7 +2,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dio/dio.dart';
 import 'package:edu_chatbot/services/chat_gpt_service.dart';
 import 'package:edu_chatbot/services/firestore_service.dart';
-import 'package:edu_chatbot/services/registration_service.dart';
 import 'package:edu_chatbot/util/dark_light_control.dart';
 import 'package:edu_chatbot/util/prefs.dart';
 import 'package:flutter_gemini/flutter_gemini.dart';
@@ -33,7 +32,7 @@ Future<void> registerServices() async {
   var prefs = Prefs(await SharedPreferences.getInstance());
   var dlc = DarkLightControl(prefs);
   var cWatcher = ColorWatcher(dlc, prefs);
-  var firestoreService = FirestoreService(FirebaseFirestore.instance);
+  var firestoreService = FirestoreService(FirebaseFirestore.instance, prefs);
   GetIt.instance.registerLazySingleton<MathService>(() => MathService());
   GetIt.instance.registerLazySingleton<ChatService>(() => ChatService(dioUtil));
   GetIt.instance

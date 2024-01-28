@@ -69,6 +69,28 @@ class YouTubeSearcherState extends State<YouTubeSearcher> {
     });
   }
 
+  Future<void> _searchByText(String query) async {
+    pp('$mm ................ searchByText YouTube ...');
+    setState(() {
+      busy = true;
+    });
+    try {
+      videos = await widget.youTubeService.searchByText(
+          subjectId: widget.subject.id!,
+          maxResults: ChatbotEnvironment.maxResults,
+          query: query);
+      pp('$mm ... search YouTube found: ${videos.length} ...');
+    } catch (e) {
+      pp(e);
+      if (mounted) {
+        showErrorDialog(context, 'Error: $e');
+      }
+    }
+    setState(() {
+      busy = false;
+    });
+  }
+
   void _launchVideo(String videoUrl) async {
     pp('$mm .................. _launchVideo: $videoUrl ...');
 
@@ -114,20 +136,22 @@ class YouTubeSearcherState extends State<YouTubeSearcher> {
                   onPressed: () {
                     _navigateToColorGallery();
                   },
-                  icon:  Icon(Icons.color_lens_outlined, color: Theme.of(context).primaryColor)),
+                  icon: Icon(Icons.color_lens_outlined,
+                      color: Theme.of(context).primaryColor)),
               IconButton(
                   onPressed: () {
                     setState(() {
                       showSearch = !showSearch;
                     });
                   },
-                  icon:  Icon(Icons.search, color: Theme.of(context).primaryColor)),
+                  icon: Icon(Icons.search,
+                      color: Theme.of(context).primaryColor)),
             ],
           ),
           body: Stack(
             children: [
               bd.Badge(
-                position: bd.BadgePosition.topEnd(top:24, end: 12),
+                position: bd.BadgePosition.topEnd(top: 24, end: 12),
                 badgeContent: Text(
                   '${videos.length}',
                   style:
@@ -159,7 +183,15 @@ class YouTubeSearcherState extends State<YouTubeSearcher> {
                                     suffixIcon: IconButton(
                                       icon: const Icon(Icons.search),
                                       onPressed: () {
-                                        _search();
+                                        if (textEditingController
+                                            .value.text.isEmpty) {
+                                          showToast(
+                                              message: 'Enter search text',
+                                              context: context);
+                                        } else {
+                                          _searchByText(
+                                              textEditingController.text);
+                                        }
                                       },
                                     ),
                                   ),
@@ -169,7 +201,8 @@ class YouTubeSearcherState extends State<YouTubeSearcher> {
                         busy
                             ? const Expanded(
                                 child: BusyIndicator(
-                                  caption: 'Searching for videos ... please wait',
+                                  caption:
+                                      'Searching for videos ... please wait',
                                 ),
                               )
                             : Expanded(
