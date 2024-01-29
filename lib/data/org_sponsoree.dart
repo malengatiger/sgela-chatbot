@@ -1,5 +1,5 @@
 
-import 'package:edu_chatbot/data/user.dart';
+import 'package:edu_chatbot/data/sgela_user.dart';
 import 'package:json_annotation/json_annotation.dart';
 
 import 'organization.dart';
@@ -12,7 +12,7 @@ class OrgSponsoree {
   String?
       organizationName;
   bool? activeFlag;
-  User? user;
+  SgelaUser? user;
 
 
   OrgSponsoree(this.organizationId, this.id, this.date, this.organizationName,

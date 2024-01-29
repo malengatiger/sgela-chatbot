@@ -5,6 +5,7 @@ import 'package:edu_chatbot/services/chat_gpt_service.dart';
 import 'package:edu_chatbot/services/firestore_service.dart';
 import 'package:edu_chatbot/util/dark_light_control.dart';
 import 'package:edu_chatbot/util/prefs.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_gemini/flutter_gemini.dart';
 import 'package:get_it/get_it.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -43,7 +44,7 @@ Future<void> registerServices() async {
   GetIt.instance.registerLazySingleton<PhysicsService>(() => PhysicsService());
   GetIt.instance
       .registerLazySingleton<Repository>(() => repository);
-  GetIt.instance.registerLazySingleton<AuthService>(() => AuthService());
+  GetIt.instance.registerLazySingleton<AuthService>(() => AuthService(FirebaseAuth.instance, prefs, firestoreService));
   GetIt.instance
       .registerLazySingleton<AccountingService>(() => AccountingService());
   GetIt.instance.registerLazySingleton<LocalDataService>(() => lds);

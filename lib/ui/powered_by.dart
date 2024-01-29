@@ -25,7 +25,7 @@ class PoweredBy extends StatefulWidget {
 class _PoweredByState extends State<PoweredBy> {
   static const String mm = '🍎🍎🍎 PoweredBy: ';
 
-  Organization? sponsorOrganization, sgelaOrganization;
+  Organization? sponsorOrganization;
   Branding? branding;
   bool busy = false;
   Prefs prefs = GetIt.instance<Prefs>();
@@ -44,12 +44,11 @@ class _PoweredByState extends State<PoweredBy> {
     try {
       sponsorOrganization = prefs.getOrganization();
       branding = prefs.getBrand();
-      sgelaOrganization = await repository.getSgelaOrganization();
-      pp('$mm org: ${sponsorOrganization!.toJson()}');
-    } catch (e) {
+    } catch (e,s) {
       pp(e);
+      pp(s);
       if (mounted) {
-        showErrorDialog(context, 'Unable to get Sgela org');
+        showErrorDialog(context, 'Unable to get sponsorOrganization ');
       }
     }
     setState(() {

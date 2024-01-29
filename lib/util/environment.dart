@@ -6,8 +6,8 @@ import 'functions.dart';
 class ChatbotEnvironment {
   //💙Skunk backend -
 
-  static const _ipNormal = '192.168.86.230';
-  static const _ipFibreDown = '192.168.86.242';
+  static const _ipNormal = '192.168.86.242';
+  static const _ipFibreDown = '192.168.86.230';
   static const bool isFibreDown = false;
   static const _devSkunkUrl = 'http://${isFibreDown? _ipFibreDown: _ipNormal}:8080/skunk-service/';
   static const _prodSkunkUrl = 'https://skunkworks-backend-service-knzs6eczwq-nw.a.run.app/';

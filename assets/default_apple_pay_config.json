@@ -1,0 +1,14 @@
+{
+  "provider": "apple_pay",
+  "data": {
+    "merchantIdentifier": "merchant.com.boha.sgela",
+    "displayName": "Sam's Fish",
+    "merchantCapabilities": ["3DS", "debit", "credit"],
+    "supportedNetworks": ["amex", "visa", "discover", "masterCard"],
+    "countryCode": "ZA",
+    "currencyCode": "ZAR",
+    "requiredBillingContactFields": ["emailAddress", "name", "phoneNumber", "postalAddress"],
+    "requiredShippingContactFields": [],
+    "shippingMethods": []
+  }
+}

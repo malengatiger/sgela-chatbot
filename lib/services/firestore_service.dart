@@ -11,7 +11,7 @@ import 'package:firebase_core/firebase_core.dart';
 import '../data/branding.dart';
 import '../data/city.dart';
 import '../data/country.dart';
-import '../data/user.dart';
+import '../data/sgela_user.dart';
 import '../util/functions.dart';
 import '../util/location_util.dart';
 
@@ -77,6 +77,23 @@ class FirestoreService {
     return examLinks;
   }
 
+  List<City> cities = [];
+  Future<List<City>> getCountryCities(int countryId) async {
+    if (cities.isNotEmpty) {
+      return cities;
+    }
+
+    var querySnapshot = await firebaseFirestore
+        .collection('City')
+        .where('countryId', isEqualTo: countryId)
+        .get();
+    for (var s in querySnapshot.docs) {
+      var subject = City.fromJson(s.data());
+      cities.add(subject);
+    }
+    return cities;
+  }
+
   Future<List<GeminiResponseRating>> getRatings(int examLinkId) async {
     List<GeminiResponseRating> ratings = [];
     var querySnapshot = await firebaseFirestore
@@ -97,16 +114,78 @@ class FirestoreService {
 
   Future addOrgSponsoree(OrgSponsoree sponsoree) async {
     var colRef = firebaseFirestore.collection('OrgSponsoree');
+    pp('$mm ... adding sponsoree: ${sponsoree.toJson()}');
+    prefs.saveSponsoree(sponsoree);
     await colRef.add(sponsoree.toJson());
   }
 
-  Future<User> addUser(User user) async {
-    var ref = await firebaseFirestore.collection('User').add(user.toJson());
+  Future<SgelaUser> addSgelaUser(SgelaUser user) async {
+    var ref = await firebaseFirestore
+        .collection('SgelaUser').add(user.toJson());
     var m = ref.path;
-    pp('$mm user added to database: ${user.toJson()}');
+    prefs.saveUser(user);
+    pp('$mm user added to database and local prefs: ${user.toJson()}');
     return user;
   }
+  Future<Country?> getLocalCountry() async {
+    if (localCountry != null) {
+      return localCountry!;
+    }
+    if (countries.isEmpty) {
+      await getCountries();
+    }
+    var place = await LocationUtil.findNearestPlace();
+    if (place != null) {
+      for (var value in countries) {
+        if (value.name!.contains(place.country!)) {
+          localCountry = value;
+          pp('$mm ... local country found: ${localCountry!.name}');
+          break;
+        }
+      }
+    }
+    return localCountry;
+  }
+  City? localCity;
+  Future<City?> getLocalCity() async {
+    if (localCity != null) {
+      return localCity!;
+    }
 
+    var place = await LocationUtil.findNearestPlace();
+    if (place != null) {
+      for (var city in cities) {
+        if (place.administrativeArea != null) {
+          if (city.name!.contains(place.administrativeArea!)) {
+            localCity = city;
+            break;
+          }
+        }
+        if (place.subAdministrativeArea != null) {
+          if (city.name!.contains(place.subAdministrativeArea!)) {
+            localCity = city;
+            break;
+          }
+        }
+
+        if (place.locality != null) {
+          if (city.name!.contains(place.locality!)) {
+            localCity = city;
+            break;
+          }
+        }
+
+        if (place.subLocality != null) {
+          if (city.name!.contains(place.subLocality!)) {
+            localCity = city;
+            break;
+          }
+        }
+
+      }
+    }
+    return localCity;
+  }
   List<Country> countries = [];
 
   Future<List<Country>> getCountries() async {
@@ -151,25 +230,6 @@ class FirestoreService {
     return brandings;
   }
   Country? localCountry;
-  Future<Country?> getLocalCountry() async {
-    if (localCountry != null) {
-      return localCountry!;
-    }
-    if (countries.isEmpty) {
-      await getCountries();
-    }
-    var place = await LocationUtil.findNearestPlace();
-    if (place != null) {
-      for (var value in countries) {
-        if (value.name!.contains(place.country!)) {
-          localCountry = value;
-          pp('$mm ... local country found: ${localCountry!.name}');
-          break;
-        }
-      }
-    }
-    return localCountry;
-  }
 
   Future<Organization?> getOrganization(int organizationId) async {
     pp('$mm ... getOrganization from Firestore ... organizationId: $organizationId');

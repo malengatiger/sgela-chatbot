@@ -1,10 +1,8 @@
 import 'package:dart_openai/dart_openai.dart';
 import 'package:edu_chatbot/repositories/repository.dart';
-import 'package:edu_chatbot/services/chat_service.dart';
 import 'package:edu_chatbot/services/downloader_isolate.dart';
-import 'package:edu_chatbot/services/firestore_service.dart';
-import 'package:edu_chatbot/services/local_data_service.dart';
 import 'package:edu_chatbot/services/you_tube_service.dart';
+import 'package:edu_chatbot/ui/landing_page.dart';
 import 'package:edu_chatbot/ui/subject_search.dart';
 import 'package:edu_chatbot/util/dark_light_control.dart';
 import 'package:edu_chatbot/util/environment.dart';
@@ -117,17 +115,7 @@ class MyApp extends StatelessWidget {
               title: 'SgelaAI',
               debugShowCheckedModeBanner: false,
               theme: _getTheme(context),
-              home: SubjectSearch(
-                repository: repository,
-                gemini: gemini,
-                prefs: GetIt.instance<Prefs>(),
-                firestoreService: GetIt.instance<FirestoreService>(),
-                localDataService: GetIt.instance<LocalDataService>(),
-                chatService: GetIt.instance<ChatService>(),
-                youTubeService: youTubeService,
-                colorWatcher: GetIt.instance<ColorWatcher>(),
-                darkLightControl: GetIt.instance<DarkLightControl>(),
-              ),
+              home: const LandingPage(),
             );
           }),
     );

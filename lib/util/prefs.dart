@@ -1,31 +1,49 @@
 import 'dart:convert';
 
+import 'package:edu_chatbot/data/org_sponsoree.dart';
 import 'package:edu_chatbot/data/organization.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../data/branding.dart';
 import '../data/country.dart';
-import '../data/user.dart';
+import '../data/sgela_user.dart';
 
 class Prefs {
   final SharedPreferences sharedPreferences;
 
   Prefs(this.sharedPreferences);
 
-  Future saveUser(User user) async {
+  Future saveUser(SgelaUser user) async {
     Map mJson = user.toJson();
     var jx = json.encode(mJson);
     sharedPreferences.setString('user', jx);
     return null;
   }
 
-  User? getUser() {
+  SgelaUser? getUser() {
     var string = sharedPreferences.getString('user');
     if (string == null) {
       return null;
     }
     var jx = json.decode(string);
-    var user = User.fromJson(jx);
+    var user = SgelaUser.fromJson(jx);
+    return user;
+  }
+
+  Future saveSponsoree(OrgSponsoree user) async {
+    Map mJson = user.toJson();
+    var jx = json.encode(mJson);
+    sharedPreferences.setString('sponsoree', jx);
+    return null;
+  }
+
+  OrgSponsoree? getSponsoree() {
+    var string = sharedPreferences.getString('sponsoree');
+    if (string == null) {
+      return null;
+    }
+    var jx = json.decode(string);
+    var user = OrgSponsoree.fromJson(jx);
     return user;
   }
 

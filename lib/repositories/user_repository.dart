@@ -3,23 +3,23 @@ import 'package:edu_chatbot/services/local_data_service.dart';
 import 'package:edu_chatbot/util/dio_util.dart';
 import 'package:edu_chatbot/util/environment.dart';
 
-import '../data/user.dart';
+import '../data/sgela_user.dart';
 import '../util/functions.dart';
 
-class UserRepository {
+class SgelaUserRepository {
   final DioUtil dioUtil;
   final LocalDataService localDataService;
 
-  static const mm = '💦💦💦💦 UserRepository 💦';
+  static const mm = '💦💦💦💦 SgelaUserRepository 💦';
 
 
-  UserRepository(this.dioUtil, this.localDataService);
+  SgelaUserRepository(this.dioUtil, this.localDataService);
 
-  Future<User?> registerUser(User user) async {
+  Future<SgelaUser?> registerSgelaUser(SgelaUser user) async {
     return null;
   }
 
-  Future<List<User>> getUsers(String organizationId) async {
+  Future<List<SgelaUser>> getSgelaUsers(String organizationId) async {
 
       return [];
 

@@ -14,7 +14,7 @@ OrgSponsoree _$OrgSponsoreeFromJson(Map<String, dynamic> json) => OrgSponsoree(
       json['activeFlag'] as bool?,
       json['user'] == null
           ? null
-          : User.fromJson(json['user'] as Map<String, dynamic>),
+          : SgelaUser.fromJson(json['user'] as Map<String, dynamic>),
     );
 
 Map<String, dynamic> _$OrgSponsoreeToJson(OrgSponsoree instance) =>

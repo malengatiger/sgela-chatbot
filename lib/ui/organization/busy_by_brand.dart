@@ -130,19 +130,19 @@ class BusyByBrandState extends State<BusyByBrand>
                               mainAxisAlignment: MainAxisAlignment.center,
                               crossAxisAlignment: CrossAxisAlignment.center,
                               children: [
-                                gapH16,
+                                gapH8,
                                 const SizedBox(
-                                  height: 14,
-                                  width: 14,
+                                  height: 18,
+                                  width: 18,
                                   child: CircularProgressIndicator(
                                     backgroundColor: Colors.pink,
-                                    strokeWidth: 2,
+                                    strokeWidth: 4,
                                   ),
                                 ),
-                                gapH16,
+                                gapH8,
                                 const Text(
                                     'SgelaAI is huffing and puffing but will not blow your house down!'),
-                                gapH16,
+                                gapH8,
                                 Row(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
@@ -153,11 +153,11 @@ class BusyByBrandState extends State<BusyByBrand>
                                     gapW16,
                                     Text(
                                       elapsedTime,
-                                      style: myTextStyleMediumBold(context),
+                                      style: myTextStyleMediumBoldPrimaryColor(context),
                                     ),
                                   ],
                                 ),
-                                gapH16,
+                                gapH8,
                               ],
                             ),
                           )),

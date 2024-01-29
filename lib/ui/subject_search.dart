@@ -26,39 +26,30 @@ import 'image_picker_widget.dart';
 import 'organization_selector.dart';
 
 class SubjectSearch extends StatefulWidget {
-  final Repository repository;
-  final LocalDataService localDataService;
-  final ChatService chatService;
-  final YouTubeService youTubeService;
-  final Prefs prefs;
-  final FirestoreService firestoreService;
-  final ColorWatcher colorWatcher;
-  final DarkLightControl darkLightControl;
-  final Gemini gemini;
+
 
   const SubjectSearch(
-      {super.key,
-      required this.repository,
-      required this.localDataService,
-      required this.chatService,
-      required this.youTubeService,
-      required this.firestoreService,
-      required this.prefs,
-      required this.colorWatcher,
-      required this.darkLightControl,
-      required this.gemini});
+      {super.key,});
 
   @override
   SubjectSearchState createState() => SubjectSearchState();
 }
 
 class SubjectSearchState extends State<SubjectSearch> {
+  final Repository repository = GetIt.instance<Repository>();
+  final LocalDataService localDataService = GetIt.instance<LocalDataService>();
+  final ChatService chatService = GetIt.instance<ChatService>();
+  final YouTubeService youTubeService = GetIt.instance<YouTubeService>();
+  final Prefs prefs = GetIt.instance<Prefs>();
+  final FirestoreService firestoreService = GetIt.instance<FirestoreService>();
+  final ColorWatcher colorWatcher = GetIt.instance<ColorWatcher>();
+  final DarkLightControl darkLightControl = GetIt.instance<DarkLightControl>();
+  final Gemini gemini = GetIt.instance<Gemini>();
   final TextEditingController _searchController = TextEditingController();
   List<Subject> _subjects = [];
   List<Subject> _filteredSubjects = [];
   bool busy = false, _showSearchBox = false;
   static const String mm = '🍎 🍎 🍎 SubjectSearch: ';
-  Prefs prefs = GetIt.instance<Prefs>();
   Branding? branding;
 
   @override
@@ -67,7 +58,7 @@ class SubjectSearchState extends State<SubjectSearch> {
     _checkIfSponsored();
   }
 
-  Organization? sgelaOrganization, sponsorOrganization;
+  Organization?  sponsorOrganization;
 
   _checkIfSponsored() async {
     sponsorOrganization = prefs.getOrganization();
@@ -109,13 +100,10 @@ class SubjectSearchState extends State<SubjectSearch> {
       //todo - 🍎🍎🍎 sort out the real implementation!!!
       sponsorOrganization = prefs.getOrganization();
       branding = prefs.getBrand();
-      sgelaOrganization ??= await widget.repository.getSgelaOrganization();
-      pp('$mm org: ${sgelaOrganization!.toJson()}');
+      pp('$mm sponsorOrganization: ${sponsorOrganization!.toJson()}');
     } catch (e) {
       pp(e);
-      if (mounted) {
-        showErrorDialog(context, 'Unable to get Sgela organization');
-      }
+
     }
     setState(() {
       busy = false;
@@ -127,7 +115,7 @@ class SubjectSearchState extends State<SubjectSearch> {
       busy = true;
     });
     try {
-      _subjects = await widget.firestoreService.getSubjects();
+      _subjects = await firestoreService.getSubjects();
       _subjects.sort((a, b) => a.title!.compareTo(b.title!));
       _filteredSubjects = _subjects;
     } catch (e) {
@@ -152,7 +140,7 @@ class SubjectSearchState extends State<SubjectSearch> {
     NavigationUtils.navigateToPage(
         context: context,
         widget: ImagePickerWidget(
-          chatService: widget.chatService,
+          chatService: chatService,
           examLink: null,
         ));
   }
@@ -168,14 +156,14 @@ class SubjectSearchState extends State<SubjectSearch> {
         context: context,
         widget: ExamsDocumentList(
           subject: subject,
-          repository: widget.repository,
-          localDataService: widget.localDataService,
-          chatService: widget.chatService,
-          youTubeService: widget.youTubeService,
-          colorWatcher: widget.colorWatcher,
-          gemini: widget.gemini,
-          prefs: widget.prefs,
-          firestoreService: widget.firestoreService,
+          repository: repository,
+          localDataService: localDataService,
+          chatService: chatService,
+          youTubeService: youTubeService,
+          colorWatcher: colorWatcher,
+          gemini: gemini,
+          prefs: prefs,
+          firestoreService: firestoreService,
         ));
   }
 
@@ -194,7 +182,7 @@ class SubjectSearchState extends State<SubjectSearch> {
               fontWeight: FontWeight.w900,
             );
     var isDark =
-        isDarkMode(widget.prefs, MediaQuery.of(context).platformBrightness);
+        isDarkMode(prefs, MediaQuery.of(context).platformBrightness);
     return GestureDetector(
       onTap: () {
         FocusScope.of(context).unfocus();
@@ -347,7 +335,7 @@ class SubjectSearchState extends State<SubjectSearch> {
                   child: Card(
                     elevation: 8,
                     child: PoweredBy(
-                      repository: widget.repository,
+                      repository: repository,
                     ),
                   ),
                 ),
@@ -360,11 +348,11 @@ class SubjectSearchState extends State<SubjectSearch> {
   }
 
   _handleMode(Brightness bright) {
-    var isDark = isDarkMode(widget.prefs, bright);
+    var isDark = isDarkMode(prefs, bright);
     if (isDark) {
-      widget.darkLightControl.setLightMode();
+      darkLightControl.setLightMode();
     } else {
-      widget.darkLightControl.setDarkMode();
+      darkLightControl.setDarkMode();
     }
   }
 
@@ -372,6 +360,6 @@ class SubjectSearchState extends State<SubjectSearch> {
     NavigationUtils.navigateToPage(
         context: context,
         widget: ColorGallery(
-            prefs: widget.prefs, colorWatcher: widget.colorWatcher));
+            prefs: prefs, colorWatcher: colorWatcher));
   }
 }

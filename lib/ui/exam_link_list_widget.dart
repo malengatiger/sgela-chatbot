@@ -8,6 +8,7 @@ import 'package:edu_chatbot/services/firestore_service.dart';
 import 'package:edu_chatbot/services/you_tube_service.dart';
 import 'package:edu_chatbot/ui/busy_indicator.dart';
 import 'package:edu_chatbot/ui/exam_paper_pages.dart';
+import 'package:edu_chatbot/ui/powered_by.dart';
 import 'package:edu_chatbot/ui/you_tube_searcher.dart';
 import 'package:edu_chatbot/util/dark_light_control.dart';
 import 'package:edu_chatbot/util/image_file_util.dart';
@@ -211,59 +212,64 @@ class ExamLinkListWidgetState extends State<ExamLinkListWidget> {
           crossAxisAlignment: CrossAxisAlignment.center,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
+            gapH32,
             Text(
               'Exam Papers',
               style: myTextStyle(
                   context, Theme.of(context).primaryColor, 32, FontWeight.w900),
             ),
-            const SizedBox(height: 24.0),
-            SizedBox(
-              height: height,
-              child: Padding(
-                padding: const EdgeInsets.only(left: 12.0, right: 12),
-                child: Card(
-                  elevation: 8,
-                  child: bd.Badge(
-                    position: bd.BadgePosition.topEnd(top: -16, end: -2),
-                    badgeContent: Text(
-                      '${filteredExamLinks.length}',
-                      style: const TextStyle(color: Colors.white),
+            gapH32,
+            gapH32,
+            Expanded(
+              child: SizedBox(
+                height: height,
+                child: Padding(
+                  padding: const EdgeInsets.only(left: 12.0, right: 12),
+                  child: Card(
+                    elevation: 8,
+                    child: bd.Badge(
+                      position: bd.BadgePosition.topEnd(top: -16, end: -2),
+                      badgeContent: Text(
+                        '${filteredExamLinks.length}',
+                        style: const TextStyle(color: Colors.white),
+                      ),
+                      badgeStyle: bd.BadgeStyle(
+                          padding: const EdgeInsets.all(8.0),
+                          badgeColor: Colors.red.shade800,
+                          elevation: 12),
+                      child: busy
+                          ? const Padding(
+                            padding: EdgeInsets.all(16.0),
+                            child: BusyIndicator(
+                                caption:
+                                    'Loading subject exams ... gimme a second ...',
+                                showClock: true,
+                              ),
+                          )
+                          : Align(
+                              alignment: Alignment.center,
+                              child: ListView.builder(
+                                itemCount: filteredExamLinks.length,
+                                itemBuilder: (context, index) {
+                                  ExamLink examLink = filteredExamLinks[index];
+                                  return GestureDetector(
+                                    onTap: () {
+                                      selectedExamLink = examLink;
+                                      _showChooserDialog();
+                                    },
+                                    child: ExamLinkWidget(
+                                      examLink: examLink,
+                                    ),
+                                  );
+                                },
+                              ),
+                            ),
                     ),
-                    badgeStyle: bd.BadgeStyle(
-                        padding: const EdgeInsets.all(8.0),
-                        badgeColor: Colors.red.shade800,
-                        elevation: 12),
-                    child: busy
-                        ? const Padding(
-                          padding: EdgeInsets.all(16.0),
-                          child: BusyIndicator(
-                              caption:
-                                  'Loading subject exams ... gimme a second ...',
-                              showClock: true,
-                            ),
-                        )
-                        : Align(
-                            alignment: Alignment.center,
-                            child: ListView.builder(
-                              itemCount: filteredExamLinks.length,
-                              itemBuilder: (context, index) {
-                                ExamLink examLink = filteredExamLinks[index];
-                                return GestureDetector(
-                                  onTap: () {
-                                    selectedExamLink = examLink;
-                                    _showChooserDialog();
-                                  },
-                                  child: ExamLinkWidget(
-                                    examLink: examLink,
-                                  ),
-                                );
-                              },
-                            ),
-                          ),
                   ),
                 ),
               ),
             ),
+            PoweredBy(repository: widget.repository),
           ],
         ),
       ),

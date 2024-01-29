@@ -1,18 +1,22 @@
 import 'dart:collection';
 
+import 'package:badges/badges.dart' as bd;
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:edu_chatbot/data/branding.dart';
 import 'package:edu_chatbot/data/country.dart';
+import 'package:edu_chatbot/data/org_sponsoree.dart';
 import 'package:edu_chatbot/data/organization.dart';
 import 'package:edu_chatbot/repositories/repository.dart';
 import 'package:edu_chatbot/services/firestore_service.dart';
 import 'package:edu_chatbot/ui/organization/organization_splash.dart';
+import 'package:edu_chatbot/ui/user_registration.dart';
 import 'package:edu_chatbot/util/navigation_util.dart';
 import 'package:edu_chatbot/util/prefs.dart';
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
 import 'package:responsive_builder/responsive_builder.dart';
 
+import '../data/sgela_user.dart';
 import '../util/functions.dart';
 
 class OrganizationSelector extends StatefulWidget {
@@ -36,15 +40,30 @@ class OrganizationSelectorState extends State<OrganizationSelector>
   FirestoreService firestoreService = GetIt.instance<FirestoreService>();
   Repository repository = GetIt.instance<Repository>();
   static const mm = ' 🔵🔵🍎🔵🔵 OrganizationSelector   🍎🍎';
+  SgelaUser? user;
 
   @override
   void initState() {
     _controller = AnimationController(vsync: this);
     super.initState();
     _getData();
+    _showToast();
   }
 
   bool _busy = false;
+
+  _showToast() {
+    Future.delayed(const Duration(milliseconds: 3000), () {
+      showToast(
+          message:
+              'Tap to select a Sponsor. The Sponsor helps with the cost of using AI tools',
+          context: context,
+          padding: 20,
+          duration: const Duration(seconds: 6),
+          backgroundColor: Colors.blue.shade700,
+          textStyle: const TextStyle(color: Colors.white));
+    });
+  }
 
   _getData() async {
     pp('$mm ... getting data ...');
@@ -54,6 +73,7 @@ class OrganizationSelectorState extends State<OrganizationSelector>
     try {
       organization = prefs.getOrganization();
       country = prefs.getCountry();
+      user = prefs.getUser();
       organizations = await firestoreService.getOrganizations();
       sgelaOrganization = await repository.getSgelaOrganization();
       brandings = await firestoreService.getAllBrandings();
@@ -106,16 +126,36 @@ class OrganizationSelectorState extends State<OrganizationSelector>
   OrganizationBranding? orgBrand;
 
   _processChosenBrand() async {
-    pp('$mm ... Brand chosen: ${orgBrand!.organization!.name}');
+    pp('$mm ... Brand chosen, create sgelaUser and OrgSponsoree: ${orgBrand!.organization!.name}');
     prefs.saveOrganization(orgBrand!.organization!);
     prefs.saveBrand(orgBrand!.branding!);
+
     pp('$mm ... Organization and Branding saved to cache!');
 
-    await NavigationUtils.navigateToPage(
-        context: context,
-        widget: OrganizationSplash(branding: orgBrand!.branding!));
+    var mUser = await NavigationUtils.navigateToPage(
+        context: context, widget: const UserRegistration());
+
+    if (mUser != null) {
+      var sponsoree = OrgSponsoree(
+          orgBrand!.organization!.id!,
+          DateTime.now().millisecondsSinceEpoch,
+          DateTime.now().toIso8601String(),
+          orgBrand!.organization!.name,
+          true,
+          mUser);
+
+      firestoreService.addOrgSponsoree(sponsoree);
+      pp('$mm ... OrgSponsoree saved to database! ${sponsoree.toJson()}');
+    }
+
     if (mounted) {
-      Navigator.of(context).pop(true);
+      await NavigationUtils.navigateToPage(
+          context: context,
+          widget: OrganizationSplash(branding: orgBrand!.branding!));
+
+      if (mounted) {
+        Navigator.of(context).pop(true);
+      }
     }
   }
 
@@ -137,15 +177,23 @@ class OrganizationSelectorState extends State<OrganizationSelector>
                           const Text('Sponsor Organizations'),
                           gapH16,
                           Expanded(
-                              child: BrandingList(
-                                  organizationBrandings: orgBrandings,
-                                  onBrandSelected: (ob) {
-                                    setState(() {
-                                      orgBrand = ob;
-                                    });
-                                    _processChosenBrand();
-                                  },
-                                  isGrid: true)),
+                              child: bd.Badge(
+                            position:
+                                bd.BadgePosition.topEnd(top: -12, end: -8),
+                            badgeContent: Text("${orgBrandings.length}"),
+                            badgeStyle: bd.BadgeStyle(
+                                badgeColor: Colors.green.shade700,
+                                padding: const EdgeInsets.all(12)),
+                            child: BrandingList(
+                                organizationBrandings: orgBrandings,
+                                onBrandSelected: (ob) {
+                                  setState(() {
+                                    orgBrand = ob;
+                                  });
+                                  _processChosenBrand();
+                                },
+                                isGrid: false),
+                          )),
                         ],
                       )
                     ],
@@ -222,8 +270,15 @@ class OrgBrandCard extends StatelessWidget {
           children: [
             organizationBranding.branding == null
                 ? gapW8
-                : organizationBranding.branding!.logoUrl == null?  Text('${organizationBranding.organization!.name}'): CachedNetworkImage(
-                    imageUrl: organizationBranding.branding!.logoUrl!, fit: BoxFit.cover,),
+                : organizationBranding.branding!.logoUrl == null
+                    ? Text('${organizationBranding.organization!.name}')
+                    : SizedBox(
+                        height: 64,
+                        child: CachedNetworkImage(
+                          imageUrl: organizationBranding.branding!.logoUrl!,
+                          fit: BoxFit.cover,
+                        ),
+                      ),
             // gapH4,
             Text('${organizationBranding.organization!.name}'),
           ],
@@ -232,7 +287,17 @@ class OrgBrandCard extends StatelessWidget {
     } else {
       mWidget = Row(
         children: [
-          CachedNetworkImage(imageUrl: organizationBranding.branding!.logoUrl!),
+          organizationBranding.branding == null
+              ? gapW8
+              : organizationBranding.branding!.logoUrl == null
+                  ? Text('${organizationBranding.organization!.name}')
+                  : SizedBox(
+                      height: 48,
+                      child: CachedNetworkImage(
+                        imageUrl: organizationBranding.branding!.logoUrl!,
+                        fit: BoxFit.cover,
+                      ),
+                    ),
           gapW16,
           Text('${organizationBranding.organization!.name}'),
         ],
