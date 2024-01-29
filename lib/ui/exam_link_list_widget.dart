@@ -219,45 +219,48 @@ class ExamLinkListWidgetState extends State<ExamLinkListWidget> {
             const SizedBox(height: 24.0),
             SizedBox(
               height: height,
-              child: Card(
-                elevation: 8,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8.0),
-                ),
-                child: bd.Badge(
-                  position: bd.BadgePosition.topEnd(top: -16, end: -2),
-                  badgeContent: Text(
-                    '${filteredExamLinks.length}',
-                    style: const TextStyle(color: Colors.white),
-                  ),
-                  badgeStyle: bd.BadgeStyle(
-                      padding: const EdgeInsets.all(8.0),
-                      badgeColor: Colors.red.shade800,
-                      elevation: 12),
-                  child: busy
-                      ? const BusyIndicator(
-                          caption:
-                              'Loading subject exams ... gimme a second ...',
-                          showClock: true,
+              child: Padding(
+                padding: const EdgeInsets.only(left: 12.0, right: 12),
+                child: Card(
+                  elevation: 8,
+                  child: bd.Badge(
+                    position: bd.BadgePosition.topEnd(top: -16, end: -2),
+                    badgeContent: Text(
+                      '${filteredExamLinks.length}',
+                      style: const TextStyle(color: Colors.white),
+                    ),
+                    badgeStyle: bd.BadgeStyle(
+                        padding: const EdgeInsets.all(8.0),
+                        badgeColor: Colors.red.shade800,
+                        elevation: 12),
+                    child: busy
+                        ? const Padding(
+                          padding: EdgeInsets.all(16.0),
+                          child: BusyIndicator(
+                              caption:
+                                  'Loading subject exams ... gimme a second ...',
+                              showClock: true,
+                            ),
                         )
-                      : Align(
-                          alignment: Alignment.center,
-                          child: ListView.builder(
-                            itemCount: filteredExamLinks.length,
-                            itemBuilder: (context, index) {
-                              ExamLink examLink = filteredExamLinks[index];
-                              return GestureDetector(
-                                onTap: () {
-                                  selectedExamLink = examLink;
-                                  _showChooserDialog();
-                                },
-                                child: ExamLinkWidget(
-                                  examLink: examLink,
-                                ),
-                              );
-                            },
+                        : Align(
+                            alignment: Alignment.center,
+                            child: ListView.builder(
+                              itemCount: filteredExamLinks.length,
+                              itemBuilder: (context, index) {
+                                ExamLink examLink = filteredExamLinks[index];
+                                return GestureDetector(
+                                  onTap: () {
+                                    selectedExamLink = examLink;
+                                    _showChooserDialog();
+                                  },
+                                  child: ExamLinkWidget(
+                                    examLink: examLink,
+                                  ),
+                                );
+                              },
+                            ),
                           ),
-                        ),
+                  ),
                 ),
               ),
             ),

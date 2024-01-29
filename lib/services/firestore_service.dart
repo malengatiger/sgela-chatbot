@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:edu_chatbot/data/exam_document.dart';
 import 'package:edu_chatbot/data/exam_link.dart';
 import 'package:edu_chatbot/data/gemini_response_rating.dart';
+import 'package:edu_chatbot/data/org_sponsoree.dart';
 import 'package:edu_chatbot/data/organization.dart';
 import 'package:edu_chatbot/data/subject.dart';
 import 'package:edu_chatbot/util/prefs.dart';
@@ -92,6 +93,11 @@ class FirestoreService {
   Future addRating(GeminiResponseRating rating) async {
     var colRef = firebaseFirestore.collection('GeminiResponseRating');
     await colRef.add(rating.toJson());
+  }
+
+  Future addOrgSponsoree(OrgSponsoree sponsoree) async {
+    var colRef = firebaseFirestore.collection('OrgSponsoree');
+    await colRef.add(sponsoree.toJson());
   }
 
   Future<User> addUser(User user) async {

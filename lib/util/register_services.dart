@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dio/dio.dart';
+import 'package:edu_chatbot/services/busy_stream_service.dart';
 import 'package:edu_chatbot/services/chat_gpt_service.dart';
 import 'package:edu_chatbot/services/firestore_service.dart';
 import 'package:edu_chatbot/util/dark_light_control.dart';
@@ -33,6 +34,8 @@ Future<void> registerServices() async {
   var dlc = DarkLightControl(prefs);
   var cWatcher = ColorWatcher(dlc, prefs);
   var firestoreService = FirestoreService(FirebaseFirestore.instance, prefs);
+  GetIt.instance.registerLazySingleton<BusyStreamService>(
+          () => BusyStreamService());
   GetIt.instance.registerLazySingleton<MathService>(() => MathService());
   GetIt.instance.registerLazySingleton<ChatService>(() => ChatService(dioUtil));
   GetIt.instance
@@ -61,5 +64,5 @@ Future<void> registerServices() async {
   GetIt.instance.registerLazySingleton<FirestoreService>(
           () => firestoreService);
 
-  pp('🍎🍎🍎🍎🍎🍎 registerServices: GetIt has registered 14 services. 🍎 Cool!! 🍎🍎🍎');
+  pp('🍎🍎🍎🍎🍎🍎 registerServices: GetIt has registered 15 services. 🍎 Cool!! 🍎🍎🍎');
 }

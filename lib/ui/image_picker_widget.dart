@@ -68,7 +68,6 @@ class ImagePickerWidgetState extends State<ImagePickerWidget> {
       var response = await widget.chatService.sendExamPageImageAndText(
           prompt: '${_getPromptContext()}. \n'
               '${textEditingController.value.text}',
-          linkResponse: 'false',
           file: _images.first,
           examLinkId: 12345);
       pp('$mm _sendImageToAI: ...... Gemini AI has responded! ');

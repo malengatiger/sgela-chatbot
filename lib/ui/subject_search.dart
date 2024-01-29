@@ -336,10 +336,19 @@ class SubjectSearchState extends State<SubjectSearch> {
                   ),
                 ),
                 gapH8,
-                Card(
-                  elevation: 8,
-                  child: PoweredBy(
-                    repository: widget.repository,
+                GestureDetector(
+                  onTap: () {
+                    if (branding != null) {
+                      NavigationUtils.navigateToPage(
+                          context: context,
+                          widget: OrganizationSplash(branding: branding!));
+                    }
+                  },
+                  child: Card(
+                    elevation: 8,
+                    child: PoweredBy(
+                      repository: widget.repository,
+                    ),
                   ),
                 ),
               ],

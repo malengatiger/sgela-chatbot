@@ -24,11 +24,10 @@ class ChatService {
 
   Future<MyGeminiResponse> sendExamPageImageAndText(
       {required String prompt,
-      required String linkResponse,
       required File file,
       required int examLinkId}) async {
-    fun.pp('$mm .... sendMultipartRequest starting ... 💙'
-        'prompt: $prompt 💙linkResponse: $linkResponse 💙file: ${file.path}');
+    fun.pp('$mm .... sendExamPageImageAndText starting ... 💙'
+        'prompt: $prompt 💙💙file: ${file.path}');
 
     MyGeminiResponse? geminiResponse;
 
@@ -39,11 +38,11 @@ class ChatService {
       fun.pp('$mm .... mimeType: $mimeType 🍎 '
           'url: $url');
       dm.Dio dio = dm.Dio();
+
       dm.FormData formData = dm.FormData.fromMap({
         'prompt': prompt,
         'examLinkId': examLinkId,
         'mimeType': mimeType,
-        'linkResponse': linkResponse,
         'file': await dm.MultipartFile.fromFile(file.path,
             contentType: MediaType.parse(mimeType)),
       });
@@ -82,6 +81,72 @@ class ChatService {
 
   }
 
+  Future<MyGeminiResponse> sendExamPageImagesAndText(
+      {required String prompt,
+        required String linkResponse,
+        required List<File> files,
+        required int examLinkId}) async {
+    fun.pp('$mm .... sendExamPageImagesAndText starting ... 💙'
+        'prompt: $prompt 💙');
+
+    if (files.length > 4) {
+      throw Exception('A maximum of 4 files is allowed');
+    }
+    MyGeminiResponse? geminiResponse;
+
+    try {
+      String urlPrefix = ChatbotEnvironment.getGeminiUrl();
+      String url = '${urlPrefix}textImage/sendTextImagesPrompt';
+      fun.pp('$mm .... sending url: $url');
+      dm.Dio dio = dm.Dio();
+      List<dm.MultipartFile> mFiles = [];
+      for (var file in files) {
+        String mimeType = ImageFileUtil.getMimeType(file);
+        mFiles.add(await dm.MultipartFile.fromFile(file.path,
+            contentType: MediaType.parse(mimeType)));
+      }
+
+      dm.FormData formData = dm.FormData.fromMap({
+        'prompt': prompt,
+        'examLinkId': examLinkId,
+        'mimeType': ImageFileUtil.getMimeType(files.first),
+        'linkResponse': linkResponse,
+        'files': mFiles,
+      });
+
+      dm.Response response = await dio.post(
+        url,
+        data: formData,
+      );
+      pp('$mm ..........sendTextImagePrompt: response returned ...');
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        fun.pp(
+            '$mm .... multiPart request is OK! status: ${response.statusCode} '
+                ' 🍎 message: ${response.statusMessage} ... ');
+        var map = response.data;
+        var map2 = map['result']['response'];
+        var tokens = map['tokens'];
+
+        geminiResponse = MyGeminiResponse.fromJson(map2);
+        geminiResponse.tokensUsed = tokens;
+        if (geminiResponse.candidates == null ||
+            geminiResponse.candidates!.isEmpty) {
+          geminiResponse.responseIsOK = false;
+          geminiResponse.message = 'No response from SgelaAI';
+        }
+      } else {
+        var message = 'Things went south';
+        geminiResponse = MyGeminiResponse([], null, 0, false, message);
+      }
+    } catch (e) {
+      pp(e);
+      throw Exception('$mm 👿👿👿👿Error sending SgelaAI request 👿👿👿👿');
+    }
+    fun.pp(
+        '$mm .... SgelaAI request is OK! tokensUsed: ${geminiResponse.tokensUsed} ');
+    return geminiResponse;
+
+  }
   Future<String> sendChatPrompt(String prompt) async {
     fun.pp('$mm ...... sendChatPrompt starting ... \n$prompt');
     String urlPrefix = ChatbotEnvironment.getGeminiUrl();

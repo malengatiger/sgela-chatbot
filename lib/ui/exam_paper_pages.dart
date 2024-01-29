@@ -1,21 +1,21 @@
 import 'dart:async';
-import 'dart:collection';
 import 'dart:io';
+
+import 'package:edu_chatbot/data/exam_link.dart';
+import 'package:edu_chatbot/services/busy_stream_service.dart';
 import 'package:edu_chatbot/services/firestore_service.dart';
 import 'package:edu_chatbot/services/local_data_service.dart';
-import 'package:flutter_gemini/flutter_gemini.dart';
-import 'package:badges/badges.dart' as bd;
-import 'package:edu_chatbot/data/exam_link.dart';
-import 'package:edu_chatbot/repositories/repository.dart';
-import 'package:edu_chatbot/services/downloader_isolate.dart';
 import 'package:edu_chatbot/ui/busy_indicator.dart';
 import 'package:edu_chatbot/ui/exam_paper_header.dart';
 import 'package:edu_chatbot/ui/gemini_response_viewer.dart';
 import 'package:edu_chatbot/ui/math_viewer.dart';
+import 'package:edu_chatbot/ui/organization/busy_by_brand.dart';
 import 'package:edu_chatbot/ui/pdf_viewer.dart';
 import 'package:edu_chatbot/util/navigation_util.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_gemini/flutter_gemini.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:get_it/get_it.dart';
 
 import '../data/exam_page_image.dart';
 import '../data/gemini/gemini_response.dart';
@@ -30,12 +30,12 @@ class ExamPaperPages extends StatefulWidget {
   final ChatService chatService;
   final LocalDataService localDataService;
 
-  const ExamPaperPages(
-      {super.key,
-      required this.examLink,
-      required this.firestoreService,
-      required this.chatService,
-      required this.gemini, required this.localDataService});
+  const ExamPaperPages({super.key,
+    required this.examLink,
+    required this.firestoreService,
+    required this.chatService,
+    required this.gemini,
+    required this.localDataService});
 
   @override
   ExamPaperPagesState createState() => ExamPaperPagesState();
@@ -60,8 +60,6 @@ class ExamPaperPagesState extends State<ExamPaperPages> {
   }
 
   int pageNumber = 0;
-
-
 
   late Timer timer;
 
@@ -107,7 +105,7 @@ class ExamPaperPagesState extends State<ExamPaperPages> {
 
     try {
       examPageImages =
-          await widget.localDataService.getExamImages(widget.examLink.id!);
+      await widget.localDataService.getExamImages(widget.examLink.id!);
       realFiles = await ImageFileUtil.convertPageImageFiles(
           widget.examLink, examPageImages);
       _executeAfterDelay();
@@ -138,16 +136,16 @@ class ExamPaperPagesState extends State<ExamPaperPages> {
     _onSubmit();
   }
 
-
   void _navigateToPdfViewer() {
     pp('$mm _navigateToPdfViewer ...');
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => PDFViewer(
-          pdfUrl: widget.examLink.link!,
-          examLink: widget.examLink,
-        ),
+        builder: (context) =>
+            PDFViewer(
+              pdfUrl: widget.examLink.link!,
+              examLink: widget.examLink,
+            ),
       ),
     );
   }
@@ -159,14 +157,15 @@ class ExamPaperPagesState extends State<ExamPaperPages> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => GeminiResponseViewer(
-          examLink: widget.examLink,
-          geminiResponse: responseText,
-          firestoreService: widget.firestoreService,
-          prompt: prompt,
-          examPageImage: examPageImage,
-          tokensUsed: geminiResponse.tokensUsed!,
-        ),
+        builder: (context) =>
+            GeminiResponseViewer(
+              examLink: widget.examLink,
+              geminiResponse: responseText,
+              firestoreService: widget.firestoreService,
+              prompt: prompt,
+              examPageImage: examPageImage,
+              tokensUsed: geminiResponse.tokensUsed!,
+            ),
       ),
     );
   }
@@ -196,8 +195,11 @@ class ExamPaperPagesState extends State<ExamPaperPages> {
   File? selectedImageFile;
   String? searchedText;
 
-  _onSubmit() async {
+  //
+  final BusyStreamService busyStreamService =
+  GetIt.instance<BusyStreamService>();
 
+  _onSubmit() async {
     if (busySending) {
       return;
     }
@@ -207,12 +209,10 @@ class ExamPaperPagesState extends State<ExamPaperPages> {
 
     prompt = getPromptContext(widget.examLink.subject!.title!);
     try {
-      // var examPageImage = selectedImages.first;
-      // File file = await ImageFileUtil.createImageFileFromBytes(
-      //     examPageImage.bytes!, 'imageFile');
-      if (await selectedImageFile!.length() > (1024*1024*3)) {
+      if (await selectedImageFile!.length() > (1024 * 1024 * 3)) {
         if (mounted) {
-          showErrorDialog(context,
+          showErrorDialog(
+              context,
               'Sorry, this page cannot be processed. '
                   'The image is too large for SgelaAI to process properly');
         }
@@ -221,21 +221,38 @@ class ExamPaperPagesState extends State<ExamPaperPages> {
         });
         return;
       }
-      pp('$mm submitting the whole thing to Gemini AI : image file: ${await selectedImageFile!.length()} bytes');
+
+      pp(
+          '$mm submitting 1 exam page image and prompt to Gemini AI : image file: ${await selectedImageFile!
+              .length()} bytes');
       myGeminiResponse = await widget.chatService.sendExamPageImageAndText(
           prompt: prompt,
-          linkResponse: 'false',
           file: selectedImageFile!,
           examLinkId: widget.examLink.id!);
       pp('$mm 😎 😎 😎 Gemini AI has responded! .... 😎 😎 😎');
-
+      var finishReason = myGeminiResponse!.candidates!.elementAt(0)
+          .finishReason!;
+      if (finishReason == 'RECITATION') {
+        pp('$mm 😎 😎 😎 Gemini AI has finishReason: RECITATION ! ....  💜💜💜');
+        if (mounted) {
+          showErrorDialog(context,
+              'SgelaAI was unable to help with your request at this time. \nPlease try again later');
+          setState(() {
+            busySending = false;
+          });
+          return;
+        }
+      }
       myPrettyJsonPrint(myGeminiResponse!.toJson());
-      responseText = _getResponseString(myGeminiResponse!);
-      if (isValidLaTeXString(responseText)) {
-        await _navigateToMathViewer(myGeminiResponse!, responseText);
-      } else {
-        await _navigateToGeminiResponse(
-            myGeminiResponse!, selectedExamPageImage!, prompt);
+      if (finishReason == 'STOP') {
+        pp('$mm 😎 😎 😎 Gemini AI has finishReason: STOP ! ....  🥦🥦🥦');
+        responseText = _getResponseString(myGeminiResponse!);
+        if (isValidLaTeXString(responseText)) {
+          await _navigateToMathViewer(myGeminiResponse!, responseText);
+        } else {
+          await _navigateToGeminiResponse(
+              myGeminiResponse!, selectedExamPageImage!, prompt);
+        }
       }
     } catch (e) {
       pp('$mm ERROR $e');
@@ -248,9 +265,10 @@ class ExamPaperPagesState extends State<ExamPaperPages> {
     setState(() {
       busySending = false;
     });
-    //_onShowPagesToast();
   }
+
   ExamPageImage? selectedExamPageImage;
+
   String _getResponseString(MyGeminiResponse geminiResponse) {
     var sb = StringBuffer();
     geminiResponse.candidates?.forEach((candidate) {
@@ -279,10 +297,14 @@ class ExamPaperPagesState extends State<ExamPaperPages> {
 
   @override
   Widget build(BuildContext context) {
+    if (busySending) {
+      return BusyByBrand(examLink: widget.examLink);
+    }
     return SafeArea(
       child: Scaffold(
         appBar: AppBar(
-          title: Column(mainAxisAlignment: MainAxisAlignment.start,
+          title: Column(
+            mainAxisAlignment: MainAxisAlignment.start,
             children: [
               Text(
                 '${widget.examLink.subject!.title}',
@@ -299,12 +321,13 @@ class ExamPaperPagesState extends State<ExamPaperPages> {
             ],
           ),
           actions: [
-
             IconButton(
               icon: Icon(
                   isHeaderVisible ? Icons.visibility_off : Icons.visibility,
                   size: 24,
-                  color: Theme.of(context).primaryColor),
+                  color: Theme
+                      .of(context)
+                      .primaryColor),
               onPressed: () {
                 setState(() {
                   isHeaderVisible = !isHeaderVisible;
@@ -313,89 +336,82 @@ class ExamPaperPagesState extends State<ExamPaperPages> {
             ),
             IconButton(
               icon: Icon(Icons.file_download,
-                  size: 32, color: Theme.of(context).primaryColor),
+                  size: 32, color: Theme
+                      .of(context)
+                      .primaryColor),
               onPressed: () {
                 _navigateToPdfViewer();
               },
             ),
           ],
         ),
-        // backgroundColor: bright == Brightness.light?Colors.brown.shade100:Colors.black,
         body: Stack(
           children: [
             busyLoading
                 ? const Positioned(
-                    top: 200,
-                    left: 20,
-                    right: 20,
-                    child: BusyIndicator(
-                        caption:
-                            "Loading exam paper and converting to images. This may take a few minutes. Please wait for completion."))
+                top: 160,
+                left: 48,
+                right: 48,
+                child: BusyIndicator(
+                    caption:
+                    "Loading exam paper and converting to images. This may take a few minutes. Please wait for completion."))
                 : Positioned.fill(
-                    child: Card(
-                      elevation: 8,
-                      child: Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: PageView.builder(
-                          controller: _pageController,
-                          itemCount: realFiles.length,
-                          reverse: false,
-                          onPageChanged: (index) {
-                            _handlePageChanged(index);
-                          },
-                          itemBuilder: (context, index) {
-                            final imageFile = realFiles[index];
-                            return Stack(
-                              children: [
-                                GestureDetector(
-                                  onTap: () async {
-                                    pp('$mm onTap, selected images:'
-                                        '🍎${await imageFile.length()}');
-                                    if (!busySending) {
-                                      selectedImageFile = imageFile;
-                                      selectedExamPageImage = examPageImages.elementAt(index);
-                                      _handlePageTapped(examPageImages.elementAt(index));
-
-                                    }
-                                  },
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(8.0),
-                                    child: InteractiveViewer(
-                                      child: Image.file(
-                                        imageFile,
-                                        fit: BoxFit.cover,
-                                        height: double.infinity,
-                                        width: double.infinity,
-                                        scale: 2.0,
-                                      ),
-                                    ),
-                                  ),
+              child: Card(
+                elevation: 8,
+                child: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: PageView.builder(
+                    controller: _pageController,
+                    itemCount: realFiles.length,
+                    reverse: false,
+                    onPageChanged: (index) {
+                      _handlePageChanged(index);
+                    },
+                    itemBuilder: (context, index) {
+                      final imageFile = realFiles[index];
+                      return Stack(
+                        children: [
+                          GestureDetector(
+                            onTap: () async {
+                              pp('$mm onTap, selected images:'
+                                  '🍎${await imageFile.length()}');
+                              if (!busySending) {
+                                selectedImageFile = imageFile;
+                                selectedExamPageImage =
+                                    examPageImages.elementAt(index);
+                                _handlePageTapped(
+                                    examPageImages.elementAt(index));
+                              }
+                            },
+                            child: Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: InteractiveViewer(
+                                child: Image.file(
+                                  imageFile,
+                                  fit: BoxFit.cover,
+                                  height: double.infinity,
+                                  width: double.infinity,
+                                  scale: 2.0,
                                 ),
-                                busySending
-                                    ? const Positioned(
-                                        top: 280,
-                                        right: 60,
-                                        left: 60,
-                                        child: BusyIndicator(
-                                          showClock: false,
-                                          caption:
-                                              'Waiting for SgelaAI to respond to the request ... This may take a minute or two. Please wait. ',
-                                        ),
-                                      )
-                                    : gapW8,
-                              ],
-                            );
-                          },
-                        ),
-                      ),
-                    ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      );
+                    },
                   ),
+                ),
+              ),
+            ),
             Positioned(
                 bottom: 24,
                 left: 32,
                 child: Text(
                   '${currentPageIndex + 1}',
-                  style: myTextStyle(context, Theme.of(context).primaryColor, 24, FontWeight.w900),
+                  style: myTextStyle(context, Theme
+                      .of(context)
+                      .primaryColor,
+                      24, FontWeight.w900),
                 )),
             if (isHeaderVisible) // Conditionally show the ExamPaperHeader
               Positioned(
@@ -413,22 +429,6 @@ class ExamPaperPagesState extends State<ExamPaperPages> {
               ),
           ],
         ),
-        // floatingActionButton: Visibility(
-        //   visible: _shouldSendButtonBeVisible(),
-        //   child: FloatingActionButton.extended(
-        //     backgroundColor: Theme.of(context).primaryColor,
-        //     tooltip: 'Tap to send your request to SgelaAI',
-        //     extendedPadding: const EdgeInsets.all(36),
-        //     onPressed: () {
-        //       _onSubmit();
-        //     },
-        //     elevation: 16,
-        //     label: const Icon(Icons.send,
-        //         size: 24,
-        //         color: Colors.white),
-        //   ),
-        // ),
-
       ),
     );
   }
@@ -444,5 +444,38 @@ class ExamPaperPagesState extends State<ExamPaperPages> {
       return false;
     }
     return true;
+  }
+}
+
+class ExamLinkCard extends StatelessWidget {
+  const ExamLinkCard({super.key, required this.examLink});
+
+  final ExamLink examLink;
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      elevation: 4,
+      child: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: [
+            Text(
+              '${examLink.subject!.title}',
+              style: myTextStyleSmall(context),
+            ),
+            Text(
+              '${examLink.title}',
+              style: myTextStyleSmall(context),
+            ),
+            Text(
+              '${examLink.documentTitle}',
+              style: myTextStyleSmall(context),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
