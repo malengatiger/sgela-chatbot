@@ -16,8 +16,9 @@ import 'package:responsive_builder/responsive_builder.dart';
 import '../util/functions.dart';
 
 class LandingPage extends StatefulWidget {
-  const LandingPage({super.key});
+  const LandingPage({super.key, required this.hideButtons});
 
+  final bool hideButtons;
   @override
   LandingPageState createState() => LandingPageState();
 }
@@ -182,7 +183,7 @@ class LandingPageState extends State<LandingPage>
                                 child: const InfoPage(
                                     filePath: 'assets/image8.jpg',
                                     content: 'Say Goodbye to Exam Anxiety!',
-                                    title: 'Be Happy!'),
+                                    title: 'Use AI, less anxiety!'),
                               ),
                               GestureDetector(
                                 onTap: () {
@@ -200,7 +201,7 @@ class LandingPageState extends State<LandingPage>
                                 child: const InfoPage(
                                     filePath: 'assets/image4.webp',
                                     content: 'Teacher\'s Pet in Your Pocket!',
-                                    title: 'Always Here'),
+                                    title: 'Always Here 24/7'),
                               ),
                             ],
                             options: CarouselOptions(

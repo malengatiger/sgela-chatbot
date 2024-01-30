@@ -182,11 +182,14 @@ class ImagePickerWidgetState extends State<ImagePickerWidget> {
                     ),
                   ),
                   Expanded(
-                    child: Image.file(
-                      _images[index],
-                      fit: BoxFit.cover,
-                      height: double.infinity,
-                      width: double.infinity,
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Image.file(
+                        _images[index],
+                        fit: BoxFit.cover,
+                        height: double.infinity,
+                        width: double.infinity,
+                      ),
                     ),
                   ),
                 ],
@@ -206,7 +209,7 @@ class ImagePickerWidgetState extends State<ImagePickerWidget> {
                     _sendImageToAI();
                   }
                 },
-                showSubmit: _images.isNotEmpty,
+                showSubmit: _images.isNotEmpty, isCamera: _useCamera,
               ),
             ),
           ),
@@ -231,11 +234,11 @@ class ToolBar extends StatelessWidget {
       {super.key,
       required this.onCamera,
       required this.onSubmit,
-      required this.showSubmit});
+      required this.showSubmit, required this.isCamera});
 
   final Function() onCamera;
   final Function() onSubmit;
-  final bool showSubmit;
+  final bool showSubmit, isCamera;
 
   @override
   Widget build(BuildContext context) {
@@ -243,9 +246,9 @@ class ToolBar extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          gapW16,
+          gapW4,
           SizedBox(
-            width: 160,
+            width: 200,
             child: ElevatedButton.icon(
               style: const ButtonStyle(
                 elevation: MaterialStatePropertyAll(8),
@@ -253,14 +256,14 @@ class ToolBar extends StatelessWidget {
               onPressed: () {
                 onCamera();
               },
-              icon: const Icon(Icons.camera_alt),
-              label: const Text('Get Image'),
+              icon:  Icon(isCamera? Icons.camera_alt : Icons.list),
+              label:  Text(isCamera?'Take Picture':'Photo Gallery'),
             ),
           ),
           gapW16,
           showSubmit
               ? SizedBox(
-                  width: 160,
+                  width: 140,
                   child: ElevatedButton.icon(
                     style: const ButtonStyle(
                       elevation: MaterialStatePropertyAll(8),

@@ -8,6 +8,7 @@ import 'package:edu_chatbot/repositories/repository.dart';
 import 'package:edu_chatbot/services/chat_gpt_service.dart';
 import 'package:edu_chatbot/services/firestore_service.dart';
 import 'package:edu_chatbot/ui/exam/exam_document_list.dart';
+import 'package:edu_chatbot/ui/landing_page.dart';
 import 'package:edu_chatbot/ui/misc/busy_indicator.dart';
 import 'package:edu_chatbot/ui/misc/color_gallery.dart';
 import 'package:edu_chatbot/ui/misc/powered_by.dart';
@@ -180,6 +181,38 @@ class SubjectSearchState extends State<SubjectSearch> {
     super.dispose();
   }
 
+  PopupMenuButton _getMenuButton(bool isDark) {
+    List<PopupMenuItem<int>> items = [];
+
+    var popUp = PopupMenuButton<String>(
+      itemBuilder: (BuildContext context) => [
+
+        const PopupMenuItem<String>(
+          value: 'colorGallery',
+          child: ListTile(
+            leading: Icon(Icons.color_lens_outlined),
+            title: Text('Pick your Colour'),
+          ),
+        ),
+        const PopupMenuItem<String>(
+          value: 'info',
+          child: ListTile(
+            leading: Icon(Icons.question_mark),
+            title: Text('Information'),
+          ),
+        ),
+      ],
+      onSelected: (String value) {
+        if (value == 'info') {
+          _navigateToInfo();
+        } else if (value == 'colorGallery') {
+          _navigateToColorGallery();
+        }
+      },
+    );
+
+    return popUp;
+  }
   int mode = 0;
 
   @override
@@ -209,7 +242,7 @@ class SubjectSearchState extends State<SubjectSearch> {
                   : Card(
                       elevation: 8,
                       child: CachedNetworkImage(
-                        height: 36,
+                        height: 40,
                         imageUrl: branding!.logoUrl!,
                         placeholder: (context, url) =>
                             const CircularProgressIndicator(),
@@ -218,32 +251,17 @@ class SubjectSearchState extends State<SubjectSearch> {
                       ),
                     ),
             ),
+            leading: gapW4,
             actions: [
-              IconButton(
-                onPressed: () {
-                  _handleMode(MediaQuery.of(context).platformBrightness);
-                },
-                icon: Icon(isDark ? Icons.light_mode : Icons.dark_mode,
-                    color:
-                        isDark ? Theme.of(context).primaryColor : Colors.black),
-              ),
               IconButton(
                   onPressed: () {
                     _navigateToAI(context);
                   },
-                  icon: Icon(Icons.camera,
+                  icon: Icon(Icons.camera_alt,
                       color: isDark
                           ? Theme.of(context).primaryColor
                           : Colors.black)),
-              IconButton(
-                onPressed: () {
-                  _navigateToColorGallery();
-                },
-                icon: Icon(
-                  Icons.color_lens_outlined,
-                  color: isDark ? Theme.of(context).primaryColor : Colors.black,
-                ),
-              ),
+
               IconButton(
                 onPressed: () {
                   _navigateToMultiTurnChat();
@@ -253,6 +271,7 @@ class SubjectSearchState extends State<SubjectSearch> {
                   color: isDark ? Theme.of(context).primaryColor : Colors.black,
                 ),
               ),
+              _getMenuButton(isDark),
             ],
           ),
           // backgroundColor: bright == Brightness.light?Colors.brown.shade100:Colors.black,
@@ -359,6 +378,10 @@ class SubjectSearchState extends State<SubjectSearch> {
       darkLightControl.setDarkMode();
     }
   }
+void _navigateToInfo() {
+    NavigationUtils.navigateToPage(context: context, widget: const LandingPage(hideButtons: true,));
+}
+
 
   void _navigateToColorGallery() {
     NavigationUtils.navigateToPage(

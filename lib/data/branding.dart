@@ -6,7 +6,7 @@ part 'branding.g.dart';
 @JsonSerializable()
 
 class Branding {
-  int? organizationId, id, splashTimeInSeconds;
+  int? organizationId, id, splashTimeInSeconds, colorIndex;
   String? date;
   String? logoUrl, splashUrl, tagLine,
       organizationName, organizationUrl;
@@ -23,6 +23,7 @@ class Branding {
     required this.organizationName,
     required this.organizationUrl,
     required this.splashTimeInSeconds,
+    required this.colorIndex,
     required this.activeFlag});
 
   factory Branding.fromJson(Map<String, dynamic> json) =>

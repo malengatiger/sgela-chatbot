@@ -34,7 +34,7 @@ Future<void> registerServices() async {
   var prefs = Prefs(await SharedPreferences.getInstance());
   var dlc = DarkLightControl(prefs);
   var cWatcher = ColorWatcher(dlc, prefs);
-  var firestoreService = FirestoreService(FirebaseFirestore.instance, prefs);
+  var firestoreService = FirestoreService(FirebaseFirestore.instance, prefs,cWatcher);
   GetIt.instance.registerLazySingleton<BusyStreamService>(
           () => BusyStreamService());
   GetIt.instance.registerLazySingleton<MathService>(() => MathService());

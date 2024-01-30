@@ -104,10 +104,15 @@ class OrganizationSplashState extends State<OrganizationSplash>
                         ),
                         gapH4,
                         Expanded(
-                            child: CachedNetworkImage(
-                          imageUrl: widget.branding.splashUrl!,
-                          fit: BoxFit.cover,
-                        )),
+                            child: GestureDetector(
+                              onTap: (){
+                                Navigator.of(context).pop();
+                              },
+                              child: CachedNetworkImage(
+                                                        imageUrl: widget.branding.splashUrl!,
+                                                        fit: BoxFit.cover,
+                                                      ),
+                            )),
                         gapH16,
                       ],
                     ),

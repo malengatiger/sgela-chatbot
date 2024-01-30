@@ -111,7 +111,7 @@ class MyApp extends StatelessWidget {
               title: 'SgelaAI',
               debugShowCheckedModeBanner: false,
               theme: _getTheme(context),
-              home: const LandingPage(),
+              home: const LandingPage(hideButtons: false,),
             );
           }),
     );

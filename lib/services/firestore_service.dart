@@ -5,8 +5,10 @@ import 'package:edu_chatbot/data/gemini_response_rating.dart';
 import 'package:edu_chatbot/data/organization.dart';
 import 'package:edu_chatbot/data/sponsoree.dart';
 import 'package:edu_chatbot/data/subject.dart';
+import 'package:edu_chatbot/util/dark_light_control.dart';
 import 'package:edu_chatbot/util/prefs.dart';
 import 'package:geocoding/geocoding.dart';
+import 'package:get_it/get_it.dart';
 
 import '../data/branding.dart';
 import '../data/city.dart';
@@ -19,9 +21,11 @@ class FirestoreService {
   final FirebaseFirestore firebaseFirestore;
 
   final Prefs prefs;
+  final   ColorWatcher colorWatcher;
+
   static const mm = ' 🥦🥦🥦FirestoreService';
 
-  FirestoreService(this.firebaseFirestore, this.prefs) {
+  FirestoreService(this.firebaseFirestore, this.prefs, this.colorWatcher) {
     firebaseFirestore.settings = const Settings(
       persistenceEnabled: true,
     );
@@ -192,8 +196,6 @@ class FirestoreService {
           break;
         }
       }
-
-
     }
     pp('$mm ... local city found: 🍎🍎 ${_localCity?.name} 🍎🍎');
 
@@ -339,6 +341,13 @@ class FirestoreService {
       brandings.sort((a, b) => b.date!.compareTo(a.date!));
       prefs.saveBrandings(brandings);
       prefs.saveBrand(brandings.first);
+      if (brandings.first.colorIndex == null) {
+        prefs.saveColorIndex(7);
+        colorWatcher.setColor(7);
+      } else {
+        prefs.saveColorIndex(brandings.first.colorIndex!);
+        colorWatcher.setColor(brandings.first.colorIndex!);
+      }
       return brandings;
     }
 

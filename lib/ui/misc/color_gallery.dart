@@ -66,7 +66,7 @@ class ColorGalleryState extends State<ColorGallery> {
                         padding: const EdgeInsets.all(16.0),
                         child: GridView.builder(
                             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                                crossAxisCount: 3),
+                                crossAxisCount: 4),
                             itemCount: colors.length,
                             itemBuilder: (_, index) {
                               var color = colors.elementAt(index);

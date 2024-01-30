@@ -16,6 +16,7 @@ Branding _$BrandingFromJson(Map<String, dynamic> json) => Branding(
       organizationName: json['organizationName'] as String?,
       organizationUrl: json['organizationUrl'] as String?,
       splashTimeInSeconds: json['splashTimeInSeconds'] as int?,
+      colorIndex: json['colorIndex'] as int?,
       activeFlag: json['activeFlag'] as bool?,
     );
 
@@ -23,6 +24,7 @@ Map<String, dynamic> _$BrandingToJson(Branding instance) => <String, dynamic>{
       'organizationId': instance.organizationId,
       'id': instance.id,
       'splashTimeInSeconds': instance.splashTimeInSeconds,
+      'colorIndex': instance.colorIndex,
       'date': instance.date,
       'logoUrl': instance.logoUrl,
       'splashUrl': instance.splashUrl,
