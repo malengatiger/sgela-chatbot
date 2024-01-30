@@ -5,7 +5,7 @@ import 'package:edu_chatbot/data/branding.dart';
 import 'package:edu_chatbot/data/country.dart';
 import 'package:edu_chatbot/data/exam_link.dart';
 import 'package:edu_chatbot/data/organization.dart';
-import 'package:edu_chatbot/ui/exam_paper_pages.dart';
+import 'package:edu_chatbot/ui/exam/exam_paper_pages.dart';
 import 'package:edu_chatbot/ui/organization/org_logo_widget.dart';
 import 'package:edu_chatbot/util/functions.dart';
 import 'package:edu_chatbot/util/prefs.dart';

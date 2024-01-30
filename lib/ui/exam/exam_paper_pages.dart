@@ -5,23 +5,23 @@ import 'package:edu_chatbot/data/exam_link.dart';
 import 'package:edu_chatbot/services/busy_stream_service.dart';
 import 'package:edu_chatbot/services/firestore_service.dart';
 import 'package:edu_chatbot/services/local_data_service.dart';
-import 'package:edu_chatbot/ui/busy_indicator.dart';
-import 'package:edu_chatbot/ui/exam_paper_header.dart';
-import 'package:edu_chatbot/ui/gemini_response_viewer.dart';
-import 'package:edu_chatbot/ui/math_viewer.dart';
+import 'package:edu_chatbot/ui/misc/busy_indicator.dart';
+import 'package:edu_chatbot/ui/exam/exam_paper_header.dart';
+import 'package:edu_chatbot/ui/chat/gemini_response_viewer.dart';
+import 'package:edu_chatbot/ui/chat/math_viewer.dart';
 import 'package:edu_chatbot/ui/organization/busy_by_brand.dart';
-import 'package:edu_chatbot/ui/pdf_viewer.dart';
+import 'package:edu_chatbot/ui/exam/pdf_viewer.dart';
 import 'package:edu_chatbot/util/navigation_util.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gemini/flutter_gemini.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:get_it/get_it.dart';
 
-import '../data/exam_page_image.dart';
-import '../data/gemini/gemini_response.dart';
-import '../services/chat_service.dart';
-import '../util/functions.dart';
-import '../util/image_file_util.dart';
+import '../../data/exam_page_image.dart';
+import '../../data/gemini/gemini_response.dart';
+import '../../services/chat_service.dart';
+import '../../util/functions.dart';
+import '../../util/image_file_util.dart';
 
 class ExamPaperPages extends StatefulWidget {
   final ExamLink examLink;

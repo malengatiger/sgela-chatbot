@@ -3,14 +3,12 @@ import 'package:edu_chatbot/repositories/repository.dart';
 import 'package:edu_chatbot/services/downloader_isolate.dart';
 import 'package:edu_chatbot/services/you_tube_service.dart';
 import 'package:edu_chatbot/ui/landing_page.dart';
-import 'package:edu_chatbot/ui/subject_search.dart';
 import 'package:edu_chatbot/util/dark_light_control.dart';
 import 'package:edu_chatbot/util/environment.dart';
 import 'package:edu_chatbot/util/functions.dart';
 import 'package:edu_chatbot/util/prefs.dart';
 import 'package:edu_chatbot/util/register_services.dart';
-import 'package:firebase_auth/firebase_auth.dart'
-    hide PhoneAuthProvider, EmailAuthProvider;
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_ui_auth/firebase_ui_auth.dart';
 import 'package:flutter/material.dart';
@@ -38,13 +36,11 @@ Future<void> main() async {
     name: ChatbotEnvironment.getFirebaseName(),
     options: DefaultFirebaseOptions.currentPlatform,
   );
-  await FirebaseAuth.instance.useAuthEmulator('localhost', 9099);
+  // await FirebaseAuth.instance.useAuthEmulator('localhost', 9099);
   pp('$mx Firebase has been initialized!! $mx name: ${app.name}');
 
   FirebaseUIAuth.configureProviders([
-    EmailAuthProvider(),
     emailLinkProviderConfig,
-    PhoneAuthProvider(),
   ]);
   pp('$mx Firebase Auth providers have been setup!!');
   pp('${app.options.asMap}');

@@ -4,7 +4,7 @@ import 'dart:io';
 import 'package:edu_chatbot/data/gemini_response_rating.dart';
 import 'package:edu_chatbot/repositories/repository.dart';
 import 'package:edu_chatbot/services/firestore_service.dart';
-import 'package:edu_chatbot/ui/rating_widget.dart';
+import 'package:edu_chatbot/ui/chat/rating_widget.dart';
 import 'package:edu_chatbot/util/functions.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_tex/flutter_tex.dart';
@@ -13,8 +13,8 @@ import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:share_plus/share_plus.dart';
 
-import '../data/exam_link.dart';
-import '../data/exam_page_image.dart';
+import '../../data/exam_link.dart';
+import '../../data/exam_page_image.dart';
 
 class MathViewer extends StatefulWidget {
   const MathViewer(

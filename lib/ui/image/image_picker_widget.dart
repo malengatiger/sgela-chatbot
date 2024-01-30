@@ -1,16 +1,16 @@
 import 'dart:io';
 
-import 'package:edu_chatbot/ui/busy_indicator.dart';
-import 'package:edu_chatbot/ui/generic_image_response_viewer.dart';
+import 'package:edu_chatbot/ui/misc/busy_indicator.dart';
+import 'package:edu_chatbot/ui/image/generic_image_response_viewer.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
 
-import '../data/exam_link.dart';
-import '../data/gemini/parts.dart';
-import '../services/chat_service.dart';
-import '../util/functions.dart';
+import '../../data/exam_link.dart';
+import '../../data/gemini/parts.dart';
+import '../../services/chat_service.dart';
+import '../../util/functions.dart';
 
 class ImagePickerWidget extends StatefulWidget {
   const ImagePickerWidget(

@@ -7,17 +7,18 @@ part of 'sgela_user.dart';
 // **************************************************************************
 
 SgelaUser _$SgelaUserFromJson(Map<String, dynamic> json) => SgelaUser(
-      json['firstName'] as String?,
-      json['lastName'] as String?,
-      json['email'] as String?,
-      json['cellphone'] as String?,
-      json['date'] as String?,
-      json['countryId'] as int?,
-      json['cityId'] as int?,
-      json['countryName'] as String?,
-      json['cityName'] as String?,
-      json['firebaseUserId'] as String?,
-      json['institutionName'] as String?,
+      id: json['id'] as int?,
+      firstName: json['firstName'] as String?,
+      lastName: json['lastName'] as String?,
+      email: json['email'] as String?,
+      cellphone: json['cellphone'] as String?,
+      date: json['date'] as String?,
+      countryId: json['countryId'] as int?,
+      cityId: json['cityId'] as int?,
+      countryName: json['countryName'] as String?,
+      cityName: json['cityName'] as String?,
+      firebaseUserId: json['firebaseUserId'] as String?,
+      institutionName: json['institutionName'] as String?,
     );
 
 Map<String, dynamic> _$SgelaUserToJson(SgelaUser instance) => <String, dynamic>{
@@ -26,6 +27,7 @@ Map<String, dynamic> _$SgelaUserToJson(SgelaUser instance) => <String, dynamic>{
       'email': instance.email,
       'cellphone': instance.cellphone,
       'date': instance.date,
+      'id': instance.id,
       'countryId': instance.countryId,
       'cityId': instance.cityId,
       'countryName': instance.countryName,

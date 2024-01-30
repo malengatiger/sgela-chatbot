@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'markdown_widget.dart' as md;
-import '../data/exam_link.dart';
-import '../data/subject.dart';
-import '../repositories/repository.dart';
-import '../services/chat_service.dart';
-import '../util/functions.dart';
+import '../../data/exam_link.dart';
+import '../../data/subject.dart';
+import '../../repositories/repository.dart';
+import '../../services/chat_service.dart';
+import '../../util/functions.dart';
 
 class ChatWidget extends StatefulWidget {
   const ChatWidget(

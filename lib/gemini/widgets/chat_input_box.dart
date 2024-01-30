@@ -1,4 +1,7 @@
+import 'package:edu_chatbot/util/functions.dart';
+import 'package:edu_chatbot/util/prefs.dart';
 import 'package:flutter/material.dart';
+import 'package:get_it/get_it.dart';
 
 class ChatInputBox extends StatelessWidget {
   final TextEditingController? controller;
@@ -13,6 +16,9 @@ class ChatInputBox extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    Prefs prefs = GetIt.instance<Prefs>();
+    var index = prefs.getColorIndex();
+    var color = getColors().elementAt(index);
     return Card(
       margin: const EdgeInsets.all(8),
       child: Row(
@@ -47,7 +53,10 @@ class ChatInputBox extends StatelessWidget {
             child: FloatingActionButton.small(
               backgroundColor: Theme.of(context).primaryColor,
               onPressed: onSend,
-              child: const Icon(Icons.send_rounded),
+              child: Icon(
+                Icons.send_rounded,
+                color: isColorDark(color) ? Colors.white : Colors.black,
+              ),
             ),
           )
         ],

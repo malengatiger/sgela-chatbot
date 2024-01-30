@@ -1,22 +1,21 @@
 import 'package:badges/badges.dart' as bd;
-import 'package:edu_chatbot/ui/busy_indicator.dart';
-import 'package:edu_chatbot/ui/powered_by.dart';
-import 'package:edu_chatbot/ui/you_tube_gallery.dart';
-import 'package:edu_chatbot/ui/you_tube_viewer.dart';
+import 'package:edu_chatbot/data/subject.dart';
+import 'package:edu_chatbot/data/youtube_data.dart';
+import 'package:edu_chatbot/repositories/repository.dart';
+import 'package:edu_chatbot/services/you_tube_service.dart';
+import 'package:edu_chatbot/ui/misc/busy_indicator.dart';
+import 'package:edu_chatbot/ui/misc/color_gallery.dart';
+import 'package:edu_chatbot/ui/misc/powered_by.dart';
+import 'package:edu_chatbot/ui/youtube/you_tube_gallery.dart';
+import 'package:edu_chatbot/ui/youtube/you_tube_viewer.dart';
+import 'package:edu_chatbot/util/dark_light_control.dart';
 import 'package:edu_chatbot/util/environment.dart';
+import 'package:edu_chatbot/util/functions.dart';
+import 'package:edu_chatbot/util/navigation_util.dart';
+import 'package:edu_chatbot/util/prefs.dart';
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
 import 'package:url_launcher/url_launcher.dart';
-
-import '../data/subject.dart';
-import '../data/youtube_data.dart';
-import '../repositories/repository.dart';
-import '../services/you_tube_service.dart';
-import '../util/dark_light_control.dart';
-import '../util/functions.dart';
-import '../util/navigation_util.dart';
-import '../util/prefs.dart';
-import 'color_gallery.dart';
 
 class YouTubeSearcher extends StatefulWidget {
   const YouTubeSearcher(

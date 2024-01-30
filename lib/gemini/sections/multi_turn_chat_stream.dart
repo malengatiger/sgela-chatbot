@@ -1,19 +1,21 @@
-import 'package:edu_chatbot/data/exam_link.dart';
+import 'package:edu_chatbot/data/branding.dart';
 import 'package:edu_chatbot/gemini/widgets/chat_input_box.dart';
-import 'package:edu_chatbot/ui/busy_indicator.dart';
-import 'package:edu_chatbot/ui/math_viewer.dart';
+import 'package:edu_chatbot/repositories/repository.dart';
+import 'package:edu_chatbot/ui/misc/busy_indicator.dart';
+import 'package:edu_chatbot/ui/chat/math_viewer.dart';
+import 'package:edu_chatbot/ui/misc/powered_by.dart';
+import 'package:edu_chatbot/util/prefs.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gemini/flutter_gemini.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
+import 'package:get_it/get_it.dart';
 
 import '../../util/functions.dart';
 
 class MultiTurnStreamChat extends StatefulWidget {
   const MultiTurnStreamChat(
-      {super.key, required this.gemini, required this.examLink});
+      {super.key});
 
-  final Gemini gemini;
-  final ExamLink examLink;
 
   @override
   State<MultiTurnStreamChat> createState() => MultiTurnStreamChatState();
@@ -24,12 +26,16 @@ class MultiTurnStreamChatState extends State<MultiTurnStreamChat> {
 
   final controller = TextEditingController();
   bool _busy = false;
+   Gemini gemini = GetIt.instance<Gemini>();
 
   bool get loading => _busy;
   int turnNumber = 0;
 
   set loading(bool set) => setState(() => _busy = set);
   final List<Content> chats = [];
+
+  Prefs prefs = GetIt.instance<Prefs>();
+  Branding? branding;
 
   @override
   void initState() {
@@ -39,18 +45,18 @@ class MultiTurnStreamChatState extends State<MultiTurnStreamChat> {
 
   _showModels() async {
     pp('$mm ... show all the AI models available');
-    await widget.gemini
+    await gemini
         .listModels()
         .then((models) => () {
               for (var value in models) {
-                pp('$mm model ....... ${value.toJson()}');
+                pp('$mm AI model ....... ${value.toJson()}');
               }
             })
         .catchError((e) => pp('$mm listModels ERROR: $e'));
 
     pp('$mm ... show the AI model in use now');
 
-    await widget.gemini
+    await gemini
         .info(model: 'gemini-pro')
         .then((info) => pp('$mm gemini.info: ${info.toJson()}'))
         .catchError((e) => pp('$mm gemini.info: $e'));
@@ -87,35 +93,42 @@ class MultiTurnStreamChatState extends State<MultiTurnStreamChat> {
               icon: Icon(Icons.share, color: Theme.of(context).primaryColor)),
         ],
       ),
-      body: Stack(
-        children: [
-          Column(
-            children: [
-              Expanded(
-                  child: chats.isNotEmpty
-                      ? Align(
-                          alignment: Alignment.bottomCenter,
-                          child: SingleChildScrollView(
-                            reverse: true,
-                            child: ListView.builder(
-                              itemBuilder: chatItem,
-                              shrinkWrap: true,
-                              physics: const NeverScrollableScrollPhysics(),
-                              itemCount: chats.length,
-                              reverse: false,
+      body: SizedBox(height: double.infinity,
+        child: Stack(
+          children: [
+            Column(
+              children: [
+                PoweredBy(repository: GetIt.instance<Repository>()),
+
+                Expanded(
+                    child: chats.isNotEmpty
+                        ? Align(
+                            alignment: Alignment.bottomCenter,
+                            child: SingleChildScrollView(
+                              reverse: true,
+                              child: Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: ListView.builder(
+                                  itemBuilder: chatItem,
+                                  shrinkWrap: true,
+                                  physics: const NeverScrollableScrollPhysics(),
+                                  itemCount: chats.length,
+                                  reverse: false,
+                                ),
+                              ),
                             ),
-                          ),
-                        )
-                      : const Center(child: Text('Say something to SgelaAI'))),
-              ChatInputBox(
-                controller: controller,
-                onSend: () {
-                  _handleInputText();
-                },
-              ),
-            ],
-          )
-        ],
+                          )
+                        : const Center(child: Text('Say something to SgelaAI'))),
+                ChatInputBox(
+                  controller: controller,
+                  onSend: () {
+                    _handleInputText();
+                  },
+                ),
+              ],
+            )
+          ],
+        ),
       ),
     ));
   }
@@ -141,14 +154,14 @@ class MultiTurnStreamChatState extends State<MultiTurnStreamChat> {
 
   Future<void> _startAndListenToChatStream() async {
     pp('$mm _startAndListenToChatStream ......  ');
-    var tokens = await widget.gemini
+    var tokens = await gemini
         .countTokens(searchedText)
         .then((value) => pp('$mm value: $value'))
 
         /// output like: `6` or `null`
         .catchError((e) => pp('countTokens error : $e'));
     pp('$mm ai tokens: $tokens');
-    widget.gemini.streamChat(chats).listen((candidates) {
+    gemini.streamChat(chats).listen((candidates) {
       pp("$mm gemini.streamChat fired!: chats: ${chats.length} "
           "------------------------------->>>");
       pp('$mm ${candidates.output}');

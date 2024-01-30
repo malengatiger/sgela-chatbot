@@ -4,11 +4,11 @@ import 'package:badges/badges.dart' as bd;
 import 'package:flutter/material.dart';
 import 'package:flutter_tex/flutter_tex.dart';
 
-import '../data/exam_link.dart';
-import '../data/subject.dart';
-import '../repositories/repository.dart';
-import '../services/chat_service.dart';
-import '../util/functions.dart';
+import '../../data/exam_link.dart';
+import '../../data/subject.dart';
+import '../../repositories/repository.dart';
+import '../../services/chat_service.dart';
+import '../../util/functions.dart';
 import 'markdown_widget.dart';
 
 class TextChat extends StatefulWidget {

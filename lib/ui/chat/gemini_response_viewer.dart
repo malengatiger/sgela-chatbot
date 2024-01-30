@@ -2,14 +2,14 @@ import 'dart:io';
 
 import 'package:edu_chatbot/data/exam_page_image.dart';
 import 'package:edu_chatbot/services/firestore_service.dart';
-import 'package:edu_chatbot/ui/rating_widget.dart';
+import 'package:edu_chatbot/ui/chat/rating_widget.dart';
 import 'package:edu_chatbot/util/functions.dart';
 import 'package:edu_chatbot/util/image_file_util.dart';
 import 'package:flutter/material.dart';
 import 'package:share_plus/share_plus.dart';
 
-import '../data/exam_link.dart';
-import '../data/gemini_response_rating.dart';
+import '../../data/exam_link.dart';
+import '../../data/gemini_response_rating.dart';
 import 'markdown_widget.dart' as md;
 
 class GeminiResponseViewer extends StatefulWidget {

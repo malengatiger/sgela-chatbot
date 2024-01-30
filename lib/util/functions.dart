@@ -41,6 +41,12 @@ pp(dynamic msg) {
   }
 }
 
+bool isColorDark(Color color) {
+  // Calculate the luminance of the color
+  final luminance = color.computeLuminance();
+  // Check if the luminance is below a threshold to determine if the color is dark
+  return luminance < 0.5;
+}
 final List<Color> _colors = [
   Colors.red[200]!,
   Colors.green[200]!,

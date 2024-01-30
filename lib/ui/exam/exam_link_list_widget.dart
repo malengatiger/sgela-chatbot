@@ -6,21 +6,21 @@ import 'package:edu_chatbot/repositories/repository.dart';
 import 'package:edu_chatbot/services/chat_service.dart';
 import 'package:edu_chatbot/services/firestore_service.dart';
 import 'package:edu_chatbot/services/you_tube_service.dart';
-import 'package:edu_chatbot/ui/busy_indicator.dart';
-import 'package:edu_chatbot/ui/exam_paper_pages.dart';
-import 'package:edu_chatbot/ui/powered_by.dart';
-import 'package:edu_chatbot/ui/you_tube_searcher.dart';
+import 'package:edu_chatbot/ui/misc/busy_indicator.dart';
+import 'package:edu_chatbot/ui/exam/exam_paper_pages.dart';
+import 'package:edu_chatbot/ui/misc/powered_by.dart';
+import 'package:edu_chatbot/ui/youtube/you_tube_searcher.dart';
 import 'package:edu_chatbot/util/dark_light_control.dart';
 import 'package:edu_chatbot/util/image_file_util.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gemini/flutter_gemini.dart';
 
-import '../data/exam_document.dart';
-import '../services/local_data_service.dart';
-import '../util/functions.dart';
-import '../util/navigation_util.dart';
-import '../util/prefs.dart';
-import 'color_gallery.dart';
+import '../../data/exam_document.dart';
+import '../../services/local_data_service.dart';
+import '../../util/functions.dart';
+import '../../util/navigation_util.dart';
+import '../../util/prefs.dart';
+import '../misc/color_gallery.dart';
 
 class ExamLinkListWidget extends StatefulWidget {
   final Subject subject;
@@ -278,12 +278,10 @@ class ExamLinkListWidgetState extends State<ExamLinkListWidget> {
 
   void _navigateToMultiTurnStreamChat(ExamLink examLink) {
     pp('$mm _navigateToMultiTurnStreamChat ...');
+
     NavigationUtils.navigateToPage(
         context: context,
-        widget: MultiTurnStreamChat(
-          gemini: widget.gemini,
-          examLink: selectedExamLink!,
-        ));
+        widget: const MultiTurnStreamChat());
   }
 
   void _navigateToExamPaperPages(ExamLink examLink) {

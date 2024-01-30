@@ -1,9 +1,12 @@
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:edu_chatbot/data/country.dart';
-import 'package:edu_chatbot/data/org_sponsoree.dart';
+import 'package:edu_chatbot/data/sponsoree.dart';
 import 'package:edu_chatbot/data/organization.dart';
 import 'package:edu_chatbot/data/sgela_user.dart';
-import 'package:edu_chatbot/ui/subject_search.dart';
+import 'package:edu_chatbot/ui/auth/user_registration.dart';
+import 'package:edu_chatbot/ui/auth/user_sign_in.dart';
+import 'package:edu_chatbot/ui/exam/subject_search.dart';
+import 'package:edu_chatbot/ui/organization/organization_selector.dart';
 import 'package:edu_chatbot/util/navigation_util.dart';
 import 'package:edu_chatbot/util/prefs.dart';
 import 'package:flutter/material.dart';
@@ -26,7 +29,7 @@ class LandingPageState extends State<LandingPage>
   Country? country;
   Organization? organization;
   SgelaUser? sgelaUser;
-  OrgSponsoree? orgSponsoree;
+  Sponsoree? orgSponsoree;
 
   Prefs prefs = GetIt.instance<Prefs>();
   static const mm = '🔵🔵🔵🔵 LandingPage  🔵🔵';
@@ -50,14 +53,21 @@ class LandingPageState extends State<LandingPage>
       country = prefs.getCountry();
       sgelaUser = prefs.getUser();
       orgSponsoree = prefs.getSponsoree();
+
       //
       if (orgSponsoree != null) {
-        NavigationUtils.navigateToPage(
-            context: context, widget: const SubjectSearch());
+        pp('$mm ... orgSponsoree: ${orgSponsoree!.toJson()} ...');
+        await Future.delayed(const Duration(milliseconds: 100));
+        if (mounted) {
+          NavigationUtils.navigateToPage(
+                      context: context, widget: const SubjectSearch());
+        }
       }
     } catch (e) {
       pp(e);
-      showErrorDialog(context, '$e');
+      if (mounted) {
+        showErrorDialog(context, '$e');
+      }
     }
     setState(() {
       _busy = false;
@@ -69,12 +79,23 @@ class LandingPageState extends State<LandingPage>
     _controller.dispose();
     super.dispose();
   }
-  _navigateToRegistration() {
-    pp('$mm _navigateToRegistration ...');
 
+  _navigateToRegistration() async {
+    pp('$mm _navigateToRegistration ...');
+    var ok = await NavigationUtils.navigateToPage(
+        context: context, widget: const OrganizationSelector());
+    if (ok) {
+      if (mounted) {
+        Navigator.of(context).pop();
+        NavigationUtils.navigateToPage(context: context, widget: const SubjectSearch());
+      }
+    }
   }
+
   _navigateToSignIn() {
     pp('$mm _navigateToSignIn ...');
+    NavigationUtils.navigateToPage(
+        context: context, widget: const UserSignIn());
   }
 
   @override
@@ -88,85 +109,94 @@ class LandingPageState extends State<LandingPage>
               mobile: (_) {
                 return Stack(
                   children: [
-                    Column(
-                      children: [
-                        CarouselSlider(
-                          items: const [
-                            InfoPage(
-                                filePath: 'assets/image10.webp',
-                                content: 'Ace the Test, Stress Less with AI!',
-                                title: 'Don\'t Worry!'),
-                            InfoPage(
-                                filePath: 'assets/image8.jpg',
-                                content: 'Say Goodbye to Exam Anxiety!',
-                                title: 'Be Happy!'),
-                            InfoPage(
-                                filePath: 'assets/image7.jpg',
-                                content: 'Study Buddy: Your 24/7 Exam Coach!',
-                                title: 'Easy Peasey!'),
-                            InfoPage(
-                                filePath: 'assets/image4.webp',
-                                content: 'Teacher\'s Pet in Your Pocket!',
-                                title: 'Always Here'),
-                          ],
-                          options: CarouselOptions(
-                              height: 600,
-                              enlargeCenterPage: true,
-                              onPageChanged: (index, ccr) {},
-                              scrollPhysics: const PageScrollPhysics()),
-                        ),
-                      ],
-                    ),
-                    Positioned(
-                        bottom: 8,
-                        left: 20,
-                        right: 20,
-                        child: Card(
-                          elevation: 8,
-                          child: Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                orgSponsoree == null
-                                    ? SizedBox(
-                                        width: 140,
-                                        child: ElevatedButton(
-                                            style: const ButtonStyle(
-                                              elevation:
-                                                  MaterialStatePropertyAll(8),
-                                            ),
-                                            onPressed: () {
-                                              _navigateToSignIn();
-                                            },
-                                            child: const Padding(
-                                              padding: EdgeInsets.all(8.0),
-                                              child: Text('Sign In'),
-                                            )),
-                                      )
-                                    : gapW4,
-                                // gapW32,
-                                orgSponsoree == null
-                                    ? SizedBox(
-                                        width: 140,
-                                        child: Padding(
-                                          padding: const EdgeInsets.all(2.0),
-                                          child: ElevatedButton(
-                                              style: const ButtonStyle(
-                                                elevation:
-                                                    MaterialStatePropertyAll(8),
-                                              ),
-                                              onPressed: () {
-                                                _navigateToRegistration();
-                                              },
-                                              child: const Text('Register')),
-                                        ),
-                                      )
-                                    : gapW4,
-                              ],
-                            ),
+                    SingleChildScrollView(
+                      child: Column(
+                        children: [
+                          CarouselSlider(
+                            items: const [
+                              InfoPage(
+                                  filePath: 'assets/image10.webp',
+                                  content: 'Ace the Test, Stress Less with AI!',
+                                  title: 'Don\'t Worry!'),
+                              InfoPage(
+                                  filePath: 'assets/image8.jpg',
+                                  content: 'Say Goodbye to Exam Anxiety!',
+                                  title: 'Be Happy!'),
+                              InfoPage(
+                                  filePath: 'assets/image7.jpg',
+                                  content: 'Study Buddy: Your 24/7 Exam Coach!',
+                                  title: 'Easy Does It!'),
+                              InfoPage(
+                                  filePath: 'assets/image4.webp',
+                                  content: 'Teacher\'s Pet in Your Pocket!',
+                                  title: 'Always Here'),
+                            ],
+                            options: CarouselOptions(
+                                height: 600,
+                                enlargeCenterPage: true,
+                                onPageChanged: (index, ccr) {},
+                                scrollPhysics: const PageScrollPhysics()),
                           ),
-                        ))
+                        ],
+                      ),
+                    ),
+                    orgSponsoree == null
+                        ? Positioned(
+                            bottom: 8,
+                            left: 20,
+                            right: 20,
+                            child: Card(
+                              elevation: 8,
+                              child: Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    orgSponsoree == null
+                                        ? SizedBox(
+                                            width: 140,
+                                            child: ElevatedButton(
+                                                style: const ButtonStyle(
+                                                  elevation:
+                                                      MaterialStatePropertyAll(
+                                                          8),
+                                                ),
+                                                onPressed: () {
+                                                  _navigateToSignIn();
+                                                },
+                                                child: const Padding(
+                                                  padding: EdgeInsets.all(8.0),
+                                                  child: Text('Sign In'),
+                                                )),
+                                          )
+                                        : gapW4,
+                                    // gapW32,
+                                    orgSponsoree == null
+                                        ? SizedBox(
+                                            width: 140,
+                                            child: Padding(
+                                              padding:
+                                                  const EdgeInsets.all(2.0),
+                                              child: ElevatedButton(
+                                                  style: const ButtonStyle(
+                                                    elevation:
+                                                        MaterialStatePropertyAll(
+                                                            8),
+                                                  ),
+                                                  onPressed: () {
+                                                    _navigateToRegistration();
+                                                  },
+                                                  child:
+                                                      const Text('Register')),
+                                            ),
+                                          )
+                                        : gapW4,
+                                  ],
+                                ),
+                              ),
+                            ))
+                        : gapW4
                   ],
                 );
               },

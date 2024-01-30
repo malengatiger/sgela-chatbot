@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 
-import '../util/functions.dart';
+import '../../util/functions.dart';
 
 class GeminiRatingWidget extends StatelessWidget {
   const GeminiRatingWidget(

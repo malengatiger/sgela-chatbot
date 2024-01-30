@@ -3,20 +3,20 @@ import 'package:edu_chatbot/repositories/repository.dart';
 import 'package:edu_chatbot/services/firestore_service.dart';
 import 'package:edu_chatbot/services/local_data_service.dart';
 import 'package:edu_chatbot/services/you_tube_service.dart';
-import 'package:edu_chatbot/ui/busy_indicator.dart';
-import 'package:edu_chatbot/ui/exam_link_list_widget.dart';
-import 'package:edu_chatbot/ui/powered_by.dart';
-import 'package:edu_chatbot/ui/you_tube_searcher.dart';
+import 'package:edu_chatbot/ui/misc/busy_indicator.dart';
+import 'package:edu_chatbot/ui/exam/exam_link_list_widget.dart';
+import 'package:edu_chatbot/ui/misc/powered_by.dart';
+import 'package:edu_chatbot/ui/youtube/you_tube_searcher.dart';
 import 'package:edu_chatbot/util/navigation_util.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gemini/flutter_gemini.dart';
 
-import '../data/subject.dart';
-import '../services/chat_service.dart';
-import '../util/dark_light_control.dart';
-import '../util/functions.dart';
-import '../util/prefs.dart';
-import 'color_gallery.dart';
+import '../../data/subject.dart';
+import '../../services/chat_service.dart';
+import '../../util/dark_light_control.dart';
+import '../../util/functions.dart';
+import '../../util/prefs.dart';
+import '../misc/color_gallery.dart';
 
 class ExamsDocumentList extends StatefulWidget {
   const ExamsDocumentList(

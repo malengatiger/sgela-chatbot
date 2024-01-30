@@ -2,28 +2,29 @@ import 'package:badges/badges.dart' as bd;
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:edu_chatbot/data/organization.dart';
 import 'package:edu_chatbot/data/subject.dart';
+import 'package:edu_chatbot/gemini/sections/multi_turn_chat_stream.dart';
 import 'package:edu_chatbot/repositories/repository.dart';
 import 'package:edu_chatbot/services/chat_gpt_service.dart';
 import 'package:edu_chatbot/services/firestore_service.dart';
-import 'package:edu_chatbot/ui/busy_indicator.dart';
-import 'package:edu_chatbot/ui/color_gallery.dart';
-import 'package:edu_chatbot/ui/exam_document_list.dart';
+import 'package:edu_chatbot/ui/misc/busy_indicator.dart';
+import 'package:edu_chatbot/ui/misc/color_gallery.dart';
+import 'package:edu_chatbot/ui/exam/exam_document_list.dart';
 import 'package:edu_chatbot/ui/organization/organization_splash.dart';
-import 'package:edu_chatbot/ui/powered_by.dart';
+import 'package:edu_chatbot/ui/misc/powered_by.dart';
 import 'package:edu_chatbot/util/dark_light_control.dart';
 import 'package:edu_chatbot/util/functions.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gemini/flutter_gemini.dart';
 import 'package:get_it/get_it.dart';
 
-import '../data/branding.dart';
-import '../services/chat_service.dart';
-import '../services/local_data_service.dart';
-import '../services/you_tube_service.dart';
-import '../util/navigation_util.dart';
-import '../util/prefs.dart';
-import 'image_picker_widget.dart';
-import 'organization_selector.dart';
+import '../../data/branding.dart';
+import '../../services/chat_service.dart';
+import '../../services/local_data_service.dart';
+import '../../services/you_tube_service.dart';
+import '../../util/navigation_util.dart';
+import '../../util/prefs.dart';
+import '../image/image_picker_widget.dart';
+import '../organization/organization_selector.dart';
 
 class SubjectSearch extends StatefulWidget {
 
@@ -238,17 +239,15 @@ class SubjectSearchState extends State<SubjectSearch> {
                   color: isDark ? Theme.of(context).primaryColor : Colors.black,
                 ),
               ),
-              // _showSearchBox? gapW8: IconButton(
-              //   onPressed: () {
-              //    setState(() {
-              //      _showSearchBox = !_showSearchBox;
-              //    });
-              //   },
-              //   icon: Icon(
-              //     Icons.search,
-              //     color: isDark ? Theme.of(context).primaryColor : Colors.black,
-              //   ),
-              // ),
+              IconButton(
+                onPressed: () {
+                  _navigateToMultiTurnChat();
+                },
+                icon: Icon(
+                  Icons.chat_outlined,
+                  color: isDark ? Theme.of(context).primaryColor : Colors.black,
+                ),
+              ),
             ],
           ),
           // backgroundColor: bright == Brightness.light?Colors.brown.shade100:Colors.black,
@@ -361,5 +360,10 @@ class SubjectSearchState extends State<SubjectSearch> {
         context: context,
         widget: ColorGallery(
             prefs: prefs, colorWatcher: colorWatcher));
+  }
+  void _navigateToMultiTurnChat() {
+    NavigationUtils.navigateToPage(
+        context: context,
+        widget: const MultiTurnStreamChat());
   }
 }

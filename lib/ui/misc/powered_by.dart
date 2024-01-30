@@ -6,7 +6,7 @@ import 'package:edu_chatbot/util/prefs.dart';
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
 
-import '../data/branding.dart';
+import '../../data/branding.dart';
 
 class PoweredBy extends StatefulWidget {
   const PoweredBy({

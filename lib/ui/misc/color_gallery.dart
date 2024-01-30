@@ -1,13 +1,13 @@
 import 'dart:async';
 
-import 'package:edu_chatbot/ui/powered_by.dart';
+import 'package:edu_chatbot/ui/misc/powered_by.dart';
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
 
-import '../repositories/repository.dart';
-import '../util/dark_light_control.dart';
-import '../util/functions.dart';
-import '../util/prefs.dart';
+import '../../repositories/repository.dart';
+import '../../util/dark_light_control.dart';
+import '../../util/functions.dart';
+import '../../util/prefs.dart';
 
 class ColorGallery extends StatefulWidget {
   const ColorGallery(

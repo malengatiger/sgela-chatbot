@@ -1,26 +1,28 @@
 import 'package:json_annotation/json_annotation.dart';
 
 part 'sgela_user.g.dart';
+
 @JsonSerializable()
 class SgelaUser {
   String? firstName, lastName, email, cellphone;
   String? date;
-  int? countryId, cityId;
+  int? id, countryId, cityId;
   String? countryName, cityName, firebaseUserId;
   String? institutionName;
 
-
   SgelaUser(
-      this.firstName,
-      this.lastName,
-      this.email,
-      this.cellphone,
-      this.date,
-      this.countryId,
-      this.cityId,
-      this.countryName,
-      this.cityName, this.firebaseUserId,
-      this.institutionName);
+      {required this.id,
+      required this.firstName,
+      required this.lastName,
+      required this.email,
+      required this.cellphone,
+      required this.date,
+      required this.countryId,
+      required this.cityId,
+      required this.countryName,
+      required this.cityName,
+      this.firebaseUserId,
+      this.institutionName});
 
   factory SgelaUser.fromJson(Map<String, dynamic> json) =>
       _$SgelaUserFromJson(json);

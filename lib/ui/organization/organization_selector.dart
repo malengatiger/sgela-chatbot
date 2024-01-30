@@ -3,21 +3,23 @@ import 'dart:collection';
 import 'package:badges/badges.dart' as bd;
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:edu_chatbot/data/branding.dart';
+import 'package:edu_chatbot/data/city.dart';
 import 'package:edu_chatbot/data/country.dart';
-import 'package:edu_chatbot/data/org_sponsoree.dart';
 import 'package:edu_chatbot/data/organization.dart';
+import 'package:edu_chatbot/data/sponsoree.dart';
 import 'package:edu_chatbot/repositories/repository.dart';
 import 'package:edu_chatbot/services/firestore_service.dart';
+import 'package:edu_chatbot/ui/auth/user_registration.dart';
+import 'package:edu_chatbot/ui/misc/busy_indicator.dart';
 import 'package:edu_chatbot/ui/organization/organization_splash.dart';
-import 'package:edu_chatbot/ui/user_registration.dart';
 import 'package:edu_chatbot/util/navigation_util.dart';
 import 'package:edu_chatbot/util/prefs.dart';
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
 import 'package:responsive_builder/responsive_builder.dart';
 
-import '../data/sgela_user.dart';
-import '../util/functions.dart';
+import '../../data/sgela_user.dart';
+import '../../util/functions.dart';
 
 class OrganizationSelector extends StatefulWidget {
   const OrganizationSelector({super.key});
@@ -47,13 +49,12 @@ class OrganizationSelectorState extends State<OrganizationSelector>
     _controller = AnimationController(vsync: this);
     super.initState();
     _getData();
-    _showToast();
   }
 
   bool _busy = false;
 
   _showToast() {
-    Future.delayed(const Duration(milliseconds: 3000), () {
+    Future.delayed(const Duration(milliseconds: 100), () {
       showToast(
           message:
               'Tap to select a Sponsor. The Sponsor helps with the cost of using AI tools',
@@ -65,20 +66,23 @@ class OrganizationSelectorState extends State<OrganizationSelector>
     });
   }
 
+  City? city;
+
   _getData() async {
     pp('$mm ... getting data ...');
     setState(() {
-      _busy = false;
+      _busy = true;
     });
     try {
+      // country = await firestoreService.getLocalCountry();
       organization = prefs.getOrganization();
-      country = prefs.getCountry();
       user = prefs.getUser();
       organizations = await firestoreService.getOrganizations();
       sgelaOrganization = await repository.getSgelaOrganization();
       brandings = await firestoreService.getAllBrandings();
       brandings.sort((a, b) => b.date!.compareTo(a.date!));
       _manageBrandings();
+      _showToast();
     } catch (e, s) {
       pp(e);
       pp(s);
@@ -133,19 +137,31 @@ class OrganizationSelectorState extends State<OrganizationSelector>
     pp('$mm ... Organization and Branding saved to cache!');
 
     var mUser = await NavigationUtils.navigateToPage(
-        context: context, widget: const UserRegistration());
+        context: context,
+        widget: UserRegistration(
+          branding: orgBrand!.branding!,
+        ));
 
-    if (mUser != null) {
-      var sponsoree = OrgSponsoree(
-          orgBrand!.organization!.id!,
-          DateTime.now().millisecondsSinceEpoch,
-          DateTime.now().toIso8601String(),
-          orgBrand!.organization!.name,
-          true,
-          mUser);
+    if (mUser != null && mUser is SgelaUser) {
+      var sponsoree = Sponsoree(
+          organizationId: orgBrand!.organization!.id!,
+          id: DateTime.now().millisecondsSinceEpoch,
+          date: DateTime.now().toIso8601String(),
+          organizationName: orgBrand!.organization!.name,
+          activeFlag: true,
+          sgelaCellphone: mUser.cellphone,
+          sgelaEmail: mUser.email,
+          sgelaFirebaseId: mUser.firebaseUserId,
+          sgelaUserId: mUser.id,
+          sgelaUserName: '${mUser.firstName} ${mUser.lastName}');
 
-      firestoreService.addOrgSponsoree(sponsoree);
-      pp('$mm ... OrgSponsoree saved to database! ${sponsoree.toJson()}');
+      await firestoreService.addOrgSponsoree(sponsoree);
+      pp('$mm ... Sponsoree saved to database! ${sponsoree.toJson()}');
+    } else {
+      if (mounted) {
+        showToast(message: 'User registration failed', context: context);
+        return;
+      }
     }
 
     if (mounted) {
@@ -176,24 +192,32 @@ class OrganizationSelectorState extends State<OrganizationSelector>
                         children: [
                           const Text('Sponsor Organizations'),
                           gapH16,
-                          Expanded(
-                              child: bd.Badge(
-                            position:
-                                bd.BadgePosition.topEnd(top: -12, end: -8),
-                            badgeContent: Text("${orgBrandings.length}"),
-                            badgeStyle: bd.BadgeStyle(
-                                badgeColor: Colors.green.shade700,
-                                padding: const EdgeInsets.all(12)),
-                            child: BrandingList(
-                                organizationBrandings: orgBrandings,
-                                onBrandSelected: (ob) {
-                                  setState(() {
-                                    orgBrand = ob;
-                                  });
-                                  _processChosenBrand();
-                                },
-                                isGrid: false),
-                          )),
+                          _busy
+                              ? const Padding(
+                                  padding: EdgeInsets.all(28.0),
+                                  child: BusyIndicator(
+                                    caption: 'Preparing Sponsor list ...',
+                                    showClock: true,
+                                  ),
+                                )
+                              : Expanded(
+                                  child: bd.Badge(
+                                  position: bd.BadgePosition.topEnd(
+                                      top: -12, end: -8),
+                                  badgeContent: Text("${orgBrandings.length}"),
+                                  badgeStyle: bd.BadgeStyle(
+                                      badgeColor: Colors.green.shade700,
+                                      padding: const EdgeInsets.all(12)),
+                                  child: BrandingList(
+                                      organizationBrandings: orgBrandings,
+                                      onBrandSelected: (ob) {
+                                        setState(() {
+                                          orgBrand = ob;
+                                        });
+                                        _processChosenBrand();
+                                      },
+                                      isGrid: false),
+                                )),
                         ],
                       )
                     ],

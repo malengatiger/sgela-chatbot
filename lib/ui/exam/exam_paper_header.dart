@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../data/exam_link.dart';
-import '../util/functions.dart';
+import '../../data/exam_link.dart';
+import '../../util/functions.dart';
 
 class ExamPaperHeader extends StatelessWidget {
   const ExamPaperHeader({super.key, required this.examLink, required this.onClose});

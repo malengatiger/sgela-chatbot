@@ -1,6 +1,6 @@
 import 'dart:convert';
 
-import 'package:edu_chatbot/data/org_sponsoree.dart';
+import 'package:edu_chatbot/data/sponsoree.dart';
 import 'package:edu_chatbot/data/organization.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -30,20 +30,20 @@ class Prefs {
     return user;
   }
 
-  Future saveSponsoree(OrgSponsoree user) async {
+  Future saveSponsoree(Sponsoree user) async {
     Map mJson = user.toJson();
     var jx = json.encode(mJson);
     sharedPreferences.setString('sponsoree', jx);
     return null;
   }
 
-  OrgSponsoree? getSponsoree() {
+  Sponsoree? getSponsoree() {
     var string = sharedPreferences.getString('sponsoree');
     if (string == null) {
       return null;
     }
     var jx = json.decode(string);
-    var user = OrgSponsoree.fromJson(jx);
+    var user = Sponsoree.fromJson(jx);
     return user;
   }
 
