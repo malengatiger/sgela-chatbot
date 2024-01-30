@@ -7,9 +7,11 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../data/branding.dart';
 import '../data/country.dart';
 import '../data/sgela_user.dart';
+import 'functions.dart';
 
 class Prefs {
   final SharedPreferences sharedPreferences;
+  static const mm = '💜💜💜💜💜Prefs 💜💜';
 
   Prefs(this.sharedPreferences);
 
@@ -17,7 +19,8 @@ class Prefs {
     Map mJson = user.toJson();
     var jx = json.encode(mJson);
     sharedPreferences.setString('user', jx);
-    return null;
+    pp('$mm ... sgelaUser saved OK');
+
   }
 
   SgelaUser? getUser() {
@@ -27,14 +30,16 @@ class Prefs {
     }
     var jx = json.decode(string);
     var user = SgelaUser.fromJson(jx);
+    pp('$mm ... sgelaUser found OK: ${user.firstName}');
     return user;
   }
 
-  Future saveSponsoree(Sponsoree user) async {
-    Map mJson = user.toJson();
+  Future saveSponsoree(Sponsoree sponsoree) async {
+    Map mJson = sponsoree.toJson();
     var jx = json.encode(mJson);
     sharedPreferences.setString('sponsoree', jx);
-    return null;
+    pp('$mm ... sponsoree saved OK, ${sponsoree.sgelaUserName}');
+
   }
 
   Sponsoree? getSponsoree() {
@@ -43,14 +48,18 @@ class Prefs {
       return null;
     }
     var jx = json.decode(string);
-    var user = Sponsoree.fromJson(jx);
-    return user;
+    var sponsoree = Sponsoree.fromJson(jx);
+    pp('$mm ... sponsoree retrieved OK, ${sponsoree.sgelaUserName}');
+
+    return sponsoree;
   }
 
   void saveCountry(Country country) {
     Map mJson = country.toJson();
     var jx = json.encode(mJson);
     sharedPreferences.setString('country', jx);
+    pp('$mm ... country saved OK: ${country.name}');
+
   }
 
   Country? getCountry() {
@@ -60,6 +69,7 @@ class Prefs {
     }
     var jx = json.decode(string);
     var country = Country.fromJson(jx);
+    pp('$mm ... country retrieved OK: ${country.name}');
     return country;
   }
 
@@ -67,6 +77,8 @@ class Prefs {
     Map mJson = brand.toJson();
     var jx = json.encode(mJson);
     sharedPreferences.setString('brand', jx);
+    pp('$mm ... branding saved OK: ${brand.organizationName}');
+
   }
 
   Branding? getBrand() {
@@ -76,6 +88,8 @@ class Prefs {
     }
     var jx = json.decode(string);
     var b = Branding.fromJson(jx);
+    pp('$mm ... branding gotten OK: ${b.organizationName}');
+
     return b;
   }
 
@@ -83,6 +97,8 @@ class Prefs {
     Map mJson = organization.toJson();
     var jx = json.encode(mJson);
     sharedPreferences.setString('Organization', jx);
+    pp('$mm ... organization saved OK: ${organization.name}');
+
   }
 
   Organization? getOrganization() {
@@ -92,31 +108,40 @@ class Prefs {
     }
     var jx = json.decode(string);
     var org = Organization.fromJson(jx);
+    pp('$mm ... organization retrieved OK: ${org.name}');
+
     return org;
   }
 
   void saveMode(int mode) {
     sharedPreferences.setInt('mode', mode);
+    pp('$mm ... mode saved OK: $mode');
+
   }
 
   int getMode() {
     var mode = sharedPreferences.getInt('mode');
     if (mode == null) {
+      pp('$mm ... mode not found, returning -1');
       return -1;
     }
+    pp('$mm ... mode saved OK: $mode');
     return mode;
   }
 
   void saveColorIndex(int index) async {
     sharedPreferences.setInt('color', index);
+    pp('$mm ... color index cached: $index');
     return null;
   }
 
   int getColorIndex() {
     var color = sharedPreferences.getInt('color');
     if (color == null) {
+      pp('$mm ... return default color index 0');
       return 0;
     }
+    pp('$mm ... color index: $color');
     return color;
   }
 
@@ -126,16 +151,20 @@ class Prefs {
     List<String> countryJsonStrings =
     countryStrings.map((pm) => json.encode(pm)).toList();
     sharedPreferences.setStringList('countries', countryJsonStrings);
+    pp('$mm ... countries saved OK: ${countries.length}');
+
   }
 
   List<Country> getCountries() {
     List<String>? paymentMethodJsonStrings =
     sharedPreferences.getStringList('countries');
     if (paymentMethodJsonStrings != null) {
-      List<Country> paymentMethods = paymentMethodJsonStrings
+      List<Country> countries = paymentMethodJsonStrings
           .map((pmJson) => Country.fromJson(json.decode(pmJson)))
           .toList();
-      return paymentMethods;
+      pp('$mm ... countries retrieved: ${countries.length}');
+
+      return countries;
     } else {
       return [];
     }
@@ -147,6 +176,8 @@ class Prefs {
     List<String> brandingJsonStrings =
     brandingStrings.map((pm) => json.encode(pm)).toList();
     sharedPreferences.setStringList('brandings', brandingJsonStrings);
+    pp('$mm ... brandings saved OK: ${brandings.length}');
+
   }
 
   List<Branding> getBrandings() {
@@ -156,6 +187,8 @@ class Prefs {
       List<Branding> brandings = brandingJsonStrings
           .map((pmJson) => Branding.fromJson(json.decode(pmJson)))
           .toList();
+      pp('$mm ... brandings retrieved: ${brandings.length}');
+
       return brandings;
     } else {
       return [];

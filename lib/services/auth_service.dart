@@ -19,20 +19,21 @@ class AuthService {
 
     try {
       var creds = await firebaseAuth.createUserWithEmailAndPassword(
-              email: user.email!, password: 'pass123');
+          email: user.email!, password: 'pass123');
       if (creds.user != null) {
-            user.firebaseUserId = creds.user?.uid;
-            await firebaseAuth.currentUser!
-                .updateDisplayName('${user.firstName} ${user.lastName}');
-            var sgelaUser = await firestoreService.addSgelaUser(user);
-            prefs.saveUser(sgelaUser);
-            pp('$mm User added to Firebase/Firestore, saved in prefs: ${sgelaUser.toJson()}');
-            return sgelaUser;
-          }
-    } catch (e,s) {
+        user.firebaseUserId = creds.user?.uid;
+        await firebaseAuth.currentUser!
+            .updateDisplayName('${user.firstName} ${user.lastName}');
+        var sgelaUser = await firestoreService.addSgelaUser(user);
+        prefs.saveUser(sgelaUser);
+        pp('$mm User added to Firebase/Firestore, saved in prefs: ${sgelaUser.toJson()}');
+        return sgelaUser;
+      }
+    } catch (e, s) {
       pp(e);
       pp(s);
-      throw Exception('Unable to create authenticated user. Check your email address');
+      throw Exception(
+          'Unable to create authenticated user. Check your email address');
     }
     return null;
   }
@@ -49,16 +50,21 @@ class AuthService {
     if (creds.user == null) {
       throw Exception('Sign in failed');
     }
-    var u = await firestoreService.getSgelaUser(creds.user!.uid);
+    pp('$mm Firebase User authenticated OK');
 
-    if (u != null) {
-      var b = await firestoreService.getSponsoree(creds.user!.uid);
-      pp('$mm User signed in: ${u.toJson()}');
-      if ((b != null)) {
-        pp('$mm Sponsoree is: ${b.toJson()}');
+    var sgelaUser = await firestoreService.getSgelaUser(creds.user!.uid);
+    if (sgelaUser != null) {
+      var sponsoree = await firestoreService.getSponsoree(creds.user!.uid);
+      pp('$mm SgelaUser is signed in: ${sgelaUser.toJson()}');
+      if ((sponsoree != null)) {
+        pp('$mm Sponsoree found is: ${sponsoree.toJson()}');
+        var org =
+            await firestoreService.getOrganization(sponsoree.organizationId!);
+        var brands = await firestoreService.getOrganizationBrandings(
+            sponsoree.organizationId!, true);
       }
 
-      return u;
+      return sgelaUser;
     }
 
     return null;

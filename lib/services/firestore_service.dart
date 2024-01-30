@@ -284,18 +284,18 @@ class FirestoreService {
   }
 
   Future<Sponsoree?> getSponsoree(String firebaseUserId) async {
-    pp('$mm ... getSgelaUser from Firestore ... firebaseUserId: $firebaseUserId');
+    pp('$mm ... getSponsoree from Firestore ... firebaseUserId: $firebaseUserId');
     List<Sponsoree> list = [];
 
     var qs = await firebaseFirestore
-        .collection('OrgSponsoree')
-        .where('user.firebaseUserId', isEqualTo: firebaseUserId)
+        .collection('Sponsoree')
+        .where('sgelaFirebaseId', isEqualTo: firebaseUserId)
         .get();
 
     for (var snap in qs.docs) {
       list.add(Sponsoree.fromJson(snap.data()));
     }
-    pp('$mm ... users found: ${list.length}');
+    pp('$mm ... sponsorees found: ${list.length}');
 
     if (list.isNotEmpty) {
       prefs.saveSponsoree(list.first);
@@ -338,6 +338,7 @@ class FirestoreService {
       pp('$mm ... brandings found: ${brandings.length}');
       brandings.sort((a, b) => b.date!.compareTo(a.date!));
       prefs.saveBrandings(brandings);
+      prefs.saveBrand(brandings.first);
       return brandings;
     }
 

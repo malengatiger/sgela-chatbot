@@ -1,7 +1,10 @@
 import 'package:edu_chatbot/data/sgela_user.dart';
 import 'package:edu_chatbot/services/auth_service.dart';
 import 'package:edu_chatbot/services/firestore_service.dart';
+import 'package:edu_chatbot/ui/exam/subject_search.dart';
+import 'package:edu_chatbot/ui/misc/busy_indicator.dart';
 import 'package:edu_chatbot/util/functions.dart';
+import 'package:edu_chatbot/util/navigation_util.dart';
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
 import 'package:reactive_forms/reactive_forms.dart';
@@ -57,6 +60,10 @@ class UserSignInState extends State<UserSignIn> {
       var user = await authService.signInUser(email, password);
       if (user != null) {
         pp('$mm ... submit: SgelaUser signed in: ${user.toJson()}');
+        if (mounted) {
+          Navigator.of(context).pop(user);
+          return;
+        }
       }
     } catch (e, s) {
       pp(e);
@@ -69,7 +76,7 @@ class UserSignInState extends State<UserSignIn> {
       _busy = false;
     });
   }
-
+//  cabo@dogs.com  pass123
   Future _forgotPassword(FormGroup form) async {
     pp('$mm ... _forgotPassword ....');
     var email = form.controls['email']?.value as String?;
@@ -90,6 +97,7 @@ class UserSignInState extends State<UserSignIn> {
           backgroundColor: Colors.blue,
           textStyle: const TextStyle(color: Colors.white),
           context: context);
+      Navigator.of(context).pop();
     }
   }
 
@@ -131,7 +139,10 @@ class UserSignInState extends State<UserSignIn> {
                             crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
                               gapH32,
-                              ReactiveFormConfig(
+                             _busy? const BusyIndicator(
+                               caption: 'Signing you in ... please wait',
+                               showClock: true,
+                             ): ReactiveFormConfig(
                                   validationMessages: {
                                     ValidationMessage.required: (_) =>
                                         'Field is mandatory',

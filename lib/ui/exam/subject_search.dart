@@ -1,16 +1,17 @@
 import 'package:badges/badges.dart' as bd;
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:edu_chatbot/data/organization.dart';
+import 'package:edu_chatbot/data/sponsoree.dart';
 import 'package:edu_chatbot/data/subject.dart';
 import 'package:edu_chatbot/gemini/sections/multi_turn_chat_stream.dart';
 import 'package:edu_chatbot/repositories/repository.dart';
 import 'package:edu_chatbot/services/chat_gpt_service.dart';
 import 'package:edu_chatbot/services/firestore_service.dart';
+import 'package:edu_chatbot/ui/exam/exam_document_list.dart';
 import 'package:edu_chatbot/ui/misc/busy_indicator.dart';
 import 'package:edu_chatbot/ui/misc/color_gallery.dart';
-import 'package:edu_chatbot/ui/exam/exam_document_list.dart';
-import 'package:edu_chatbot/ui/organization/organization_splash.dart';
 import 'package:edu_chatbot/ui/misc/powered_by.dart';
+import 'package:edu_chatbot/ui/organization/organization_splash.dart';
 import 'package:edu_chatbot/util/dark_light_control.dart';
 import 'package:edu_chatbot/util/functions.dart';
 import 'package:flutter/material.dart';
@@ -27,10 +28,9 @@ import '../image/image_picker_widget.dart';
 import '../organization/organization_selector.dart';
 
 class SubjectSearch extends StatefulWidget {
-
-
-  const SubjectSearch(
-      {super.key,});
+  const SubjectSearch({
+    super.key,
+  });
 
   @override
   SubjectSearchState createState() => SubjectSearchState();
@@ -50,7 +50,7 @@ class SubjectSearchState extends State<SubjectSearch> {
   List<Subject> _subjects = [];
   List<Subject> _filteredSubjects = [];
   bool busy = false, _showSearchBox = false;
-  static const String mm = '🍎 🍎 🍎 SubjectSearch: ';
+  static const String mm = '🍎🍎🍎🍎🍎🍎 SubjectSearch: 🍎🍎🍎 ';
   Branding? branding;
 
   @override
@@ -59,11 +59,14 @@ class SubjectSearchState extends State<SubjectSearch> {
     _checkIfSponsored();
   }
 
-  Organization?  sponsorOrganization;
+  Organization? sponsorOrganization;
+  Sponsoree? sponsoree;
 
   _checkIfSponsored() async {
-    sponsorOrganization = prefs.getOrganization();
-    if (sponsorOrganization == null) {
+    pp('$mm ... checking if sponsored .....');
+    sponsoree = prefs.getSponsoree();
+    if (sponsoree == null) {
+      pp('$mm ... checking if sponsored: NOT SPONSORED! navigateTo OrganizationSelector .....');
       Future.delayed(const Duration(milliseconds: 200), () async {
         var ok = await NavigationUtils.navigateToPage(
             context: context, widget: const OrganizationSelector());
@@ -75,9 +78,9 @@ class SubjectSearchState extends State<SubjectSearch> {
         }
       });
     } else {
+      pp('$mm ... this user is SPONSORED! navigateTo OrganizationSplash for 5 seconds .....');
       _getSubjects();
       await _getOrganization();
-
       if (mounted) {
         if (branding != null) {
           NavigationUtils.navigateToPage(
@@ -98,13 +101,16 @@ class SubjectSearchState extends State<SubjectSearch> {
       busy = true;
     });
     try {
-      //todo - 🍎🍎🍎 sort out the real implementation!!!
       sponsorOrganization = prefs.getOrganization();
       branding = prefs.getBrand();
-      pp('$mm sponsorOrganization: ${sponsorOrganization!.toJson()}');
+      if ((sponsorOrganization != null)) {
+        pp('$mm sponsorOrganization: ${sponsorOrganization!.toJson()}');
+      }
+      if ((branding != null)) {
+        pp('$mm branding: ${branding!.toJson()}');
+      }
     } catch (e) {
       pp(e);
-
     }
     setState(() {
       busy = false;
@@ -182,8 +188,7 @@ class SubjectSearchState extends State<SubjectSearch> {
         Theme.of(context).textTheme.bodySmall!.copyWith(
               fontWeight: FontWeight.w900,
             );
-    var isDark =
-        isDarkMode(prefs, MediaQuery.of(context).platformBrightness);
+    var isDark = isDarkMode(prefs, MediaQuery.of(context).platformBrightness);
     return GestureDetector(
       onTap: () {
         FocusScope.of(context).unfocus();
@@ -199,7 +204,7 @@ class SubjectSearchState extends State<SubjectSearch> {
                   ? Text(
                       'SgelaAI',
                       style: myTextStyle(context,
-                          Theme.of(context).primaryColor, 36, FontWeight.w900),
+                          Theme.of(context).primaryColor, 24, FontWeight.w900),
                     )
                   : Card(
                       elevation: 8,
@@ -358,12 +363,11 @@ class SubjectSearchState extends State<SubjectSearch> {
   void _navigateToColorGallery() {
     NavigationUtils.navigateToPage(
         context: context,
-        widget: ColorGallery(
-            prefs: prefs, colorWatcher: colorWatcher));
+        widget: ColorGallery(prefs: prefs, colorWatcher: colorWatcher));
   }
+
   void _navigateToMultiTurnChat() {
     NavigationUtils.navigateToPage(
-        context: context,
-        widget: const MultiTurnStreamChat());
+        context: context, widget: const MultiTurnStreamChat());
   }
 }

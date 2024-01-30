@@ -44,7 +44,7 @@ class LandingPageState extends State<LandingPage>
   bool _busy = false;
 
   _getData() async {
-    pp('$mm ... getting data ...');
+    pp('$mm ... getting cached data to decide what happens next ...');
     setState(() {
       _busy = false;
     });
@@ -53,15 +53,13 @@ class LandingPageState extends State<LandingPage>
       country = prefs.getCountry();
       sgelaUser = prefs.getUser();
       orgSponsoree = prefs.getSponsoree();
-
       //
       if (orgSponsoree != null) {
-        pp('$mm ... orgSponsoree: ${orgSponsoree!.toJson()} ...');
-        await Future.delayed(const Duration(milliseconds: 100));
-        if (mounted) {
+        pp('$mm ... YEBO!!! returning Sponsoree. have to navigate to SubjectSearch: ${orgSponsoree!.toJson()} ...');
+        Future.delayed(const Duration(milliseconds: 200), (){
           NavigationUtils.navigateToPage(
-                      context: context, widget: const SubjectSearch());
-        }
+              context: context, widget: const SubjectSearch());
+        });
       }
     } catch (e) {
       pp(e);
@@ -87,15 +85,21 @@ class LandingPageState extends State<LandingPage>
     if (ok) {
       if (mounted) {
         Navigator.of(context).pop();
-        NavigationUtils.navigateToPage(context: context, widget: const SubjectSearch());
+        NavigationUtils.navigateToPage(
+            context: context, widget: const SubjectSearch());
       }
     }
   }
 
-  _navigateToSignIn() {
+  _navigateToSignIn() async {
     pp('$mm _navigateToSignIn ...');
-    NavigationUtils.navigateToPage(
+    var user = await NavigationUtils.navigateToPage(
         context: context, widget: const UserSignIn());
+    pp('$mm _navigateToSignIn: returned from UserSignIn ...');
+    if (user != null) {
+      pp('$mm _navigateToSignIn: returned from UserSignIn, user is not null ...');
+      _getData();
+    }
   }
 
   @override
@@ -112,27 +116,95 @@ class LandingPageState extends State<LandingPage>
                     SingleChildScrollView(
                       child: Column(
                         children: [
+                          Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Row(
+                              mainAxisAlignment:
+                              MainAxisAlignment.spaceBetween,
+                              children: [
+                                orgSponsoree == null
+                                    ? SizedBox(
+                                  width: 140,
+                                  child: ElevatedButton(
+                                      style: const ButtonStyle(
+                                        elevation:
+                                        MaterialStatePropertyAll(
+                                            8),
+                                      ),
+                                      onPressed: () {
+                                        _navigateToSignIn();
+                                      },
+                                      child: const Padding(
+                                        padding: EdgeInsets.all(8.0),
+                                        child: Text('Sign In'),
+                                      )),
+                                )
+                                    : gapW4,
+                                // gapW32,
+                                orgSponsoree == null
+                                    ? SizedBox(
+                                  width: 140,
+                                  child: Padding(
+                                    padding:
+                                    const EdgeInsets.all(2.0),
+                                    child: ElevatedButton(
+                                        style: const ButtonStyle(
+                                          elevation:
+                                          MaterialStatePropertyAll(
+                                              8),
+                                        ),
+                                        onPressed: () {
+                                          _navigateToRegistration();
+                                        },
+                                        child:
+                                        const Text('Register')),
+                                  ),
+                                )
+                                    : gapW4,
+                              ],
+                            ),
+                          ),
                           CarouselSlider(
-                            items: const [
-                              InfoPage(
-                                  filePath: 'assets/image10.webp',
-                                  content: 'Ace the Test, Stress Less with AI!',
-                                  title: 'Don\'t Worry!'),
-                              InfoPage(
-                                  filePath: 'assets/image8.jpg',
-                                  content: 'Say Goodbye to Exam Anxiety!',
-                                  title: 'Be Happy!'),
-                              InfoPage(
-                                  filePath: 'assets/image7.jpg',
-                                  content: 'Study Buddy: Your 24/7 Exam Coach!',
-                                  title: 'Easy Does It!'),
-                              InfoPage(
-                                  filePath: 'assets/image4.webp',
-                                  content: 'Teacher\'s Pet in Your Pocket!',
-                                  title: 'Always Here'),
+                            items: [
+                              GestureDetector(
+                                onTap: () {
+                                  pp('$mm page 1 tapped');
+                                },
+                                child: const InfoPage(
+                                    filePath: 'assets/image10.webp',
+                                    content: 'Ace the Test, Stress Less with AI!',
+                                    title: 'Don\'t Worry, Be Happy!'),
+                              ),
+                              GestureDetector(
+                                onTap: () {
+                                  pp('$mm page 2 tapped');
+                                },
+                                child: const InfoPage(
+                                    filePath: 'assets/image8.jpg',
+                                    content: 'Say Goodbye to Exam Anxiety!',
+                                    title: 'Be Happy!'),
+                              ),
+                              GestureDetector(
+                                onTap: () {
+                                  pp('$mm page 3 tapped');
+                                },
+                                child: const InfoPage(
+                                    filePath: 'assets/image7.jpg',
+                                    content: 'Study Buddy: Your 24/7 Exam Coach!',
+                                    title: 'Easy Does It!'),
+                              ),
+                              GestureDetector(
+                                onTap: () {
+                                  pp('$mm page 4 tapped');
+                                },
+                                child: const InfoPage(
+                                    filePath: 'assets/image4.webp',
+                                    content: 'Teacher\'s Pet in Your Pocket!',
+                                    title: 'Always Here'),
+                              ),
                             ],
                             options: CarouselOptions(
-                                height: 600,
+                                height: 560,
                                 enlargeCenterPage: true,
                                 onPageChanged: (index, ccr) {},
                                 scrollPhysics: const PageScrollPhysics()),
@@ -140,63 +212,7 @@ class LandingPageState extends State<LandingPage>
                         ],
                       ),
                     ),
-                    orgSponsoree == null
-                        ? Positioned(
-                            bottom: 8,
-                            left: 20,
-                            right: 20,
-                            child: Card(
-                              elevation: 8,
-                              child: Padding(
-                                padding: const EdgeInsets.all(8.0),
-                                child: Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    orgSponsoree == null
-                                        ? SizedBox(
-                                            width: 140,
-                                            child: ElevatedButton(
-                                                style: const ButtonStyle(
-                                                  elevation:
-                                                      MaterialStatePropertyAll(
-                                                          8),
-                                                ),
-                                                onPressed: () {
-                                                  _navigateToSignIn();
-                                                },
-                                                child: const Padding(
-                                                  padding: EdgeInsets.all(8.0),
-                                                  child: Text('Sign In'),
-                                                )),
-                                          )
-                                        : gapW4,
-                                    // gapW32,
-                                    orgSponsoree == null
-                                        ? SizedBox(
-                                            width: 140,
-                                            child: Padding(
-                                              padding:
-                                                  const EdgeInsets.all(2.0),
-                                              child: ElevatedButton(
-                                                  style: const ButtonStyle(
-                                                    elevation:
-                                                        MaterialStatePropertyAll(
-                                                            8),
-                                                  ),
-                                                  onPressed: () {
-                                                    _navigateToRegistration();
-                                                  },
-                                                  child:
-                                                      const Text('Register')),
-                                            ),
-                                          )
-                                        : gapW4,
-                                  ],
-                                ),
-                              ),
-                            ))
-                        : gapW4
+
                   ],
                 );
               },
@@ -211,11 +227,10 @@ class LandingPageState extends State<LandingPage>
 }
 
 class InfoPage extends StatelessWidget {
-  const InfoPage(
-      {super.key,
-      required this.filePath,
-      required this.content,
-      required this.title});
+  const InfoPage({super.key,
+    required this.filePath,
+    required this.content,
+    required this.title});
 
   final String filePath, content, title;
 
@@ -231,14 +246,16 @@ class InfoPage extends StatelessWidget {
             Text(
               title,
               style: myTextStyle(
-                  context, Theme.of(context).primaryColor, 20, FontWeight.w900),
+                  context, Theme
+                  .of(context)
+                  .primaryColor, 20, FontWeight.w900),
             ),
             gapH32,
             Expanded(
                 child: Image.asset(
-              filePath,
-              fit: BoxFit.cover,
-            )),
+                  filePath,
+                  fit: BoxFit.cover,
+                )),
             gapH32,
             Text(
               content,
