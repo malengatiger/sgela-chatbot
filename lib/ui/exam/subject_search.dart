@@ -355,11 +355,9 @@ class SubjectSearchState extends State<SubjectSearch> {
                           widget: OrganizationSplash(branding: branding!));
                     }
                   },
-                  child: Card(
+                  child: const Card(
                     elevation: 8,
-                    child: PoweredBy(
-                      repository: repository,
-                    ),
+                    child: SponsoredBy(),
                   ),
                 ),
               ],
@@ -379,7 +377,8 @@ class SubjectSearchState extends State<SubjectSearch> {
     }
   }
 void _navigateToInfo() {
-    NavigationUtils.navigateToPage(context: context, widget: const LandingPage(hideButtons: true,));
+    NavigationUtils.navigateToPage(context: context,
+        widget:  const LandingPage(hideButtons: true,));
 }
 
 

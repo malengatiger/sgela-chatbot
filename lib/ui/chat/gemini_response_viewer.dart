@@ -1,14 +1,15 @@
 import 'dart:io';
 
-import 'package:edu_chatbot/data/exam_page_image.dart';
 import 'package:edu_chatbot/services/firestore_service.dart';
 import 'package:edu_chatbot/ui/chat/rating_widget.dart';
 import 'package:edu_chatbot/util/functions.dart';
 import 'package:edu_chatbot/util/image_file_util.dart';
 import 'package:flutter/material.dart';
+import 'package:get_it/get_it.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../data/exam_link.dart';
+import '../../data/exam_page_content.dart';
 import '../../data/gemini_response_rating.dart';
 import 'markdown_widget.dart' as md;
 
@@ -17,16 +18,14 @@ class GeminiResponseViewer extends StatefulWidget {
       {super.key,
       required this.examLink,
       required this.geminiResponse,
-      required this.firestoreService,
       required this.prompt,
-      required this.examPageImage,
+      required this.examPageContent,
       required this.tokensUsed});
 
   final ExamLink examLink;
   final String geminiResponse;
-  final FirestoreService firestoreService;
   final String prompt;
-  final ExamPageImage examPageImage;
+  final ExamPageContent examPageContent;
   final int tokensUsed;
 
   @override
@@ -38,6 +37,8 @@ class _GeminiResponseViewerState extends State<GeminiResponseViewer> {
 
   bool _showRatingBar = false;
   String responseText = '';
+  FirestoreService firestoreService = GetIt.instance<FirestoreService>();
+
 
   @override
   void initState() {
@@ -56,13 +57,12 @@ class _GeminiResponseViewerState extends State<GeminiResponseViewer> {
           rating: mRating,
           id: DateTime.now().millisecondsSinceEpoch,
           date: DateTime.now().toIso8601String(),
-          pageNumber: widget.examPageImage.pageIndex,
+          pageNumber: widget.examPageContent.pageIndex,
           responseText: responseText,
           tokensUsed: widget.tokensUsed,
-          prompt: widget.prompt,
           examLinkId: widget.examLink.id!);
 
-      var res = await widget.firestoreService.addRating(gr);
+      var res = await firestoreService.addRating(gr);
       pp('$mm 💙💙💙💙 GeminiResponseRating sent to backend!  🍎🍎🍎response: $res');
     } catch (e) {
       pp('$mm ERROR - $e');
@@ -77,7 +77,7 @@ class _GeminiResponseViewerState extends State<GeminiResponseViewer> {
     sb.write('$responseText\n');
 
     File mdFile = await ImageFileUtil.getFileFromString(sb.toString(),
-        'response_${widget.examLink.id}_${widget.examPageImage.pageIndex}.md');
+        'response_${widget.examLink.id}_${widget.examPageContent.pageIndex}.md');
     var xFile = XFile(mdFile.path);
     pp('$mm XFile created: '
         '${await xFile.length()} bytes - path: ${xFile.path}');
@@ -147,7 +147,7 @@ class _GeminiResponseViewerState extends State<GeminiResponseViewer> {
                         13, FontWeight.normal),
                   ),
                   Text(
-                    "Page ${widget.examPageImage.pageIndex}",
+                    "Page ${widget.examPageContent.pageIndex}",
                     style: myTextStyle(context, Theme.of(context).primaryColor,
                         18, FontWeight.w900),
                   ),

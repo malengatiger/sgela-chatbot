@@ -1,34 +1,43 @@
+import 'dart:io';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:edu_chatbot/data/exam_document.dart';
 import 'package:edu_chatbot/data/exam_link.dart';
+import 'package:edu_chatbot/data/exam_page_content.dart';
+import 'package:edu_chatbot/data/exam_page_image.dart';
 import 'package:edu_chatbot/data/gemini_response_rating.dart';
 import 'package:edu_chatbot/data/organization.dart';
 import 'package:edu_chatbot/data/sponsoree.dart';
 import 'package:edu_chatbot/data/subject.dart';
+import 'package:edu_chatbot/services/local_data_service.dart';
 import 'package:edu_chatbot/util/dark_light_control.dart';
 import 'package:edu_chatbot/util/prefs.dart';
 import 'package:geocoding/geocoding.dart';
-import 'package:get_it/get_it.dart';
 
 import '../data/branding.dart';
 import '../data/city.dart';
 import '../data/country.dart';
 import '../data/sgela_user.dart';
 import '../util/functions.dart';
+import '../util/image_file_util.dart';
 import '../util/location_util.dart';
 
 class FirestoreService {
-  final FirebaseFirestore firebaseFirestore;
 
   final Prefs prefs;
   final   ColorWatcher colorWatcher;
 
-  static const mm = ' 🥦🥦🥦FirestoreService';
+  static const mm = ' 🥦🥦🥦FirestoreService 🥦 ';
+  final FirebaseFirestore firebaseFirestore;
+  final LocalDataService localDataService;
 
-  FirestoreService(this.firebaseFirestore, this.prefs, this.colorWatcher) {
-    firebaseFirestore.settings = const Settings(
-      persistenceEnabled: true,
-    );
+
+  FirestoreService( this.prefs, this.colorWatcher, this.firebaseFirestore, this.localDataService) {
+   pp('$mm ... FirestoreService constructor ...');
+   //  firebaseFirestore.settings = const Settings(
+   //   persistenceEnabled: true,
+   // );
+   // pp('$mm ... FirestoreService constructor ... ${firebaseFirestore.settings.asMap}');
   }
 
   Future<List<ExamDocument>> getExamDocuments() async {
@@ -79,6 +88,28 @@ class FirestoreService {
       examLinks.add(subject);
     }
     return examLinks;
+  }
+
+  Future<List<ExamPageContent>> getExamPageContents(int examLinkId) async {
+    List<ExamPageContent> examPageContents = [];
+    var querySnapshot = await firebaseFirestore
+        .collection('ExamPageContent')
+        .where('examLinkId', isEqualTo: examLinkId)
+        .get();
+    for (var s in querySnapshot.docs) {
+      var content = ExamPageContent.fromJson(s.data());
+      examPageContents.add(content);
+    }
+    pp('$mm ... examPageContents: ${examPageContents.length}');
+    for (var value in examPageContents) {
+      if (value.pageImageUrl != null) {
+        pp('$mm ... examPageContents: downloading exam page image ....');
+        File file = await ImageFileUtil.downloadFile(value.pageImageUrl!);
+        value.uBytes = file.readAsBytesSync();
+      }
+      await localDataService.addExamPageContent(value);
+    }
+    return examPageContents;
   }
 
   List<City> cities = [];
@@ -354,4 +385,8 @@ class FirestoreService {
     brandings = prefs.getBrandings();
     return brandings;
   }
+  //
+
+
+
 }

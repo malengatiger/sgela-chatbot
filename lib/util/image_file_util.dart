@@ -2,10 +2,10 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:archive/archive.dart';
-import 'package:edu_chatbot/services/downloader_isolate.dart';
+import 'package:edu_chatbot/data/exam_page_content.dart';
+import 'package:edu_chatbot/services/firestore_service.dart';
 import 'package:edu_chatbot/services/local_data_service.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
-import 'package:get_it/get_it.dart';
 import 'package:http/http.dart' as http;
 import 'package:image/image.dart';
 import 'package:mime/mime.dart';
@@ -19,10 +19,10 @@ class ImageFileUtil {
   static const mm = '🌿🌿🌿 ImageFileUtil 😎😎';
 
   static Future<List<File>> getFiles(ExamLink examLink) async {
-    return await downloadFile(examLink.pageImageZipUrl!);
+    return await downloadZipFile(examLink.pageImageZipUrl!);
   }
 
-  static Future<List<File>> downloadFile(String url) async {
+  static Future<List<File>> downloadZipFile(String url) async {
     pp('$mm .... downloading file .........................\n$url ');
     var start = DateTime.now();
     try {
@@ -35,6 +35,24 @@ class ImageFileUtil {
       pp('$mm file: ${(await mFile.length()) / 1024}K bytes '
           'elapsed: ${end.difference(start).inSeconds} seconds');
       return unpackZipFile(mFile);
+    } catch (e) {
+      pp('Error downloading file: $e');
+      rethrow;
+    }
+  }
+  static Future<File> downloadFile(String url) async {
+    pp('$mm .... downloading file .........................\n$url ');
+    var start = DateTime.now();
+    try {
+      var response = await http.get(Uri.parse(url));
+      var bytes = response.bodyBytes;
+      Directory tempDir = Directory.systemTemp;
+      var mFile = File('${tempDir.path}/someFile.zip');
+      mFile.writeAsBytesSync(bytes);
+      var end = DateTime.now();
+      pp('$mm file: ${(await mFile.length()) / 1024}K bytes '
+          'elapsed: ${end.difference(start).inSeconds} seconds');
+      return mFile;
     } catch (e) {
       pp('Error downloading file: $e');
       rethrow;
@@ -80,90 +98,28 @@ class ImageFileUtil {
     return files;
   }
 
-  static Future createExamPageImages(
-      List<ExamLink> examLinks, LocalDataService localDataService) async {
-    List<ExamPageImage> images = [];
-    List<ExamPageImageCount> counts = [];
-    for (var link in examLinks) {
-      var images0 = await localDataService.getExamImages(link.id!);
-      images.addAll(images0);
-      counts.add(ExamPageImageCount(link, images0.length));
-    }
-    bool downloadFiles = false;
-    for (var value in counts) {
-      if (value.count == 0) {
-        downloadFiles = true;
-      }
-    }
-    if (!downloadFiles) {
-      pp('$mm ..... no need to download image zip file. already done for ${images.length} page images ');
-      return images;
-    }
-    for (var link in examLinks) {
-      pp('$mm ..... download image zip file ...... ${link.title}  - id: ${link.id}');
-      var files = await ImageFileUtil.downloadFile(link.pageImageZipUrl!);
-      var index = 0;
-      for (var file in files) {
-        var bytes = file.readAsBytesSync();
-        String mimeType = ImageFileUtil.getMimeType(file);
-        var image = ExamPageImage(
-            examLinkId: link.id!,
-            id: null,
-            bytes: bytes,
-            pageIndex: index + 1,
-            mimeType: mimeType);
-        index++;
-        localDataService.addExamImage(image);
-      }
-      var images1 = await localDataService.getExamImages(link.id!);
-      images.addAll(images1);
-      pp('$mm examPageImages created, examLink id: ${link.id!} then fetched from local db: ${images.length}');
-    }
-    return images;
-  }
 
-  static Future<List<File>> getPageImageFiles(
-      ExamLink examLink, DownloaderService downloaderService) async {
-    var images = await downloaderService.getExamImages(examLink);
-    pp('$mm examPageImages found for conversion: ${images.length}');
+  static Future<List<File>> convertPageContentFiles(
+      ExamLink examLink, List<ExamPageContent> pageContents) async {
+    pp('$mm ExamPageContents to convert into files: ${pageContents.length}');
     int index = 0;
     final appDir = await getApplicationDocumentsDirectory();
     List<File> realFiles = [];
 
-    for (var img in images) {
+    for (var img in pageContents) {
       var pathSuffix = '/image_${examLink.id!}_${img.pageIndex}.png';
       var path0 = '${appDir.path}$pathSuffix';
       File x = File(path0);
       if (x.existsSync()) {
         realFiles.add(x);
       } else {
-        var mFile = await ImageFileUtil.createImageFileFromBytes(
-            img.bytes!, pathSuffix);
-        realFiles.add(mFile);
-      }
-      index++;
-    }
-    pp('$mm examPageImages turned into files: ${realFiles.length}');
-    return realFiles;
-  }
+        if (img.pageImageUrl != null) {
+          downloadZipFile(img.pageImageUrl!);
+          var mFile = await ImageFileUtil.createImageFileFromBytes(
+              img.uBytes!);
+          realFiles.add(mFile);
+        }
 
-  static Future<List<File>> convertPageImageFiles(
-      ExamLink examLink, List<ExamPageImage> images) async {
-    pp('$mm examPageImages found for conversion: ${images.length}');
-    int index = 0;
-    final appDir = await getApplicationDocumentsDirectory();
-    List<File> realFiles = [];
-
-    for (var img in images) {
-      var pathSuffix = '/image_${examLink.id!}_${img.pageIndex}.png';
-      var path0 = '${appDir.path}$pathSuffix';
-      File x = File(path0);
-      if (x.existsSync()) {
-        realFiles.add(x);
-      } else {
-        var mFile = await ImageFileUtil.createImageFileFromBytes(
-            img.bytes!, pathSuffix);
-        realFiles.add(mFile);
       }
       index++;
     }
@@ -210,8 +166,9 @@ class ImageFileUtil {
   }
 
   static Future<File> createImageFileFromBytes(
-      List<int> bytes, String filePath) async {
+      List<int> bytes) async {
     final appDir = await getApplicationSupportDirectory();
+    var filePath = 'f${DateTime.now().millisecondsSinceEpoch}.png';
     final file = File('${appDir.path}/$filePath');
 
     // Determine the file extension based on the content
@@ -264,8 +221,9 @@ class ImageFileUtil {
     return multipartFile;
   }
 
-  static Future<File> getFileFromBytes(List<int> bytes, String path) async {
+  static Future<File> getFileFromBytes(List<int> bytes) async {
     Directory dir = await getApplicationDocumentsDirectory();
+    var path = 'f${DateTime.now().millisecondsSinceEpoch}.png';
     final file = File('${dir.path}/$path');
     file.writeAsBytesSync(bytes);
     return file;

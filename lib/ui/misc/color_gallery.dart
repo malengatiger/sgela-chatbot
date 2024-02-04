@@ -91,7 +91,7 @@ class ColorGalleryState extends State<ColorGallery> {
                             }),
                       ),
                     ),
-                    PoweredBy(repository: GetIt.instance<Repository>()),
+                    const SponsoredBy(),
                   ],
                 ),
               ),

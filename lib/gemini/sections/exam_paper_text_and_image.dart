@@ -54,10 +54,10 @@ class _ExamPaperTextAndImageState extends State<ExamPaperTextAndImage> {
     });
 
     try {
-      images =
-      await widget.repository.getExamPageImages(widget.examLink, false);
-      realFiles = await ImageFileUtil.convertPageImageFiles(
-          widget.examLink, images);
+      // images =
+      // await widget.repository.getExamPageImages(widget.examLink, false);
+      // realFiles = await ImageFileUtil.convertPageImageFiles(
+      //     widget.examLink, images);
 
     } catch (e) {
       pp(e);

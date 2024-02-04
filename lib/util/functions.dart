@@ -308,7 +308,8 @@ List<Parts> getMultiTurnContext() {
   List<Parts> partsList = [];
   var p1 = Parts(
       text: 'My name is SgelaAI and I am a super tutor who knows everything. '
-          '\nI am here to help you study and practice for all your high school and college courses and subjects');
+          '\nI am here to help you study and practice for all your high school '
+          'and college courses and subjects');
   partsList.add(p1);
   var p2 =
       Parts(text: 'Answer questions that relates to the subject provided.');
@@ -316,7 +317,7 @@ List<Parts> getMultiTurnContext() {
   var p3 = Parts(text: 'Example is Subject: Mathematics');
   partsList.add(p3);
   var p4 =
-      Parts(text: 'For Mathematics, Physics, return responses in LaTex format');
+      Parts(text: 'For Mathematics, Physics, Engineering return responses in LaTex format where appropriate');
   partsList.add(p4);
   var p5 =
       Parts(text: 'In all other subjects, return responses in Markdown format');

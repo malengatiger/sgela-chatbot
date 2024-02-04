@@ -14,13 +14,12 @@ class GeminiResponseRating {
   int? examLinkId;
 
   String? responseText;
-  String? prompt;
 
   int? tokensUsed;
 
   GeminiResponseRating({required this.rating, required this.date,
     this.id, required this.pageNumber, required this.tokensUsed,
-    required this.examLinkId, required this.responseText, required this.prompt});
+    required this.examLinkId, required this.responseText});
 
   factory GeminiResponseRating.fromJson(Map<String, dynamic> json) =>
       _$GeminiResponseRatingFromJson(json);

@@ -178,7 +178,7 @@ class ExamsDocumentListState extends State<ExamsDocumentList> {
                                   );
                                 }),
                       ),
-                      PoweredBy(repository: widget.repository),
+                      const SponsoredBy(),
                     ],
                   ),
                 )

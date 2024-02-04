@@ -8,21 +8,17 @@ import 'package:get_it/get_it.dart';
 
 import '../../data/branding.dart';
 
-class PoweredBy extends StatefulWidget {
-  const PoweredBy({
-    super.key,
-    this.organization,
-    required this.repository,
+class SponsoredBy extends StatefulWidget {
+  const SponsoredBy({
+    super.key, this.height, this.logoHeight,
   });
-
-  final Organization? organization;
-  final Repository repository;
+  final double? height, logoHeight;
 
   @override
-  State<PoweredBy> createState() => _PoweredByState();
+  State<SponsoredBy> createState() => _SponsoredByState();
 }
 
-class _PoweredByState extends State<PoweredBy> {
+class _SponsoredByState extends State<SponsoredBy> {
   static const String mm = '🍎🍎🍎 PoweredBy: ';
 
   Organization? sponsorOrganization;
@@ -37,7 +33,6 @@ class _PoweredByState extends State<PoweredBy> {
   }
 
   Future<void> _getOrganization() async {
-    sponsorOrganization = widget.organization;
     setState(() {
       busy = true;
     });
@@ -59,14 +54,14 @@ class _PoweredByState extends State<PoweredBy> {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 64,
+      height: widget.height == null? 48 : widget.height!,
       child: Padding(
         padding: const EdgeInsets.all(4.0),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             gapW4,
-             Text('Powered by', style: myTextStyleTiny(context),),
+             Text('Sponsored by', style: myTextStyleTiny(context),),
             gapW4,
             sponsorOrganization == null ? gapW4 : Text('${sponsorOrganization!.name}'),
             gapW8,
@@ -75,7 +70,7 @@ class _PoweredByState extends State<PoweredBy> {
                 : Card(
                     elevation: 8,
                     child: CachedNetworkImage(
-                      height: 32,
+                      height: widget.logoHeight == null? 28 : widget.logoHeight!,
                       imageUrl: branding!.logoUrl!,
                       placeholder: (context, url) => const CircularProgressIndicator(),
                       errorWidget: (context, url, error) => const Icon(Icons.error),

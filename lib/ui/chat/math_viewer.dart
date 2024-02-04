@@ -2,51 +2,47 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:edu_chatbot/data/gemini_response_rating.dart';
-import 'package:edu_chatbot/repositories/repository.dart';
 import 'package:edu_chatbot/services/firestore_service.dart';
 import 'package:edu_chatbot/ui/chat/rating_widget.dart';
+import 'package:edu_chatbot/ui/open_ai/open_ai_driver.dart';
 import 'package:edu_chatbot/util/functions.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_tex/flutter_tex.dart';
+import 'package:get_it/get_it.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:share_plus/share_plus.dart';
 
 import '../../data/exam_link.dart';
+import '../../data/exam_page_content.dart';
 import '../../data/exam_page_image.dart';
 
-class MathViewer extends StatefulWidget {
-  const MathViewer(
+class LaTexMathViewer extends StatefulWidget {
+  const LaTexMathViewer(
       {super.key,
       required this.text,
-      required this.examPageImage,
-      required this.repository,
-      required this.prompt,
-      required this.examLink,
-      required this.tokensUsed,
-      this.showHeader});
+      required this.examPageContents, required this.tokensUsed, required this.examLink,
+      });
 
-  final String text, prompt;
+  final String text;
   final int tokensUsed;
   static const mm = '💙💙💙💙 MathViewer 💙';
 
-  final ExamPageImage examPageImage;
-  final FirestoreService repository;
+  final List<ExamPageContent> examPageContents;
   final ExamLink examLink;
 
-  final bool? showHeader;
 
   @override
-  State<MathViewer> createState() => _MathViewerState();
+  State<LaTexMathViewer> createState() => _LaTexMathViewerState();
 }
 
-class _MathViewerState extends State<MathViewer> {
+class _LaTexMathViewerState extends State<LaTexMathViewer> {
   final GlobalKey _repaintBoundaryKey = GlobalKey();
 
   bool _showRatingBar = false;
   List<ExamPageImage> list = [];
-
+  FirestoreService firestoreService = GetIt.instance<FirestoreService>();
   @override
   void initState() {
     super.initState();
@@ -61,7 +57,7 @@ class _MathViewerState extends State<MathViewer> {
   }
 
   _share(GeminiResponseRating responseRating) async {
-    pp('${MathViewer.mm} ... sharing is caring ...');
+    pp('${LaTexMathViewer.mm} ... sharing is caring ...');
     var directory = await getApplicationDocumentsDirectory();
 
     final pdf = pw.Document();
@@ -83,7 +79,7 @@ class _MathViewerState extends State<MathViewer> {
         [XFile('${directory.path}/response.pdf')],
         text: 'Response from SgelaAI');
     if (result.status == ShareResultStatus.success) {
-      pp('${MathViewer.mm} Thank you for sharing the response from SgelaAI!');
+      pp('${LaTexMathViewer.mm} Thank you for sharing the response from SgelaAI!');
     }
   }
 
@@ -101,9 +97,8 @@ class _MathViewerState extends State<MathViewer> {
           pageNumber: examPageImage.pageIndex,
           responseText: widget.text,
           tokensUsed: widget.tokensUsed,
-          prompt: widget.prompt,
           examLinkId: widget.examLink.id!);
-      var res = await widget.repository.addRating(gr);
+      var res = await firestoreService.addRating(gr);
       pp('💙💙💙💙 GeminiResponseRating sent to backend! id: $res');
       myPrettyJsonPrint(gr.toJson());
 
@@ -111,7 +106,7 @@ class _MathViewerState extends State<MathViewer> {
         Navigator.of(context).pop();
       }
     } catch (e) {
-      pp('${MathViewer.mm} ERROR - $e');
+      pp('${LaTexMathViewer.mm} ERROR - $e');
     }
   }
 
@@ -145,7 +140,7 @@ class _MathViewerState extends State<MathViewer> {
             actions: [
               IconButton(
                   onPressed: () {
-                    pp('${MathViewer.mm} ... share required ... images: ${list.length}');
+                    pp('${LaTexMathViewer.mm} ... share required ... images: ${list.length}');
                   },
                   icon:
                       Icon(Icons.share, color: Theme.of(context).primaryColor)),
@@ -153,26 +148,7 @@ class _MathViewerState extends State<MathViewer> {
           bottom: PreferredSize(preferredSize: const Size.fromHeight(64), child: Column(
             children: [
               gapH8,
-              Text(
-                '${widget.examLink.title}',
-                style: myTextStyle(
-                    context, Theme.of(context).primaryColor, 16, FontWeight.w900),
-              ),
-              Text(
-                '${widget.examLink.subject!.title}',
-                style: myTextStyle(
-                    context, Theme.of(context).primaryColor, 14, FontWeight.normal),
-              ),
-              Text(
-                '${widget.examLink.documentTitle}',
-                style: myTextStyle(
-                    context, Theme.of(context).primaryColor, 14, FontWeight.normal),
-              ),
-              Text(
-                '${widget.examPageImage.pageIndex}',
-                style: myTextStyle(
-                    context, Theme.of(context).primaryColor, 18, FontWeight.w900),
-              ),
+              ExamLinkDetails(examLink: widget.examLink, pageNumber: 0),
             ],
           ),),
         ),
@@ -253,10 +229,10 @@ class LaTexViewer extends StatelessWidget {
                   padding: const EdgeInsets.all(8.0),
                   child: SizedBox(height: 600,
                     child: TeXView(
-                      style: TeXViewStyle(
+                      style: const TeXViewStyle(
                         contentColor: Colors.white,
                         backgroundColor: Colors.transparent,
-                        padding: const TeXViewPadding.all(8),
+                        padding: TeXViewPadding.all(8),
                       ),
                       renderingEngine: const TeXViewRenderingEngine.katex(),
                       child: TeXViewColumn(

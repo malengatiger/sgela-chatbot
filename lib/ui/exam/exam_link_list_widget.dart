@@ -1,17 +1,16 @@
 import 'package:badges/badges.dart' as bd;
 import 'package:edu_chatbot/data/exam_link.dart';
 import 'package:edu_chatbot/data/subject.dart';
+import 'package:edu_chatbot/gemini/sections/exam_page_content_list.dart';
 import 'package:edu_chatbot/gemini/sections/multi_turn_chat_stream.dart';
 import 'package:edu_chatbot/repositories/repository.dart';
 import 'package:edu_chatbot/services/chat_service.dart';
 import 'package:edu_chatbot/services/firestore_service.dart';
 import 'package:edu_chatbot/services/you_tube_service.dart';
 import 'package:edu_chatbot/ui/misc/busy_indicator.dart';
-import 'package:edu_chatbot/ui/exam/exam_paper_pages.dart';
 import 'package:edu_chatbot/ui/misc/powered_by.dart';
 import 'package:edu_chatbot/ui/youtube/you_tube_searcher.dart';
 import 'package:edu_chatbot/util/dark_light_control.dart';
-import 'package:edu_chatbot/util/image_file_util.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gemini/flutter_gemini.dart';
 
@@ -80,8 +79,7 @@ class ExamLinkListWidgetState extends State<ExamLinkListWidget> {
       pp('$mm fetchedExamLinks: examLinks: ${examLinks.length}');
       filteredExamLinks = examLinks;
       filteredExamLinks.sort((a,b) => a.title!.compareTo(b.title!));
-      await ImageFileUtil.createExamPageImages(
-          examLinks, widget.localDataService);
+
     } catch (e) {
       // Handle error
       pp('$mm 👿👿👿👿👿Error fetching exam links: $e');
@@ -104,39 +102,6 @@ class ExamLinkListWidgetState extends State<ExamLinkListWidget> {
   }
 
   ExamLink? selectedExamLink;
-
-  _showChooserDialog() {
-    showDialog(
-        context: context,
-        barrierDismissible: true,
-        builder: (_) {
-          return AlertDialog(
-            title: Column(
-              children: [
-                Text(
-                  selectedExamLink!.title!,
-                  style: myTextStyleMediumLarge(context, 16),
-                ),
-                gapH16,
-                Text(
-                  'What do you want to do?',
-                  style: myTextStyleMedium(context),
-                ),
-              ],
-            ),
-            elevation: 8,
-            content: ChatTypeChooser(onChatTypeChosen: (type) {
-              Navigator.of(context).pop();
-              if ((type == CHAT_TYPE_MULTI_TURN)) {
-                _navigateToMultiTurnStreamChat(selectedExamLink!);
-              }
-              if ((type == CHAT_TYPE_IMAGE)) {
-                _navigateToExamPaperPages(selectedExamLink!);
-              }
-            }),
-          );
-        });
-  }
 
   void _navigateToColorGallery() {
     NavigationUtils.navigateToPage(
@@ -212,7 +177,7 @@ class ExamLinkListWidgetState extends State<ExamLinkListWidget> {
           crossAxisAlignment: CrossAxisAlignment.center,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            gapH32,
+            // gapH32,
             Text(
               'Exam Papers',
               style: myTextStyle(
@@ -220,56 +185,54 @@ class ExamLinkListWidgetState extends State<ExamLinkListWidget> {
             ),
             gapH32,
             gapH32,
-            Expanded(
-              child: SizedBox(
-                height: height,
-                child: Padding(
-                  padding: const EdgeInsets.only(left: 12.0, right: 12),
-                  child: Card(
-                    elevation: 8,
-                    child: bd.Badge(
-                      position: bd.BadgePosition.topEnd(top: -16, end: -2),
-                      badgeContent: Text(
-                        '${filteredExamLinks.length}',
-                        style: const TextStyle(color: Colors.white),
-                      ),
-                      badgeStyle: bd.BadgeStyle(
-                          padding: const EdgeInsets.all(8.0),
-                          badgeColor: Colors.red.shade800,
-                          elevation: 12),
-                      child: busy
-                          ? const Padding(
-                            padding: EdgeInsets.all(16.0),
-                            child: BusyIndicator(
-                                caption:
-                                    'Loading subject exams ... gimme a second ...',
-                                showClock: true,
-                              ),
-                          )
-                          : Align(
-                              alignment: Alignment.center,
-                              child: ListView.builder(
-                                itemCount: filteredExamLinks.length,
-                                itemBuilder: (context, index) {
-                                  ExamLink examLink = filteredExamLinks[index];
-                                  return GestureDetector(
-                                    onTap: () {
-                                      selectedExamLink = examLink;
-                                      _showChooserDialog();
-                                    },
-                                    child: ExamLinkWidget(
-                                      examLink: examLink,
-                                    ),
-                                  );
-                                },
-                              ),
-                            ),
+            SizedBox(
+              height: height,
+              child: Padding(
+                padding: const EdgeInsets.only(left: 12.0, right: 12),
+                child: Card(
+                  elevation: 8,
+                  child: bd.Badge(
+                    position: bd.BadgePosition.topEnd(top: -16, end: -2),
+                    badgeContent: Text(
+                      '${filteredExamLinks.length}',
+                      style: const TextStyle(color: Colors.white),
                     ),
+                    badgeStyle: bd.BadgeStyle(
+                        padding: const EdgeInsets.all(8.0),
+                        badgeColor: Colors.red.shade800,
+                        elevation: 12),
+                    child: busy
+                        ? const Padding(
+                          padding: EdgeInsets.all(16.0),
+                          child: BusyIndicator(
+                              caption:
+                                  'Loading subject exams ... gimme a second ...',
+                              showClock: true,
+                            ),
+                        )
+                        : Align(
+                            alignment: Alignment.center,
+                            child: ListView.builder(
+                              itemCount: filteredExamLinks.length,
+                              itemBuilder: (context, index) {
+                                ExamLink examLink = filteredExamLinks[index];
+                                return GestureDetector(
+                                  onTap: () {
+                                    selectedExamLink = examLink;
+                                    _navigateToExamPageContentSelector(examLink);
+                                  },
+                                  child: ExamLinkWidget(
+                                    examLink: examLink,
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
                   ),
                 ),
               ),
             ),
-            PoweredBy(repository: widget.repository),
+            const SponsoredBy(),
           ],
         ),
       ),
@@ -284,17 +247,13 @@ class ExamLinkListWidgetState extends State<ExamLinkListWidget> {
         widget: const MultiTurnStreamChat());
   }
 
-  void _navigateToExamPaperPages(ExamLink examLink) {
-    pp('$mm _navigateToExamPaperPages ...');
+  void _navigateToExamPageContentSelector(ExamLink examLink) {
+    pp('$mm .............. _navigateToExamPageContentSelector ...');
 
     NavigationUtils.navigateToPage(
         context: context,
-        widget: ExamPaperPages(
+        widget: ExamPageContentSelector(
           examLink: examLink,
-          firestoreService: widget.firestoreService,
-          chatService: widget.chatService,
-          gemini: widget.gemini,
-          localDataService: widget.localDataService,
         ));
   }
 

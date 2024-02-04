@@ -115,7 +115,6 @@ class Prefs {
 
   void saveMode(int mode) {
     sharedPreferences.setInt('mode', mode);
-    pp('$mm ... mode saved OK: $mode');
 
   }
 
@@ -125,7 +124,6 @@ class Prefs {
       pp('$mm ... mode not found, returning -1');
       return -1;
     }
-    pp('$mm ... mode saved OK: $mode');
     return mode;
   }
 

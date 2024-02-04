@@ -60,7 +60,7 @@ class _WebsiteViewState extends State<WebsiteView> {
     return SafeArea(
         child: Scaffold(
           appBar: AppBar(
-            title: Text(widget.title, style: myTextStyleSmall(context),),
+            title: Text("Sponsor Organization Website", style: myTextStyleSmall(context),),
           ),
           body: ScreenTypeLayout.builder(
             mobile: (_) {

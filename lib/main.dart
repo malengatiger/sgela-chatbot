@@ -1,6 +1,7 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dart_openai/dart_openai.dart';
 import 'package:edu_chatbot/repositories/repository.dart';
-import 'package:edu_chatbot/services/downloader_isolate.dart';
+import 'package:edu_chatbot/services/firestore_service.dart';
 import 'package:edu_chatbot/services/you_tube_service.dart';
 import 'package:edu_chatbot/ui/landing_page.dart';
 import 'package:edu_chatbot/util/dark_light_control.dart';
@@ -14,7 +15,7 @@ import 'package:firebase_ui_auth/firebase_ui_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gemini/flutter_gemini.dart';
 import 'package:get_it/get_it.dart';
-
+import 'package:flutter_dotenv/flutter_dotenv.dart' as dot;
 import 'firebase_options.dart';
 
 const String mx = '🍎 🍎 🍎 main: ';
@@ -38,37 +39,65 @@ Future<void> main() async {
   );
   // await FirebaseAuth.instance.useAuthEmulator('localhost', 9099);
   pp('$mx Firebase has been initialized!! $mx name: ${app.name}');
-
-  FirebaseUIAuth.configureProviders([
-    emailLinkProviderConfig,
-  ]);
-  pp('$mx Firebase Auth providers have been setup!!');
   pp('${app.options.asMap}');
+  //
+  // await dot.dotenv.load();
 
-  var geminiAPIKey = ChatbotEnvironment.getGeminiAPIKey();
-  var chatGPTAPIKey = ChatbotEnvironment.getChatGPTAPIKey();
 
-  OpenAI.apiKey = chatGPTAPIKey;
+
+  try {
+    var fbf = FirebaseFirestore.instance;
+    await _initGemini();
+    await registerServices(fbf, Gemini.instance);
+    _initOpenAI();
+    //
+    var prefs = GetIt.instance<Prefs>();
+    var mode = prefs.getMode();
+    var colorIndex = prefs.getColorIndex();
+    modeAndColor = ModeAndColor(mode, colorIndex);
+  } catch (e,s) {
+    pp(e);
+    pp(s);
+  }
+  runApp(const MyApp());
+}
+
+Future<void> _initOpenAI() async {
+  pp('$mx _initOpenAI ....');
+
+  var openAIKey = await ChatbotEnvironment.getOpenAIKey();
+
+  OpenAI.apiKey = openAIKey;
   OpenAI.requestsTimeOut = const Duration(seconds: 180); // 3 minutes.
   OpenAI.showLogs = true;
-  OpenAI.showResponsesLogs = true;
+  OpenAI.showResponsesLogs = false;
 
-  pp('$mx OpenAI has been initialized and timeOut set!!');
+  pp('$mx OpenAI has been initialized and timeOut set!!\n'
+      '💛💛 model.endpoint: ${OpenAI.instance.model.endpoint} '
+      '💛💛 openAIKey: $openAIKey');
+
+  var x = await OpenAI.instance.model.list();
+  for (var model in x) {
+    pp('$mx OpenAI model: ${model.id} 🔵🔵ownedBy: ${model.ownedBy}');
+  }
+
+  pp('\n$mx OpenAI initialized!\n');
+
+}
+
+Future<void> _initGemini() async {
+  var geminiAPIKey = ChatbotEnvironment.getGeminiAPIKey();
 
   Gemini.init(
-      apiKey: ChatbotEnvironment.getGeminiAPIKey(),
+      apiKey: geminiAPIKey,
       enableDebugging: ChatbotEnvironment.isChatDebuggingEnabled());
+
+  var geminiModels = await Gemini.instance.listModels();
+  for (var model in geminiModels) {
+    pp('$mx Gemini AI model: ${model.displayName} 🔵🔵name: ${model.name} 🔵🔵 ${model.description}');
+  }
   pp('$mx Gemini AI API has been initialized!! \n$mx'
-      ' 🔵🔵 Gemini apiKey: $geminiAPIKey 🔵🔵 ChatGPT apiKey: $chatGPTAPIKey');
-  // Register services
-  await registerServices();
-  //
-  var prefs = GetIt.instance<Prefs>();
-  var mode = prefs.getMode();
-  var colorIndex = prefs.getColorIndex();
-  modeAndColor = ModeAndColor(mode, colorIndex);
-  //
-  runApp(const MyApp());
+      ' 🔵🔵 Gemini apiKey: $geminiAPIKey 🔵🔵 ');
 }
 
 late ModeAndColor modeAndColor;
@@ -86,11 +115,10 @@ class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    var repository = GetIt.instance<Repository>();
-    var youTubeService = GetIt.instance<YouTubeService>();
-    var downloaderService = GetIt.instance<DownloaderService>();
+
     var dlc = GetIt.instance<DarkLightControl>();
-    var gemini = GetIt.instance<Gemini>();
+    var prefs = GetIt.instance<Prefs>();
+    var fs = GetIt.instance<FirestoreService>();
 
     return GestureDetector(
       onTap: () {
@@ -110,37 +138,27 @@ class MyApp extends StatelessWidget {
             return MaterialApp(
               title: 'SgelaAI',
               debugShowCheckedModeBanner: false,
-              theme: _getTheme(context),
-              home: const LandingPage(hideButtons: false,),
+              theme: _getTheme(context, prefs),
+              home:  const LandingPage(
+                hideButtons: false,
+              ),
             );
           }),
     );
   }
 
-  ThemeData _getTheme(BuildContext context) {
-    var brightness = MediaQuery.of(context).platformBrightness;
-    if (modeAndColor.mode > -1) {
-      if (modeAndColor.mode == 0) {
-        return ThemeData.light().copyWith(
-          primaryColor: getColors()
-              .elementAt(modeAndColor.colorIndex), // Set the primary color
-        );
-      } else {
-        return ThemeData.dark().copyWith(
-          primaryColor: getColors()
-              .elementAt(modeAndColor.colorIndex), // Set the primary color
-        );
-      }
-    }
-    if (brightness == Brightness.dark) {
+  ThemeData _getTheme(BuildContext context, Prefs prefs ) {
+    var colorIndex = prefs.getColorIndex();
+    var mode = prefs.getMode();
+    if (mode == DARK) {
       return ThemeData.dark().copyWith(
-        primaryColor: getColors()
-            .elementAt(modeAndColor.colorIndex), // Set the primary color
+        primaryColor:
+        getColors().elementAt(colorIndex), // Set the primary color
       );
     } else {
       return ThemeData.light().copyWith(
-        primaryColor: getColors()
-            .elementAt(modeAndColor.colorIndex), // Set the primary color
+        primaryColor:
+        getColors().elementAt(colorIndex), // Set the primary color
       );
     }
   }

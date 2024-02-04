@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_markdown/flutter_markdown.dart';
 import 'markdown_widget.dart' as md;
 import '../../data/exam_link.dart';
 import '../../data/subject.dart';

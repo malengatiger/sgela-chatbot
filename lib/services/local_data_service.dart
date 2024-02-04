@@ -1,11 +1,11 @@
 import 'dart:async';
 
-import 'package:edu_chatbot/data/exam_page_image.dart';
 import 'package:edu_chatbot/data/youtube_data.dart';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 
 import '../data/exam_link.dart';
+import '../data/exam_page_content.dart';
 import '../util/functions.dart';
 
 class LocalDataService {
@@ -17,7 +17,7 @@ class LocalDataService {
     pp('$mm initialize sqlite ...');
 
     db = await openDatabase(
-      join(await getDatabasesPath(), 'skunk046db'),
+      join(await getDatabasesPath(), 'skunk047db'),
       version: 1,
     );
     pp('$mm SQLite Database is open: ${db.isOpen} 🔵🔵 ${db.path}');
@@ -54,24 +54,26 @@ class LocalDataService {
     }
 
     // Check if the "exam_images" table exists
-    bool imageTableExists = await _tableExists('exam_images');
+    bool imageTableExists = await _tableExists('exam_page_contents');
     if (!imageTableExists) {
       try {
         await db.execute('''
-                CREATE TABLE exam_images (
+                CREATE TABLE exam_page_contents (
                   id INTEGER PRIMARY KEY,
-                  downloadUrl TEXT,
-                  mimeType VARCHAR(6),
-                  bytes BLOB,
                   examLinkId INTEGER,
                   pageIndex INTEGER,
+                  text TEXT,
+                  title TEXT,
+                  pageImageUrl TEXT,
+                  mimeType VARCHAR(6),
+                  uBytes BLOB,
                   UNIQUE(examLinkId, pageIndex) ON CONFLICT REPLACE
 
                 )
               ''');
-        pp('$mm Created the exam_images table 🔵🔵');
+        pp('$mm Created the exam_page_contents table 🔵🔵');
       } catch (e) {
-        pp('$mm exam_images: error: 👿👿👿$e');
+        pp('$mm exam_page_contents: error: 👿👿👿$e');
       }
     }
   }
@@ -83,12 +85,29 @@ class LocalDataService {
     return tables.isNotEmpty;
   }
 
-  Future<void> addExamImage(ExamPageImage image) async {
+  Future<void> addExamPageContents(
+      List<ExamPageContent> examPageContents) async {
+    for (var value in examPageContents) {
+      await addExamPageContent(value);
+    }
+  }
+
+  Future<void> addExamPageContent(ExamPageContent image) async {
     try {
-      await db.insert('exam_images', image.toJson());
-      pp('$mm ExamPageImage added to local database 🍎🍎 pageIndex: ${image.pageIndex}');
+      var tMap = {
+        'id': image.id!,
+        'examLinkId': image.examLinkId!,
+        'pageIndex': image.pageIndex,
+        'text': image.text,
+        'uBytes': image.uBytes,
+        'pageImageUrl': image.pageImageUrl,
+        'title': image.title,
+      };
+      await db.insert('exam_page_contents', tMap);
+      pp('$mm ExamPageContent added to local database 🍎🍎 '
+          'pageIndex: ${image.pageIndex}');
     } catch (e) {
-      pp("$mm addExamImage: ERROR: 👿${e.toString()} 👿🏽");
+      pp("$mm addExamPageContent: ERROR: 👿${e.toString()} 👿🏽");
     }
   }
 
@@ -107,11 +126,11 @@ class LocalDataService {
     }
   }
 
-  Future<List<ExamPageImage>> getExamImages(int examLinkId) async {
-    List<ExamPageImage> examImages = [];
+  Future<List<ExamPageContent>> getExamPageContents(int examLinkId) async {
+    List<ExamPageContent> examPageContents = [];
     List<Map<String, dynamic>> maps = await db.query(
-      'exam_images',
-      columns: ["id", "pageIndex", "bytes","mimeType"],
+      'exam_page_contents',
+      columns: ["id", "pageIndex", "uBytes", "text", "title", "pageImageUrl"],
       where: "examLinkId = ?",
       whereArgs: [examLinkId],
     );
@@ -119,12 +138,13 @@ class LocalDataService {
     if (maps.isNotEmpty) {
       for (var element in maps) {
         var mapWithStrings = element.cast<String, dynamic>();
-        examImages.add(ExamPageImage.fromJson(mapWithStrings));
+        examPageContents.add(ExamPageContent.fromJson(mapWithStrings));
       }
     }
 
-    pp('$mm getExamImages: found on local db: ${examImages.length}');
-    return examImages;
+    pp('$mm getExamPageContent: found on local db: ${examPageContents.length}');
+    if (examPageContents.isEmpty) {}
+    return examPageContents;
   }
 }
 

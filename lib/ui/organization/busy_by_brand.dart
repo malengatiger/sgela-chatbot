@@ -5,7 +5,7 @@ import 'package:edu_chatbot/data/branding.dart';
 import 'package:edu_chatbot/data/country.dart';
 import 'package:edu_chatbot/data/exam_link.dart';
 import 'package:edu_chatbot/data/organization.dart';
-import 'package:edu_chatbot/ui/exam/exam_paper_pages.dart';
+import 'package:edu_chatbot/ui/open_ai/open_ai_driver.dart';
 import 'package:edu_chatbot/ui/organization/org_logo_widget.dart';
 import 'package:edu_chatbot/util/functions.dart';
 import 'package:edu_chatbot/util/prefs.dart';
@@ -100,7 +100,7 @@ class BusyByBrandState extends State<BusyByBrand>
                 children: [
                   Column(
                     children: [
-                      ExamLinkCard(examLink: widget.examLink),
+                      ExamLinkDetails(examLink: widget.examLink, pageNumber: 0,),
                       Expanded(
                         child: Padding(
                           padding: const EdgeInsets.all(8.0),

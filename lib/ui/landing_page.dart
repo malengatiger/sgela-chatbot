@@ -3,6 +3,7 @@ import 'package:edu_chatbot/data/country.dart';
 import 'package:edu_chatbot/data/sponsoree.dart';
 import 'package:edu_chatbot/data/organization.dart';
 import 'package:edu_chatbot/data/sgela_user.dart';
+import 'package:edu_chatbot/services/firestore_service.dart';
 import 'package:edu_chatbot/ui/auth/user_registration.dart';
 import 'package:edu_chatbot/ui/auth/user_sign_in.dart';
 import 'package:edu_chatbot/ui/exam/subject_search.dart';
@@ -16,9 +17,13 @@ import 'package:responsive_builder/responsive_builder.dart';
 import '../util/functions.dart';
 
 class LandingPage extends StatefulWidget {
-  const LandingPage({super.key, required this.hideButtons});
+  const LandingPage({super.key,
+    // required this.firestoreService,
+    required this.hideButtons});
 
   final bool hideButtons;
+  // final   FirestoreService firestoreService;
+
   @override
   LandingPageState createState() => LandingPageState();
 }
@@ -57,6 +62,7 @@ class LandingPageState extends State<LandingPage>
       //
       if (orgSponsoree != null) {
         pp('$mm ... YEBO!!! returning Sponsoree. have to navigate to SubjectSearch: ${orgSponsoree!.toJson()} ...');
+        //await widget.firestoreService.getOrganizationBrandings(orgSponsoree!.organizationId!, true);
         Future.delayed(const Duration(milliseconds: 200), (){
           NavigationUtils.navigateToPage(
               context: context, widget: const SubjectSearch());

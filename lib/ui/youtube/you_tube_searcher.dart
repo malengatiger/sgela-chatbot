@@ -213,7 +213,7 @@ class YouTubeSearcherState extends State<YouTubeSearcher> {
                                           _launchVideo(video.videoUrl!);
                                         }),
                               ),
-                        PoweredBy(repository: GetIt.instance<Repository>()),
+                        const SponsoredBy(),
                       ],
                     ),
                   ),

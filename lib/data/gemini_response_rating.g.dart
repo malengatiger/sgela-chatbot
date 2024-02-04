@@ -16,7 +16,6 @@ GeminiResponseRating _$GeminiResponseRatingFromJson(
       tokensUsed: json['tokensUsed'] as int?,
       examLinkId: json['examLinkId'] as int?,
       responseText: json['responseText'] as String?,
-      prompt: json['prompt'] as String?,
     );
 
 Map<String, dynamic> _$GeminiResponseRatingToJson(
@@ -28,6 +27,5 @@ Map<String, dynamic> _$GeminiResponseRatingToJson(
       'pageNumber': instance.pageNumber,
       'examLinkId': instance.examLinkId,
       'responseText': instance.responseText,
-      'prompt': instance.prompt,
       'tokensUsed': instance.tokensUsed,
     };

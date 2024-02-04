@@ -2,7 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart' as dot;
 
 import 'functions.dart';
-
+import 'package:flutter_dotenv/flutter_dotenv.dart' as dot;
 class ChatbotEnvironment {
   //💙Skunk backend -
 
@@ -13,6 +13,8 @@ class ChatbotEnvironment {
   static const _prodSkunkUrl = 'https://skunkworks-backend-service-knzs6eczwq-nw.a.run.app/';
 
   //TODO - refresh url links after Skunk deployment
+
+
 
   //💙Chatbot Backend
   static const _devGeminiUrl = 'http://${isFibreDown? _ipFibreDown: _ipNormal}:3010/';
@@ -51,20 +53,20 @@ class ChatbotEnvironment {
   static int maxResults = 48;
 
   static bool isDotLoaded = false;
-  //AIza
+//OPEN_API_KEY
   static String part1 = 'SyAUXc8lM1wPsR-Rrow0XLms3i';
   static String part2 = 'Tbok7FjDA';
   static String part0 = 'AIza';
-  static String cpart1 = '6JYaZCnxXBlul3XGHuRBT3Blbk';
-  static String cpart2 = 'FJZ6XfXvncD9zGDK9ZSm9p';
+  //sk-
+  static String cpart1 = 'DaoQn8ZlwhyQtW9RMHoeT3Blbk';
+  static String cpart2 = 'FJLF9kBDWPHOCbfbm3V0rT';
   static String cpart0 = 'sk-';
   static String getGeminiAPIKey()  {
     return '$part0$part1$part2';
 
   }
-  static String getChatGPTAPIKey()  {
+  static getOpenAIKey() async {
     return '$cpart0$cpart1$cpart2';
-
   }
 
   static const _devClientId = "";

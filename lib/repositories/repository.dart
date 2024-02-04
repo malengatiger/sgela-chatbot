@@ -3,16 +3,13 @@ import 'dart:io';
 
 import 'package:archive/archive.dart';
 import 'package:dio/dio.dart';
-import 'package:edu_chatbot/data/gemini_response_rating.dart';
 import 'package:edu_chatbot/data/organization.dart';
-import 'package:edu_chatbot/data/subject.dart';
 import 'package:edu_chatbot/services/local_data_service.dart';
 import 'package:edu_chatbot/util/dio_util.dart';
 import 'package:edu_chatbot/util/environment.dart';
 import 'package:http/http.dart' as http;
 import 'package:path/path.dart' as path;
 
-import '../data/exam_document.dart';
 import '../data/exam_link.dart';
 import '../data/exam_page_image.dart';
 import '../util/functions.dart';
@@ -37,40 +34,6 @@ class Repository {
     Organization org = Organization.fromJson(result);
     return org;
 
-  }
-
-  Future<List<ExamPageImage>> getExamPageImages(
-      ExamLink examLink, bool useStream) async {
-    pp('$mm ... getExamPageImages ....');
-    List<ExamPageImage> images = [];
-    try {
-      images = await localDataService.getExamImages(examLink.id!);
-      if (images.isNotEmpty) {
-        pp('$mm ... getExamPageImages .... found in local store: ${images.length}'
-            '... no need to download ');
-        return images;
-      }
-      var imageFiles = await ImageFileUtil.getFiles(examLink);
-      int index = 1;
-      for (var imgFile in imageFiles) {
-        var img = ExamPageImage(examLinkId: examLink.id!,
-            id: null, bytes: imgFile.readAsBytesSync(),
-            pageIndex: index, mimeType: ImageFileUtil.getMimeType(imgFile));
-        await localDataService.addExamImage(img);
-        images.add(img);
-        index++;
-      }
-      if (useStream) {
-        _streamController.sink.add(index);
-      }
-      pp('$mm ... getExamPageImages .... from remote store: ${images.length}');
-
-      return images;
-    } catch (e) {
-      // Handle any errors
-      pp('Error calling addExamImage API: $e');
-      rethrow;
-    }
   }
 
 
