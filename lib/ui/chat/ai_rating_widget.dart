@@ -3,8 +3,8 @@ import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 
 import '../../util/functions.dart';
 
-class GeminiRatingWidget extends StatelessWidget {
-  const GeminiRatingWidget(
+class AIRatingWidget extends StatelessWidget {
+  const AIRatingWidget(
       {super.key, required this.onRating, required this.visible, this.color});
 
   final Function(double) onRating;
@@ -17,19 +17,18 @@ class GeminiRatingWidget extends StatelessWidget {
     var brightness = MediaQuery.of(context).platformBrightness;
     return visible
         ? Card(
-            elevation: 12,
-            // color: Colors.black,
+            elevation: 8,
             child: Padding(
-              padding: const EdgeInsets.all(16.0),
+              padding: const EdgeInsets.all(8.0),
               child: RatingBar.builder(
                 initialRating: 0,
                 minRating: 1,
                 direction: Axis.horizontal,
                 allowHalfRating: false,
                 itemCount: 5,
-                itemPadding: const EdgeInsets.symmetric(horizontal: 4.0),
+                itemPadding: const EdgeInsets.symmetric(horizontal: 2.0),
                 itemBuilder: (context, _) =>  Icon(
-                  Icons.star,
+                  Icons.star, size: 16,
                   color: color == null? Theme.of(context).primaryColor: color!,
                 ),
                 onRatingUpdate: (rating) {

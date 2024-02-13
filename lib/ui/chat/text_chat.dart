@@ -7,9 +7,9 @@ import 'package:flutter_tex/flutter_tex.dart';
 import '../../data/exam_link.dart';
 import '../../data/subject.dart';
 import '../../repositories/repository.dart';
-import '../../services/chat_service.dart';
+import '../../services/gemini_chat_service.dart';
 import '../../util/functions.dart';
-import 'markdown_widget.dart';
+import 'sgela_markdown_widget.dart';
 
 class TextChat extends StatefulWidget {
   const TextChat(
@@ -21,7 +21,7 @@ class TextChat extends StatefulWidget {
 
   final ExamLink examLink;
   final Repository repository;
-  final ChatService chatService;
+  final GeminiChatService chatService;
   final Subject subject;
 
   @override
@@ -206,7 +206,7 @@ class Carrier extends StatelessWidget {
       children: [
         Expanded(
           child: isMarkDown
-              ? MarkdownWidget(text: responseText)
+              ? SgelaMarkdownWidget(text: responseText)
               : Card(
                   child: Padding(
                     padding: const EdgeInsets.all(8.0),

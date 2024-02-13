@@ -2,13 +2,14 @@ import 'package:badges/badges.dart' as bd;
 import 'package:edu_chatbot/data/exam_link.dart';
 import 'package:edu_chatbot/data/subject.dart';
 import 'package:edu_chatbot/gemini/sections/exam_page_content_list.dart';
-import 'package:edu_chatbot/gemini/sections/multi_turn_chat_stream.dart';
+import 'package:edu_chatbot/gemini/sections/gemini_multi_turn_chat_stream.dart';
 import 'package:edu_chatbot/repositories/repository.dart';
-import 'package:edu_chatbot/services/chat_service.dart';
 import 'package:edu_chatbot/services/firestore_service.dart';
+import 'package:edu_chatbot/services/gemini_chat_service.dart';
 import 'package:edu_chatbot/services/you_tube_service.dart';
 import 'package:edu_chatbot/ui/misc/busy_indicator.dart';
-import 'package:edu_chatbot/ui/misc/powered_by.dart';
+import 'package:edu_chatbot/ui/misc/sponsored_by.dart';
+import 'package:edu_chatbot/ui/open_ai/openai_multi_turn_chat_stream.dart';
 import 'package:edu_chatbot/ui/youtube/you_tube_searcher.dart';
 import 'package:edu_chatbot/util/dark_light_control.dart';
 import 'package:flutter/material.dart';
@@ -19,13 +20,14 @@ import '../../services/local_data_service.dart';
 import '../../util/functions.dart';
 import '../../util/navigation_util.dart';
 import '../../util/prefs.dart';
+import '../chat/ai_model_selector.dart';
 import '../misc/color_gallery.dart';
 
 class ExamLinkListWidget extends StatefulWidget {
   final Subject subject;
   final Repository repository;
   final LocalDataService localDataService;
-  final ChatService chatService;
+  final GeminiChatService chatService;
   final YouTubeService youTubeService;
 
   // final DownloaderService downloaderService;
@@ -78,8 +80,7 @@ class ExamLinkListWidgetState extends State<ExamLinkListWidget> {
               documentId: widget.examDocument.id!);
       pp('$mm fetchedExamLinks: examLinks: ${examLinks.length}');
       filteredExamLinks = examLinks;
-      filteredExamLinks.sort((a,b) => a.title!.compareTo(b.title!));
-
+      filteredExamLinks.sort((a, b) => a.title!.compareTo(b.title!));
     } catch (e) {
       // Handle error
       pp('$mm 👿👿👿👿👿Error fetching exam links: $e');
@@ -116,25 +117,25 @@ class ExamLinkListWidgetState extends State<ExamLinkListWidget> {
         Theme.of(context).textTheme.bodySmall!.copyWith(
               fontWeight: FontWeight.bold,
             );
-   double height = 0.0;
-    switch(filteredExamLinks.length) {
+    double height = 0.0;
+    switch (filteredExamLinks.length) {
       case 1:
         height = 120;
         break;
       case 2:
-        height = 120*2;
+        height = 120 * 2;
         break;
       case 3:
-        height = 120*3;
+        height = 120 * 3;
         break;
       case 4:
-        height = 120*4;
+        height = 120 * 4;
         break;
       case 5:
-        height = 120*5;
+        height = 120 * 5;
         break;
       case 6:
-        height = 120*6;
+        height = 120 * 6;
         break;
       default:
         height = 400;
@@ -143,17 +144,7 @@ class ExamLinkListWidgetState extends State<ExamLinkListWidget> {
     return Scaffold(
       appBar: AppBar(
         title: Column(
-          children: [
-            Text(
-              '${widget.subject.title}',
-              style: titleStyle,
-            ),
-            gapH4,
-            Text(
-              '${widget.examDocument.title}',
-              style: myTextStyleSmall(context),
-            )
-          ],
+          children: [],
         ),
         actions: [
           IconButton(
@@ -167,7 +158,17 @@ class ExamLinkListWidgetState extends State<ExamLinkListWidget> {
                 _navigateToColorGallery();
               },
               icon: Icon(Icons.color_lens_outlined,
-                  color: Theme.of(context).primaryColor))
+                  color: Theme.of(context).primaryColor)),
+          IconButton(
+              onPressed: () {
+                _navigateToGeminiMultiTurnStreamChat();
+              },
+              icon: Icon(Icons.chat, color: Theme.of(context).primaryColor)),
+          IconButton(
+              onPressed: () {
+                _navigateToOpenAIMultiTurnStreamChat();
+              },
+              icon: const Icon(Icons.message, color: Colors.teal))
         ],
       ),
       // backgroundColor: Colors.teal,
@@ -177,13 +178,36 @@ class ExamLinkListWidgetState extends State<ExamLinkListWidget> {
           crossAxisAlignment: CrossAxisAlignment.center,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // gapH32,
+            Row(mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                // const Text('AI Model'),
+                gapW16,
+                AiModelSelector(onModelSelected: (m) {
+                  setState(() {
+                    aiModelName = m;
+                  });
+                }),
+                gapW32,
+                aiModelName == null ? gapW4 : Text('$aiModelName',
+                style: myTextStyleMediumLarge(context, 20),),
+              ],
+            ),
+            gapH32,
             Text(
               'Exam Papers',
               style: myTextStyle(
                   context, Theme.of(context).primaryColor, 32, FontWeight.w900),
             ),
             gapH32,
+            Text(
+              '${widget.subject.title}',
+              style: titleStyle,
+            ),
+            gapH4,
+            Text(
+              '${widget.examDocument.title}',
+              style: myTextStyleSmall(context),
+            ),
             gapH32,
             SizedBox(
               height: height,
@@ -203,13 +227,13 @@ class ExamLinkListWidgetState extends State<ExamLinkListWidget> {
                         elevation: 12),
                     child: busy
                         ? const Padding(
-                          padding: EdgeInsets.all(16.0),
-                          child: BusyIndicator(
+                            padding: EdgeInsets.all(16.0),
+                            child: BusyIndicator(
                               caption:
                                   'Loading subject exams ... gimme a second ...',
                               showClock: true,
                             ),
-                        )
+                          )
                         : Align(
                             alignment: Alignment.center,
                             child: ListView.builder(
@@ -219,7 +243,8 @@ class ExamLinkListWidgetState extends State<ExamLinkListWidget> {
                                 return GestureDetector(
                                   onTap: () {
                                     selectedExamLink = examLink;
-                                    _navigateToExamPageContentSelector(examLink);
+                                    _navigateToExamPageContentSelector(
+                                        examLink);
                                   },
                                   child: ExamLinkWidget(
                                     examLink: examLink,
@@ -239,23 +264,39 @@ class ExamLinkListWidgetState extends State<ExamLinkListWidget> {
     );
   }
 
-  void _navigateToMultiTurnStreamChat(ExamLink examLink) {
-    pp('$mm _navigateToMultiTurnStreamChat ...');
+  void _navigateToGeminiMultiTurnStreamChat() {
+    pp('$mm _navigateToGeminiMultiTurnStreamChat ...');
 
     NavigationUtils.navigateToPage(
         context: context,
-        widget: const MultiTurnStreamChat());
+        widget: GeminiMultiTurnStreamChat(
+          subject: widget.subject,
+        ));
+  }
+
+  void _navigateToOpenAIMultiTurnStreamChat() {
+    pp('$mm _navigateToOpenAIMultiTurnStreamChat ...');
+
+    NavigationUtils.navigateToPage(
+        context: context,
+        widget: OpenAIMultiTurnStreamChat(
+          subject: widget.subject,
+        ));
   }
 
   void _navigateToExamPageContentSelector(ExamLink examLink) {
     pp('$mm .............. _navigateToExamPageContentSelector ...');
 
+    aiModelName ??= 'OpenAI';
     NavigationUtils.navigateToPage(
         context: context,
         widget: ExamPageContentSelector(
           examLink: examLink,
+          aiModelName: aiModelName!,
         ));
   }
+
+  String? aiModelName;
 
   void _navigateToYouTube() {
     pp('$mm _navigateToYouTube ... widget.subject.id: ${widget.subject.id}');

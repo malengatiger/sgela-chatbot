@@ -2,8 +2,8 @@ import 'package:edu_chatbot/util/functions.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 
-class MarkdownWidget extends StatelessWidget {
-  const MarkdownWidget({super.key, required this.text});
+class SgelaMarkdownWidget extends StatelessWidget {
+  const SgelaMarkdownWidget({super.key, required this.text});
 
   final String text;
 

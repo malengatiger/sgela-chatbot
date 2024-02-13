@@ -21,7 +21,9 @@ class BusyIndicator extends StatefulWidget {
       this.color = Colors.blue,
       this.elevation = 8.0,
       this.showClock = true,
-      this.showElapsedTime = true, this.showTimerOnly, this.textSize = 14});
+      this.showElapsedTime = true,
+      this.showTimerOnly,
+      this.textSize = 14});
 
   @override
   State<BusyIndicator> createState() => _BusyIndicatorState();
@@ -63,11 +65,11 @@ class _BusyIndicatorState extends State<BusyIndicator> {
 
   @override
   Widget build(BuildContext context) {
-    var height = 210.0;
+    var height = 240.0;
     var show = false;
     if (widget.showClock != null) {
       if (widget.showClock != null) {
-        height = 340.0;
+        height = 400.0;
         show = widget.showClock!;
       }
     }
@@ -76,19 +78,24 @@ class _BusyIndicatorState extends State<BusyIndicator> {
         elevation: 16,
         child: Padding(
           padding: const EdgeInsets.all(2.0),
-          child: Column(
-            children: [
-              gapH8,
-              const SizedBox(height: 10, width: 10,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  backgroundColor: Colors.red,
+          child: SizedBox(
+            height: height,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                const SizedBox(
+                  height: 12,
+                  width: 12,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    backgroundColor: Colors.pink,
+                  ),
                 ),
-              ),
-              gapH8,
-              Padding(
-                padding: const EdgeInsets.only(left:8.0,right: 8.0),
-                child: Text(
+                gapH8,
+                Padding(
+                  padding: const EdgeInsets.only(left: 8.0, right: 8.0),
+                  child: Text(
                     elapsedTime,
                     style: myTextStyle(
                       context,
@@ -96,91 +103,87 @@ class _BusyIndicatorState extends State<BusyIndicator> {
                       widget.textSize!,
                       FontWeight.normal,
                     ),
-                      ),
-              ),
-            ],
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       );
     }
 
     return Card(
-      elevation: widget.elevation,
-      child: Center(
-        child: SizedBox(
-          height: height,
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const SizedBox(
-                  height: 20,
-                  width: 20,
-                  child: CircularProgressIndicator(
-                    backgroundColor: Colors.red,
-                    strokeWidth: 6.0,
-                  ),
-                ),
-                gapH16,
-                widget.caption == null
-                    ? gapW8
-                    : Text(widget.caption!, style: myTextStyleSmall(context)),
-                gapH16,
-                gapH16,
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Text('Elapsed Time: '),
-                    gapW16,
-                    Text(
-                      elapsedTime,
-                      style: myTextStyle(
-                        context,
-                        Theme.of(context).primaryColor,
-                        18,
-                        FontWeight.bold,
-                      ),
+        elevation: widget.elevation,
+        child: Center(
+          child: SizedBox(
+            height: height,
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  gapH32,
+                  gapH32,
+                  const SizedBox(
+                    height: 20,
+                    width: 20,
+                    child: CircularProgressIndicator(
+                      backgroundColor: Colors.red,
+                      strokeWidth: 6.0,
                     ),
-                  ],
-                ),
-                gapH8,
-                show
-                    ? Expanded(
-                  child: SizedBox(
-                    height: 160,
-                    width: 160,
-                    child: Card(
-                      elevation: 8,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(80.0),
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: AnalogClock(
-                          secondHandColor: Colors.red,
-                          dateTime: DateTime.now(),
-                          dialBorderColor: Colors.green,
-                          isKeepTime: true,
-                          child: const Align(
-                            alignment: FractionalOffset(0.5, 0.75),
-                            child: Text(
-                              'GMT+2',
-                            ), //todo - use country db to set this
-                          ),
+                  ),
+                  gapH16,
+                  widget.caption == null
+                      ? gapW8
+                      : Text(widget.caption!, style: myTextStyleSmall(context)),
+                  gapH16,
+                  gapH16,
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Text('Elapsed Time: '),
+                      gapW16,
+                      Text(
+                        elapsedTime,
+                        style: myTextStyle(
+                          context,
+                          Theme.of(context).primaryColor,
+                          18,
+                          FontWeight.bold,
                         ),
                       ),
-                    ),
+                    ],
                   ),
-                )
-                    : gapW8,
-              ],
+                  gapH8,
+                  show
+                      ? Expanded(
+                          child: SizedBox(
+                            height: 160,
+                            width: 160,
+                            child: Padding(
+                              padding: const EdgeInsets.all(16.0),
+                              child: AnalogClock(
+                                secondHandColor: Colors.red,
+                                dateTime: DateTime.now(),
+                                dialBorderColor: Colors.green,
+                                isKeepTime: true,
+                                child: const Align(
+                                  alignment: FractionalOffset(0.5, 0.75),
+                                  child: Text(
+                                    'GMT+2',
+                                  ), //todo - use country db to set this
+                                ),
+                              ),
+                            ),
+                          ),
+                        )
+                      : gapW8,
+                ],
+              ),
             ),
           ),
-        ),
-      )
-    );
+        ));
   }
 }

@@ -1,31 +1,44 @@
 import 'package:json_annotation/json_annotation.dart';
 
-import 'exam_page_image.dart';
-
 part 'gemini_response_rating.g.dart';
 
 @JsonSerializable()
-class GeminiResponseRating {
+class AIResponseRating {
   int? rating;
   String? date;
-  int? id;
-  int? pageNumber;
+  int? id, subjectId, organizationId;
+  int? numberOfPagesInQuery;
 
+  int? sponsoreeId, userId;
+  String? sponsoreeName, sponsoreeEmail, sponsoreeCellphone;
   int? examLinkId;
-
-  String? responseText;
-
+  String? examTitle, subject, aiModel;
   int? tokensUsed;
 
-  GeminiResponseRating({required this.rating, required this.date,
-    this.id, required this.pageNumber, required this.tokensUsed,
-    required this.examLinkId, required this.responseText});
+  AIResponseRating(
+      {required this.rating,
+      required this.date,
+      required this.id,
+      required this.subjectId,
+      required this.organizationId,
+      required this.numberOfPagesInQuery,
+      required this.sponsoreeId,
+      required this.userId,
+      required this.sponsoreeName,
+      required this.sponsoreeEmail,
+      required this.sponsoreeCellphone,
+      required this.examLinkId,
+      required this.examTitle,
+      required this.subject,
+      required this.aiModel,
+      required this.tokensUsed});
 
-  factory GeminiResponseRating.fromJson(Map<String, dynamic> json) =>
-      _$GeminiResponseRatingFromJson(json);
+  factory AIResponseRating.fromJson(Map<String, dynamic> json) =>
+      _$AIResponseRatingFromJson(json);
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = _$GeminiResponseRatingToJson(this);
+    final Map<String, dynamic> data = _$AIResponseRatingToJson(this);
 
     return data;
-  }}
+  }
+}

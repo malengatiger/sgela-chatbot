@@ -58,7 +58,7 @@ class _SponsoredByState extends State<SponsoredBy> {
       child: Padding(
         padding: const EdgeInsets.all(4.0),
         child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisAlignment: MainAxisAlignment.center, crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             gapW4,
              Text('Sponsored by', style: myTextStyleTiny(context),),

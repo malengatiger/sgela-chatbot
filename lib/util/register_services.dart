@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dio/dio.dart';
 import 'package:edu_chatbot/services/busy_stream_service.dart';
 import 'package:edu_chatbot/services/chat_gpt_service.dart';
+import 'package:edu_chatbot/services/conversion_service.dart';
 import 'package:edu_chatbot/services/firestore_service.dart';
 import 'package:edu_chatbot/services/skunk_service.dart';
 import 'package:edu_chatbot/util/dark_light_control.dart';
@@ -17,7 +18,7 @@ import '../repositories/repository.dart';
 import '../services/accounting_service.dart';
 import '../services/agriculture_service.dart';
 import '../services/auth_service.dart';
-import '../services/chat_service.dart';
+import '../services/gemini_chat_service.dart';
 import '../services/local_data_service.dart';
 import '../services/math_service.dart';
 import '../services/physics_service.dart';
@@ -40,7 +41,7 @@ Future<void> registerServices(FirebaseFirestore firebaseFirestore, Gemini gemini
   GetIt.instance.registerLazySingleton<BusyStreamService>(
           () => BusyStreamService());
   GetIt.instance.registerLazySingleton<MathService>(() => MathService());
-  GetIt.instance.registerLazySingleton<ChatService>(() => ChatService(dioUtil));
+  GetIt.instance.registerLazySingleton<GeminiChatService>(() => GeminiChatService(dioUtil));
   GetIt.instance
       .registerLazySingleton<AgricultureService>(() => AgricultureService());
   GetIt.instance.registerLazySingleton<PhysicsService>(() => PhysicsService());
@@ -75,6 +76,7 @@ Future<void> registerServices(FirebaseFirestore firebaseFirestore, Gemini gemini
   GetIt.instance.registerLazySingleton<AuthService>(() => AuthService(
       FirebaseAuth.instance, prefs, firestoreService));
   GetIt.instance.registerLazySingleton<SkunkService>(() => SkunkService(dioUtil,lds));
+  GetIt.instance.registerLazySingleton<ConversionService>(() => ConversionService(dioUtil));
 
-  pp('🍎🍎🍎🍎🍎🍎 registerServices: GetIt has registered 16 services. 🍎 Cool!! 🍎🍎🍎');
+  pp('🍎🍎🍎🍎🍎🍎 registerServices: GetIt has registered 17 services. 🍎 Cool!! 🍎🍎🍎');
 }

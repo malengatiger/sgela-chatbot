@@ -16,11 +16,11 @@ import '../util/functions.dart' as fun;
 import '../util/functions.dart';
 import '../util/image_file_util.dart';
 
-class ChatService {
+class GeminiChatService {
   static const mm = '💜💜💜💜 ChatService';
   final DioUtil dioUtil;
 
-  ChatService(this.dioUtil);
+  GeminiChatService(this.dioUtil);
 
   Future<MyGeminiResponse> sendExamPageImageAndText(
       {required String prompt,

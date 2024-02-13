@@ -1,22 +1,17 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:edu_chatbot/data/gemini_response_rating.dart';
 import 'package:edu_chatbot/services/firestore_service.dart';
-import 'package:edu_chatbot/ui/chat/rating_widget.dart';
-import 'package:edu_chatbot/ui/open_ai/open_ai_driver.dart';
+import 'package:edu_chatbot/ui/chat/ai_rating_widget.dart';
 import 'package:edu_chatbot/util/functions.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_tex/flutter_tex.dart';
 import 'package:get_it/get_it.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:pdf/pdf.dart';
-import 'package:pdf/widgets.dart' as pw;
-import 'package:share_plus/share_plus.dart';
 
 import '../../data/exam_link.dart';
 import '../../data/exam_page_content.dart';
 import '../../data/exam_page_image.dart';
+import '../exam/exam_link_details.dart';
 
 class LaTexMathViewer extends StatefulWidget {
   const LaTexMathViewer(
@@ -56,58 +51,58 @@ class _LaTexMathViewerState extends State<LaTexMathViewer> {
     setState(() {});
   }
 
-  _share(GeminiResponseRating responseRating) async {
-    pp('${LaTexMathViewer.mm} ... sharing is caring ...');
-    var directory = await getApplicationDocumentsDirectory();
-
-    final pdf = pw.Document();
-    pdf.addPage(pw.Page(
-        pageFormat: PdfPageFormat.a4,
-        build: (pw.Context context) {
-          return pw.Center(
-            child: pw.Text("SgelaAI Response"),
-          ); // Center
-        })); // Page
-
-    //
-    if (isValidLaTeXString(responseRating.responseText!)) {
-      //todo - write formatted LaTex string to pdf
-    } else {
-      //todo - write formatted markdown text to pdf
-    }
-    final result = await Share.shareXFiles(
-        [XFile('${directory.path}/response.pdf')],
-        text: 'Response from SgelaAI');
-    if (result.status == ShareResultStatus.success) {
-      pp('${LaTexMathViewer.mm} Thank you for sharing the response from SgelaAI!');
-    }
-  }
+  // _share(AIResponseRating responseRating) async {
+  //   pp('${LaTexMathViewer.mm} ... sharing is caring ...');
+  //   var directory = await getApplicationDocumentsDirectory();
+  //
+  //   final pdf = pw.Document();
+  //   pdf.addPage(pw.Page(
+  //       pageFormat: PdfPageFormat.a4,
+  //       build: (pw.Context context) {
+  //         return pw.Center(
+  //           child: pw.Text("SgelaAI Response"),
+  //         ); // Center
+  //       })); // Page
+  //
+  //   //
+  //   if (isValidLaTeXString(responseRating.responseText!)) {
+  //     //todo - write formatted LaTex string to pdf
+  //   } else {
+  //     //todo - write formatted markdown text to pdf
+  //   }
+  //   final result = await Share.shareXFiles(
+  //       [XFile('${directory.path}/response.pdf')],
+  //       text: 'Response from SgelaAI');
+  //   if (result.status == ShareResultStatus.success) {
+  //     pp('${LaTexMathViewer.mm} Thank you for sharing the response from SgelaAI!');
+  //   }
+  // }
 
   bool isRated = false;
   int rating = 0;
   String responseText = '';
 
   _sendRating(int mRating) async {
-    try {
-      var examPageImage = list.first;
-      var gr = GeminiResponseRating(
-          rating: mRating,
-          id: DateTime.now().millisecondsSinceEpoch,
-          date: DateTime.now().toIso8601String(),
-          pageNumber: examPageImage.pageIndex,
-          responseText: widget.text,
-          tokensUsed: widget.tokensUsed,
-          examLinkId: widget.examLink.id!);
-      var res = await firestoreService.addRating(gr);
-      pp('💙💙💙💙 GeminiResponseRating sent to backend! id: $res');
-      myPrettyJsonPrint(gr.toJson());
-
-      if (mounted) {
-        Navigator.of(context).pop();
-      }
-    } catch (e) {
-      pp('${LaTexMathViewer.mm} ERROR - $e');
-    }
+    // try {
+    //   var examPageImage = list.first;
+    //   var gr = AIResponseRating(
+    //       rating: mRating,
+    //       id: DateTime.now().millisecondsSinceEpoch,
+    //       date: DateTime.now().toIso8601String(),
+    //       numberOfPagesInQuery: examPageImage.pageIndex,
+    //       responseText: widget.text,
+    //       tokensUsed: widget.tokensUsed,
+    //       examLinkId: widget.examLink.id!);
+    //   var res = await firestoreService.addRating(gr);
+    //   pp('💙💙💙💙 GeminiResponseRating sent to backend! id: $res');
+    //   myPrettyJsonPrint(gr.toJson());
+    //
+    //   if (mounted) {
+    //     Navigator.of(context).pop();
+    //   }
+    // } catch (e) {
+    //   pp('${LaTexMathViewer.mm} ERROR - $e');
+    // }
   }
 
   @override
@@ -158,6 +153,7 @@ class _LaTexMathViewerState extends State<LaTexMathViewer> {
               child: RepaintBoundary(
                 key: _repaintBoundaryKey,
                 child: Container(
+                  color: Colors.blue,
                   width: double.infinity,
                   // height: h,
                   padding: const EdgeInsets.all(8.0),
@@ -168,7 +164,7 @@ class _LaTexMathViewerState extends State<LaTexMathViewer> {
             if (_showRatingBar)  Positioned(
                 bottom: 16,
                 right: 48,
-                child: GeminiRatingWidget(
+                child: AIRatingWidget(
                   onRating: (rating) {
                     pp('💙💙 Gemini rating: $rating, 💙💙 set _showRatingBar to false');
                     showToast(

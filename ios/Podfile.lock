@@ -961,7 +961,7 @@ PODS:
   - SDWebImage (5.18.10):
     - SDWebImage/Core (= 5.18.10)
   - SDWebImage/Core (5.18.10)
-  - SDWebImageWebPCoder (0.14.3):
+  - SDWebImageWebPCoder (0.14.4):
     - libwebp (~> 1.0)
     - SDWebImage/Core (~> 5.17)
   - share_plus (0.0.1):
@@ -1179,7 +1179,7 @@ SPEC CHECKSUMS:
   PromisesSwift: 28dca69a9c40779916ac2d6985a0192a5cb4a265
   RecaptchaInterop: 7d1a4a01a6b2cb1610a47ef3f85f0c411434cb21
   SDWebImage: fc8f2d48bbfd72ef39d70e981bd24a3f3be53fec
-  SDWebImageWebPCoder: d25b638fc2c98782072f159165f22232f225b9d7
+  SDWebImageWebPCoder: 74cd61d52d8a4b20561f638bb88dda67b00eb5e0
   share_plus: c3fef564749587fc939ef86ffb283ceac0baf9f5
   shared_preferences_foundation: b4c3b4cddf1c21f02770737f147a3f5da9d39695
   smart_auth: 4bedbc118723912d0e45a07e8ab34039c19e04f2
@@ -1192,4 +1192,4 @@ SPEC CHECKSUMS:
 
 PODFILE CHECKSUM: 819463e6a0290f5a72f145ba7cde16e8b6ef0796
 
-COCOAPODS: 1.14.3
+COCOAPODS: 1.15.0

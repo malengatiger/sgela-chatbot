@@ -9,14 +9,14 @@ import 'package:path_provider/path_provider.dart';
 
 import '../../data/exam_link.dart';
 import '../../data/gemini/parts.dart';
-import '../../services/chat_service.dart';
+import '../../services/gemini_chat_service.dart';
 import '../../util/functions.dart';
 
 class ImagePickerWidget extends StatefulWidget {
   const ImagePickerWidget(
       {super.key, required this.chatService, this.examLink});
 
-  final ChatService chatService;
+  final GeminiChatService chatService;
   final ExamLink? examLink;
 
   @override

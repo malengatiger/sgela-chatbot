@@ -9,7 +9,6 @@ class Sponsoree {
   String? date;
   String? organizationName;
   bool? activeFlag;
-
   int? sgelaUserId;
   String? sgelaUserName;
   String? sgelaCellphone;

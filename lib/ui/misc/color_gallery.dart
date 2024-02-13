@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:edu_chatbot/ui/misc/powered_by.dart';
+import 'package:edu_chatbot/ui/misc/sponsored_by.dart';
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
 

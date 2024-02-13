@@ -1,13 +1,13 @@
 import 'package:edu_chatbot/data/branding.dart';
 import 'package:edu_chatbot/data/exam_link.dart';
 import 'package:edu_chatbot/data/exam_page_content.dart';
+import 'package:edu_chatbot/data/subject.dart';
 import 'package:edu_chatbot/gemini/widgets/chat_input_box.dart';
-import 'package:edu_chatbot/repositories/repository.dart';
 import 'package:edu_chatbot/services/firestore_service.dart';
 import 'package:edu_chatbot/services/local_data_service.dart';
 import 'package:edu_chatbot/ui/misc/busy_indicator.dart';
-import 'package:edu_chatbot/ui/chat/math_viewer.dart';
-import 'package:edu_chatbot/ui/misc/powered_by.dart';
+import 'package:edu_chatbot/ui/chat/latex_math_viewer.dart';
+import 'package:edu_chatbot/ui/misc/sponsored_by.dart';
 import 'package:edu_chatbot/util/prefs.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gemini/flutter_gemini.dart';
@@ -16,18 +16,19 @@ import 'package:get_it/get_it.dart';
 
 import '../../util/functions.dart';
 
-class MultiTurnStreamChat extends StatefulWidget {
-  const MultiTurnStreamChat(
-      {super.key, this.examLink});
+class GeminiMultiTurnStreamChat extends StatefulWidget {
+  const GeminiMultiTurnStreamChat(
+      {super.key, this.examLink, this.subject});
 
   final ExamLink? examLink;
+  final Subject? subject;
 
   @override
-  State<MultiTurnStreamChat> createState() => MultiTurnStreamChatState();
+  State<GeminiMultiTurnStreamChat> createState() => GeminiMultiTurnStreamChatState();
 }
 
-class MultiTurnStreamChatState extends State<MultiTurnStreamChat> {
-  static const mm = '🍐🍐🍐🍐 MultiTurnStreamChat 🍐';
+class GeminiMultiTurnStreamChatState extends State<GeminiMultiTurnStreamChat> {
+  static const mm = '🍐🍐🍐🍐 GeminiMultiTurnStreamChat 🍐';
 
   final controller = TextEditingController();
   bool _busy = false;
@@ -124,8 +125,6 @@ class MultiTurnStreamChatState extends State<MultiTurnStreamChat> {
     var tokens = await gemini
         .countTokens(searchedText)
         .then((value) => pp('$mm value: $value'))
-
-    /// output like: `6` or `null`
         .catchError((e) => pp('countTokens error : $e'));
     pp('$mm ai tokens: $tokens');
     gemini.streamChat(chats).listen((candidates) {

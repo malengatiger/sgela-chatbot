@@ -1,19 +1,20 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'gemini_response_rating.dart';
+part of 'sponsoree_activity.dart';
 
 // **************************************************************************
 // JsonSerializableGenerator
 // **************************************************************************
 
-AIResponseRating _$AIResponseRatingFromJson(Map<String, dynamic> json) =>
-    AIResponseRating(
-      rating: json['rating'] as int?,
-      date: json['date'] as String?,
-      id: json['id'] as int?,
-      subjectId: json['subjectId'] as int?,
+SponsoreeActivity _$SponsoreeActivityFromJson(Map<String, dynamic> json) =>
+    SponsoreeActivity(
       organizationId: json['organizationId'] as int?,
-      numberOfPagesInQuery: json['numberOfPagesInQuery'] as int?,
+      id: json['id'] as int?,
+      date: json['date'] as String?,
+      organizationName: json['organizationName'] as String?,
+      totalTokens: json['totalTokens'] as int?,
+      elapsedTimeInSeconds: json['elapsedTimeInSeconds'] as int?,
+      aiModel: json['aiModel'] as String?,
       sponsoreeId: json['sponsoreeId'] as int?,
       userId: json['userId'] as int?,
       sponsoreeName: json['sponsoreeName'] as String?,
@@ -21,19 +22,19 @@ AIResponseRating _$AIResponseRatingFromJson(Map<String, dynamic> json) =>
       sponsoreeCellphone: json['sponsoreeCellphone'] as String?,
       examLinkId: json['examLinkId'] as int?,
       examTitle: json['examTitle'] as String?,
+      subjectId: json['subjectId'] as int?,
       subject: json['subject'] as String?,
-      aiModel: json['aiModel'] as String?,
-      tokensUsed: json['tokensUsed'] as int?,
     );
 
-Map<String, dynamic> _$AIResponseRatingToJson(AIResponseRating instance) =>
+Map<String, dynamic> _$SponsoreeActivityToJson(SponsoreeActivity instance) =>
     <String, dynamic>{
-      'rating': instance.rating,
-      'date': instance.date,
-      'id': instance.id,
-      'subjectId': instance.subjectId,
       'organizationId': instance.organizationId,
-      'numberOfPagesInQuery': instance.numberOfPagesInQuery,
+      'id': instance.id,
+      'date': instance.date,
+      'organizationName': instance.organizationName,
+      'totalTokens': instance.totalTokens,
+      'elapsedTimeInSeconds': instance.elapsedTimeInSeconds,
+      'aiModel': instance.aiModel,
       'sponsoreeId': instance.sponsoreeId,
       'userId': instance.userId,
       'sponsoreeName': instance.sponsoreeName,
@@ -42,6 +43,5 @@ Map<String, dynamic> _$AIResponseRatingToJson(AIResponseRating instance) =>
       'examLinkId': instance.examLinkId,
       'examTitle': instance.examTitle,
       'subject': instance.subject,
-      'aiModel': instance.aiModel,
-      'tokensUsed': instance.tokensUsed,
+      'subjectId': instance.subjectId,
     };

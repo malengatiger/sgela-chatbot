@@ -1,7 +1,7 @@
 import 'dart:io';
 
 import 'package:edu_chatbot/services/firestore_service.dart';
-import 'package:edu_chatbot/ui/chat/rating_widget.dart';
+import 'package:edu_chatbot/ui/chat/ai_rating_widget.dart';
 import 'package:edu_chatbot/util/functions.dart';
 import 'package:edu_chatbot/util/image_file_util.dart';
 import 'package:flutter/material.dart';
@@ -11,7 +11,7 @@ import 'package:share_plus/share_plus.dart';
 import '../../data/exam_link.dart';
 import '../../data/exam_page_content.dart';
 import '../../data/gemini_response_rating.dart';
-import 'markdown_widget.dart' as md;
+import 'sgela_markdown_widget.dart' as md;
 
 class GeminiResponseViewer extends StatefulWidget {
   const GeminiResponseViewer(
@@ -52,21 +52,20 @@ class _GeminiResponseViewerState extends State<GeminiResponseViewer> {
   }
 
   _sendRating(int mRating) async {
-    try {
-      var gr = GeminiResponseRating(
-          rating: mRating,
-          id: DateTime.now().millisecondsSinceEpoch,
-          date: DateTime.now().toIso8601String(),
-          pageNumber: widget.examPageContent.pageIndex,
-          responseText: responseText,
-          tokensUsed: widget.tokensUsed,
-          examLinkId: widget.examLink.id!);
-
-      var res = await firestoreService.addRating(gr);
-      pp('$mm 💙💙💙💙 GeminiResponseRating sent to backend!  🍎🍎🍎response: $res');
-    } catch (e) {
-      pp('$mm ERROR - $e');
-    }
+    // try {
+    //   var gr = AIResponseRating(
+    //       rating: mRating,
+    //       id: DateTime.now().millisecondsSinceEpoch,
+    //       date: DateTime.now().toIso8601String(),
+    //       numberOfPagesInQuery: widget.examPageContent.pageIndex,
+    //       tokensUsed: widget.tokensUsed,
+    //       examLinkId: widget.examLink.id!);
+    //
+    //   var res = await firestoreService.addRating(gr);
+    //   pp('$mm 💙💙💙💙 GeminiResponseRating sent to backend!  🍎🍎🍎response: $res');
+    // } catch (e) {
+    //   pp('$mm ERROR - $e');
+    // }
   }
 
   _share() async {
@@ -176,7 +175,7 @@ class _GeminiResponseViewerState extends State<GeminiResponseViewer> {
                 Expanded(
                   child: Padding(
                     padding: const EdgeInsets.all(8.0),
-                    child: md.MarkdownWidget(text: responseText),
+                    child: md.SgelaMarkdownWidget(text: responseText),
                   ),
                 ),
               ],
@@ -187,7 +186,7 @@ class _GeminiResponseViewerState extends State<GeminiResponseViewer> {
                     left: 12,
                     right: 12,
                     child: Center(
-                      child: GeminiRatingWidget(
+                      child: AIRatingWidget(
                           onRating: (mRating) {
                             if (mounted) {
                               setState(() {

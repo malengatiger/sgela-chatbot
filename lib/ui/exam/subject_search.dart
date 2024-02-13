@@ -3,7 +3,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:edu_chatbot/data/organization.dart';
 import 'package:edu_chatbot/data/sponsoree.dart';
 import 'package:edu_chatbot/data/subject.dart';
-import 'package:edu_chatbot/gemini/sections/multi_turn_chat_stream.dart';
+import 'package:edu_chatbot/gemini/sections/gemini_multi_turn_chat_stream.dart';
 import 'package:edu_chatbot/repositories/repository.dart';
 import 'package:edu_chatbot/services/chat_gpt_service.dart';
 import 'package:edu_chatbot/services/firestore_service.dart';
@@ -11,7 +11,7 @@ import 'package:edu_chatbot/ui/exam/exam_document_list.dart';
 import 'package:edu_chatbot/ui/landing_page.dart';
 import 'package:edu_chatbot/ui/misc/busy_indicator.dart';
 import 'package:edu_chatbot/ui/misc/color_gallery.dart';
-import 'package:edu_chatbot/ui/misc/powered_by.dart';
+import 'package:edu_chatbot/ui/misc/sponsored_by.dart';
 import 'package:edu_chatbot/ui/organization/organization_splash.dart';
 import 'package:edu_chatbot/util/dark_light_control.dart';
 import 'package:edu_chatbot/util/functions.dart';
@@ -20,7 +20,7 @@ import 'package:flutter_gemini/flutter_gemini.dart';
 import 'package:get_it/get_it.dart';
 
 import '../../data/branding.dart';
-import '../../services/chat_service.dart';
+import '../../services/gemini_chat_service.dart';
 import '../../services/local_data_service.dart';
 import '../../services/you_tube_service.dart';
 import '../../util/navigation_util.dart';
@@ -40,7 +40,7 @@ class SubjectSearch extends StatefulWidget {
 class SubjectSearchState extends State<SubjectSearch> {
   final Repository repository = GetIt.instance<Repository>();
   final LocalDataService localDataService = GetIt.instance<LocalDataService>();
-  final ChatService chatService = GetIt.instance<ChatService>();
+  final GeminiChatService chatService = GetIt.instance<GeminiChatService>();
   final YouTubeService youTubeService = GetIt.instance<YouTubeService>();
   final Prefs prefs = GetIt.instance<Prefs>();
   final FirestoreService firestoreService = GetIt.instance<FirestoreService>();
@@ -186,7 +186,6 @@ class SubjectSearchState extends State<SubjectSearch> {
 
     var popUp = PopupMenuButton<String>(
       itemBuilder: (BuildContext context) => [
-
         const PopupMenuItem<String>(
           value: 'colorGallery',
           child: ListTile(
@@ -213,6 +212,7 @@ class SubjectSearchState extends State<SubjectSearch> {
 
     return popUp;
   }
+
   int mode = 0;
 
   @override
@@ -261,7 +261,6 @@ class SubjectSearchState extends State<SubjectSearch> {
                       color: isDark
                           ? Theme.of(context).primaryColor
                           : Colors.black)),
-
               IconButton(
                 onPressed: () {
                   _navigateToMultiTurnChat();
@@ -376,11 +375,14 @@ class SubjectSearchState extends State<SubjectSearch> {
       darkLightControl.setDarkMode();
     }
   }
-void _navigateToInfo() {
-    NavigationUtils.navigateToPage(context: context,
-        widget:  const LandingPage(hideButtons: true,));
-}
 
+  void _navigateToInfo() {
+    NavigationUtils.navigateToPage(
+        context: context,
+        widget: const LandingPage(
+          hideButtons: true,
+        ));
+  }
 
   void _navigateToColorGallery() {
     NavigationUtils.navigateToPage(
@@ -390,6 +392,6 @@ void _navigateToInfo() {
 
   void _navigateToMultiTurnChat() {
     NavigationUtils.navigateToPage(
-        context: context, widget: const MultiTurnStreamChat());
+        context: context, widget: const GeminiMultiTurnStreamChat());
   }
 }

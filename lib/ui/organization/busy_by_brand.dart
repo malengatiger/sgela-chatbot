@@ -5,13 +5,14 @@ import 'package:edu_chatbot/data/branding.dart';
 import 'package:edu_chatbot/data/country.dart';
 import 'package:edu_chatbot/data/exam_link.dart';
 import 'package:edu_chatbot/data/organization.dart';
-import 'package:edu_chatbot/ui/open_ai/open_ai_driver.dart';
 import 'package:edu_chatbot/ui/organization/org_logo_widget.dart';
 import 'package:edu_chatbot/util/functions.dart';
 import 'package:edu_chatbot/util/prefs.dart';
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
 import 'package:responsive_builder/responsive_builder.dart';
+
+import '../exam/exam_link_details.dart';
 
 class BusyByBrand extends StatefulWidget {
   const BusyByBrand({super.key, required this.examLink,});

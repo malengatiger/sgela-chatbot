@@ -5,6 +5,7 @@ import 'dart:math';
 import 'dart:ui' as ui;
 import 'dart:ui';
 
+import 'package:edu_chatbot/ui/chat/ai_rating_widget.dart';
 import 'package:edu_chatbot/util/prefs.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -1392,6 +1393,7 @@ const gapH8 = SizedBox(height: 8.0);
 const gapH12 = SizedBox(height: 12.0);
 const gapH16 = SizedBox(height: 16.0);
 const gapH32 = SizedBox(height: 32.0);
+
 
 showToast(
     {required String message,

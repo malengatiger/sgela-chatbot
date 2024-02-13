@@ -4,10 +4,10 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:edu_chatbot/data/exam_document.dart';
 import 'package:edu_chatbot/data/exam_link.dart';
 import 'package:edu_chatbot/data/exam_page_content.dart';
-import 'package:edu_chatbot/data/exam_page_image.dart';
 import 'package:edu_chatbot/data/gemini_response_rating.dart';
 import 'package:edu_chatbot/data/organization.dart';
 import 'package:edu_chatbot/data/sponsoree.dart';
+import 'package:edu_chatbot/data/sponsoree_activity.dart';
 import 'package:edu_chatbot/data/subject.dart';
 import 'package:edu_chatbot/services/local_data_service.dart';
 import 'package:edu_chatbot/util/dark_light_control.dart';
@@ -23,21 +23,20 @@ import '../util/image_file_util.dart';
 import '../util/location_util.dart';
 
 class FirestoreService {
-
   final Prefs prefs;
-  final   ColorWatcher colorWatcher;
+  final ColorWatcher colorWatcher;
 
   static const mm = ' 🥦🥦🥦FirestoreService 🥦 ';
   final FirebaseFirestore firebaseFirestore;
   final LocalDataService localDataService;
 
-
-  FirestoreService( this.prefs, this.colorWatcher, this.firebaseFirestore, this.localDataService) {
-   pp('$mm ... FirestoreService constructor ...');
-   //  firebaseFirestore.settings = const Settings(
-   //   persistenceEnabled: true,
-   // );
-   // pp('$mm ... FirestoreService constructor ... ${firebaseFirestore.settings.asMap}');
+  FirestoreService(this.prefs, this.colorWatcher, this.firebaseFirestore,
+      this.localDataService) {
+    pp('$mm ... FirestoreService constructor ...');
+    //  firebaseFirestore.settings = const Settings(
+    //   persistenceEnabled: true,
+    // );
+    // pp('$mm ... FirestoreService constructor ... ${firebaseFirestore.settings.asMap}');
   }
 
   Future<List<ExamDocument>> getExamDocuments() async {
@@ -130,21 +129,22 @@ class FirestoreService {
     return cities;
   }
 
-  Future<List<GeminiResponseRating>> getRatings(int examLinkId) async {
-    List<GeminiResponseRating> ratings = [];
+  Future<List<AIResponseRating>> getRatings(int examLinkId) async {
+    List<AIResponseRating> ratings = [];
     var querySnapshot = await firebaseFirestore
         .collection('GeminiResponseRating')
         .where('examLinkId', isEqualTo: examLinkId)
         .get();
     for (var s in querySnapshot.docs) {
-      var rating = GeminiResponseRating.fromJson(s.data());
+      var rating = AIResponseRating.fromJson(s.data());
       ratings.add(rating);
     }
     return ratings;
   }
 
-  Future addRating(GeminiResponseRating rating) async {
-    var colRef = firebaseFirestore.collection('GeminiResponseRating');
+  Future addRating(AIResponseRating rating) async {
+    var colRef =
+    firebaseFirestore.collection('AIResponseRating');
     await colRef.add(rating.toJson());
   }
 
@@ -154,6 +154,45 @@ class FirestoreService {
     var res = await colRef.add(sponsoree.toJson());
     prefs.saveSponsoree(sponsoree);
     pp('$mm ... res path: ${res.path}');
+  }
+
+  Future addSponsoreeActivity(SponsoreeActivity sponsoreeActivity) async {
+    var colRef = firebaseFirestore.collection('SponsoreeActivity');
+    pp('$mm ... adding addSponsoreeActivity, check sponsoree: ${sponsoreeActivity.toJson()}');
+    var res = await colRef.add(sponsoreeActivity.toJson());
+    pp('$mm ... addSponsoreeActivity done; path: ${res.path}');
+  }
+
+  Future<List<SponsoreeActivity>> getSponsoreeActivity(
+      int organizationId) async {
+    var querySnapshot = await firebaseFirestore
+        .collection('SponsoreeActivity')
+        .where('organizationId', isEqualTo: organizationId)
+        .orderBy('date', descending: true)
+        .get();
+
+    List<SponsoreeActivity> activities = [];
+    for (var s in querySnapshot.docs) {
+      var activity = SponsoreeActivity.fromJson(s.data());
+      activities.add(activity);
+    }
+    return activities;
+  }
+  Future<List<SponsoreeActivity>> getSponsoreeActivityByDate(
+      int organizationId, String date) async {
+    var querySnapshot = await firebaseFirestore
+        .collection('SponsoreeActivity')
+        .where('organizationId', isEqualTo: organizationId)
+        .where('date', isGreaterThanOrEqualTo: date)
+        .orderBy('date', descending: true)
+        .get();
+
+    List<SponsoreeActivity> activities = [];
+    for (var s in querySnapshot.docs) {
+      var activity = SponsoreeActivity.fromJson(s.data());
+      activities.add(activity);
+    }
+    return activities;
   }
 
   Future<SgelaUser> addSgelaUser(SgelaUser user) async {
@@ -385,8 +424,5 @@ class FirestoreService {
     brandings = prefs.getBrandings();
     return brandings;
   }
-  //
-
-
-
+//
 }

@@ -58,5 +58,10 @@
     <string>Access to the camera is required to capture photos.</string>
     <key>NSPhotoLibraryUsageDescription</key>
     <string>Access to the photo library is required to pick photos.</string>
+    <key>LSApplicationQueriesSchemes</key>
+    <array>
+      <string>sms</string>
+      <string>tel</string>
+    </array>
 </dict>
 </plist>

@@ -15,7 +15,6 @@ import 'package:firebase_ui_auth/firebase_ui_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gemini/flutter_gemini.dart';
 import 'package:get_it/get_it.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart' as dot;
 import 'firebase_options.dart';
 
 const String mx = '🍎 🍎 🍎 main: ';
@@ -41,10 +40,6 @@ Future<void> main() async {
   pp('$mx Firebase has been initialized!! $mx name: ${app.name}');
   pp('${app.options.asMap}');
   //
-  // await dot.dotenv.load();
-
-
-
   try {
     var fbf = FirebaseFirestore.instance;
     await _initGemini();
@@ -69,7 +64,7 @@ Future<void> _initOpenAI() async {
 
   OpenAI.apiKey = openAIKey;
   OpenAI.requestsTimeOut = const Duration(seconds: 180); // 3 minutes.
-  OpenAI.showLogs = true;
+  OpenAI.showLogs = false;
   OpenAI.showResponsesLogs = false;
 
   pp('$mx OpenAI has been initialized and timeOut set!!\n'

@@ -10,6 +10,7 @@ class Branding {
   String? logoUrl, splashUrl, tagLine,
       organizationName, organizationUrl;
   bool? activeFlag;
+  int? boxFit;
 
 
   Branding({
@@ -23,6 +24,7 @@ class Branding {
     required this.organizationUrl,
     required this.splashTimeInSeconds,
     required this.colorIndex,
+    required this.boxFit,
     required this.activeFlag});
 
   factory Branding.fromJson(Map<String, dynamic> json) =>
@@ -30,3 +32,8 @@ class Branding {
 
   Map<String, dynamic> toJson() => _$BrandingToJson(this);
 }
+
+const int boxFitCover = 1;
+const int boxFitFill = 2;
+const int boxFitHeight = 3;
+const int boxFitWidth = 4;

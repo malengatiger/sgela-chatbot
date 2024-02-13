@@ -5,7 +5,7 @@ import 'package:edu_chatbot/repositories/repository.dart';
 import 'package:edu_chatbot/services/you_tube_service.dart';
 import 'package:edu_chatbot/ui/misc/busy_indicator.dart';
 import 'package:edu_chatbot/ui/misc/color_gallery.dart';
-import 'package:edu_chatbot/ui/misc/powered_by.dart';
+import 'package:edu_chatbot/ui/misc/sponsored_by.dart';
 import 'package:edu_chatbot/ui/youtube/you_tube_gallery.dart';
 import 'package:edu_chatbot/ui/youtube/you_tube_viewer.dart';
 import 'package:edu_chatbot/util/dark_light_control.dart';

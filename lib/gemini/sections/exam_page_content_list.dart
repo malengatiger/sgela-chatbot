@@ -5,9 +5,12 @@ import 'package:edu_chatbot/data/branding.dart';
 import 'package:edu_chatbot/data/exam_link.dart';
 import 'package:edu_chatbot/services/firestore_service.dart';
 import 'package:edu_chatbot/services/local_data_service.dart';
+import 'package:edu_chatbot/ui/chat/gemini_chat_widget.dart';
 import 'package:edu_chatbot/ui/misc/busy_indicator.dart';
-import 'package:edu_chatbot/ui/open_ai/open_ai_driver.dart';
+import 'package:edu_chatbot/ui/misc/sponsored_by.dart';
+import 'package:edu_chatbot/ui/open_ai/open_ai_chat_widget.dart';
 import 'package:edu_chatbot/ui/organization/org_logo_widget.dart';
+import 'package:edu_chatbot/util/dark_light_control.dart';
 import 'package:edu_chatbot/util/navigation_util.dart';
 import 'package:edu_chatbot/util/prefs.dart';
 import 'package:flutter/material.dart';
@@ -16,12 +19,15 @@ import 'package:get_it/get_it.dart';
 import 'package:responsive_builder/responsive_builder.dart';
 
 import '../../data/exam_page_content.dart';
+import '../../ui/exam/exam_link_details.dart';
 import '../../util/functions.dart';
 
 class ExamPageContentSelector extends StatefulWidget {
-  const ExamPageContentSelector({super.key, required this.examLink});
+  const ExamPageContentSelector(
+      {super.key, required this.examLink, required this.aiModelName});
 
   final ExamLink examLink;
+  final String aiModelName;
 
   @override
   State<ExamPageContentSelector> createState() =>
@@ -32,7 +38,6 @@ class ExamPageContentSelectorState extends State<ExamPageContentSelector> {
   List<ExamPageContent> examPageContents = [];
   List<ExamPageContent> selectedExamPageContents = [];
   List<ContentBag> contentBags = [];
-
   Prefs prefs = GetIt.instance<Prefs>();
   LocalDataService localDataService = GetIt.instance<LocalDataService>();
   FirestoreService firestoreService = GetIt.instance<FirestoreService>();
@@ -69,7 +74,6 @@ class ExamPageContentSelectorState extends State<ExamPageContentSelector> {
             height: 56));
       }
       _getImageCount();
-      _showToast();
       pp('$mm ... ${examPageContents.length} examPageContents found');
     } catch (e, s) {
       pp(e);
@@ -95,11 +99,19 @@ class ExamPageContentSelectorState extends State<ExamPageContentSelector> {
     selectedExamPageContents
         .sort((a, b) => a.pageIndex!.compareTo(b.pageIndex!));
 
-    NavigationUtils.navigateToPage(
-        context: context,
-        widget: AICommunicationsWidget(
-            examLink: widget.examLink,
-            examPageContents: selectedExamPageContents));
+    if (_getImageCount() > 0) {
+      NavigationUtils.navigateToPage(
+          context: context,
+          widget: GeminiChatWidget(
+              examLink: widget.examLink,
+              examPageContents: selectedExamPageContents));
+    } else {
+      NavigationUtils.navigateToPage(
+          context: context,
+          widget: OpenAIChatWidget(
+              examLink: widget.examLink,
+              examPageContents: selectedExamPageContents));
+    }
   }
 
   _handleLongPress(ContentBag bag) {
@@ -113,7 +125,8 @@ class ExamPageContentSelectorState extends State<ExamPageContentSelector> {
                 Uint8List.fromList(bag.examPageContent.uBytes!);
             mWidget = Image.memory(uint8List);
           } else {
-            mWidget = Text(replaceKeywordsWithBlanks(bag.examPageContent.text!));
+            mWidget =
+                Text(replaceKeywordsWithBlanks(bag.examPageContent.text!));
           }
 
           return AlertDialog(
@@ -139,30 +152,12 @@ class ExamPageContentSelectorState extends State<ExamPageContentSelector> {
                       elevation: MaterialStatePropertyAll(8.0)),
                   onPressed: () {
                     Navigator.of(context).pop();
-                    NavigationUtils.navigateToPage(
-                        context: context,
-                        widget: AICommunicationsWidget(
-                            examLink: widget.examLink,
-                            examPageContents: [bag.examPageContent]));
+                    _navigateToChat(bag);
                   },
                   child: const Text('Send to SgelaAI'))
             ],
           );
         });
-  }
-
-  void _showToast() {
-    Future.delayed(const Duration(milliseconds: 200), () {
-      showToast(
-          padding: 20,
-          backgroundColor: Colors.black,
-          toastGravity: ToastGravity.TOP,
-          duration: const Duration(seconds: 10),
-          textStyle: const TextStyle(color: Colors.white),
-          message: 'Tap once to select, double tap to de-select, '
-              'long press to view contents of the page',
-          context: context);
-    });
   }
 
   int _getSelectedCount() {
@@ -188,11 +183,18 @@ class ExamPageContentSelectorState extends State<ExamPageContentSelector> {
     imageCount = cnt;
     return imageCount;
   }
+
+  String? modelName;
+
   String replaceKeywordsWithBlanks(String text) {
-    String modifiedText = text.replaceAll("Copyright reserved", "")
+    String modifiedText = text
+        .replaceAll("Copyright reserved", "")
         .replaceAll("Please turn over", "");
     return modifiedText;
   }
+
+  bool _showHelp = false;
+
   @override
   Widget build(BuildContext context) {
     return SafeArea(
@@ -201,15 +203,42 @@ class ExamPageContentSelectorState extends State<ExamPageContentSelector> {
         title: branding == null
             ? const Text('SgelaAI')
             : OrgLogoWidget(
-                branding: branding,
+                branding: branding,height: 24,
               ),
         actions: [
           IconButton(
               onPressed: () {
-                _showToast();
+                setState(() {
+                  _showHelp = !_showHelp;
+                });
               },
               icon: const Icon(Icons.question_mark)),
         ],
+        bottom: PreferredSize(
+            preferredSize: Size.fromHeight(_showHelp ? 120.0 : 48.0),
+            child:  Column(
+              children: [
+                _showHelp?  Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: GestureDetector(
+                    onTap: (){
+                      setState(() {
+                        _showHelp = false;
+                      });
+                    },
+                    child: const Card(
+                      elevation: 8,
+                      child: Padding(
+                        padding: EdgeInsets.all(12.0),
+                        child: Text('Tap once to select, double tap to de-select, '
+                            'long press to view contents '),
+                      ),
+                    ),
+                  ),
+                ): gapH4,
+                gapH8,
+              ],
+            )),
       ),
       body: ScreenTypeLayout.builder(
         mobile: (_) {
@@ -310,7 +339,11 @@ class ExamPageContentSelectorState extends State<ExamPageContentSelector> {
                     ),
                   ),
                 ),
-              )
+              ),
+              const Positioned(
+                  bottom: 8,
+                  left: 48, right: 48,
+                  child: SponsoredBy(logoHeight: 24,)),
             ],
           );
         },
@@ -323,33 +356,54 @@ class ExamPageContentSelectorState extends State<ExamPageContentSelector> {
       ),
     ));
   }
+
+  void _navigateToChat(ContentBag bag) {
+    pp('$mm todo - handle choice of LLM model - Gemini or OpenAI or both?');
+    if (_getImageCount() > 0) {
+      NavigationUtils.navigateToPage(
+          context: context,
+          widget: GeminiChatWidget(
+              examLink: widget.examLink,
+              examPageContents: [bag.examPageContent]));
+    } else {
+      NavigationUtils.navigateToPage(
+          context: context,
+          widget: OpenAIChatWidget(
+              examLink: widget.examLink,
+              examPageContents: [bag.examPageContent]));
+    }
+  }
 }
 
 class ExamPageContentCard extends StatelessWidget {
-  const ExamPageContentCard({super.key, required this.contentBag});
+  const ExamPageContentCard({super.key, required this.contentBag, this.mode});
 
   final ContentBag contentBag;
+  final int? mode;
 
   @override
   Widget build(BuildContext context) {
+    if (mode == null) {
+      mode == DARK;
+    }
     return Card(
       elevation: 8,
       child: SizedBox(
         height: contentBag.height,
-        child: Row(
+        child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            contentBag.selected
-                ? Checkbox(
-                    value: contentBag.selected,
-                    activeColor: Colors.green,
-                    onChanged: (selected) {})
-                : gapW16,
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
+                contentBag.selected
+                    ? Checkbox(
+                        value: contentBag.selected,
+                        activeColor: Colors.green,
+                        onChanged: (selected) {})
+                    : gapW16,
                 Text(
                   'Page',
                   style: myTextStyleTiny(context),
@@ -369,6 +423,11 @@ class ExamPageContentCard extends StatelessWidget {
                 ),
               ],
             ),
+            gapH8,
+            contentBag.examPageContent.pageImageUrl == null
+                ? gapW4
+                : Icon(Icons.camera_alt,
+                    size: 18, color: Theme.of(context).primaryColor)
           ],
         ),
       ),

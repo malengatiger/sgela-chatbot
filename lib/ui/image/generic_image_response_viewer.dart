@@ -4,7 +4,7 @@ import 'package:edu_chatbot/util/functions.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_tex/flutter_tex.dart';
 
-import '../chat/markdown_widget.dart';
+import '../chat/sgela_markdown_widget.dart';
 
 class GenericImageResponseViewer extends StatefulWidget {
   const GenericImageResponseViewer(
@@ -72,7 +72,7 @@ class _GenericImageResponseViewerState
                           ),
                         )
                       : Expanded(
-                          child: MarkdownWidget(text: widget.text),
+                          child: SgelaMarkdownWidget(text: widget.text),
                         ),
                 ],
               ),
