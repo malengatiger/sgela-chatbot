@@ -28,18 +28,18 @@ import '../../util/dark_light_control.dart';
 import '../../util/functions.dart';
 import '../exam/exam_link_details.dart';
 
-class OpenAIChatWidget extends StatefulWidget {
-  const OpenAIChatWidget(
+class OpenAIImageChatWidget extends StatefulWidget {
+  const OpenAIImageChatWidget(
       {super.key, required this.examLink, required this.examPageContents});
 
   final ExamLink examLink;
   final List<ExamPageContent> examPageContents;
 
   @override
-  OpenAIChatWidgetState createState() => OpenAIChatWidgetState();
+  OpenAIImageChatWidgetState createState() => OpenAIImageChatWidgetState();
 }
 
-class OpenAIChatWidgetState extends State<OpenAIChatWidget>
+class OpenAIImageChatWidgetState extends State<OpenAIImageChatWidget>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
 
@@ -47,7 +47,7 @@ class OpenAIChatWidgetState extends State<OpenAIChatWidget>
   Organization? organization;
   Prefs prefs = GetIt.instance<Prefs>();
   Sponsoree? sponsoree;
-  static const mm = '🔵🔵🔵🔵 OpenAIChatWidget  🔵🔵';
+  static const mm = '🔵🔵🔵🔵 OpenAIImageChatWidget  🔵🔵';
   String? aiResponseText, fingerPrint;
   int? totalTokens, promptTokens, completionTokens;
   int imageCount = 0;
@@ -67,8 +67,6 @@ class OpenAIChatWidgetState extends State<OpenAIChatWidget>
   _controlTraffic() {
     if (_getImageCount() > 0) {
       _startOpenAIChatWithImages();
-    } else {
-      _startOpenAIChat();
     }
   }
 

@@ -165,13 +165,7 @@ class SubjectSearchState extends State<SubjectSearch> {
         widget: ExamsDocumentList(
           subject: subject,
           repository: repository,
-          localDataService: localDataService,
-          chatService: chatService,
-          youTubeService: youTubeService,
-          colorWatcher: colorWatcher,
-          gemini: gemini,
-          prefs: prefs,
-          firestoreService: firestoreService,
+
         ));
   }
 

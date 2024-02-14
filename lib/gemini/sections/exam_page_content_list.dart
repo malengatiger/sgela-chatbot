@@ -5,16 +5,17 @@ import 'package:edu_chatbot/data/branding.dart';
 import 'package:edu_chatbot/data/exam_link.dart';
 import 'package:edu_chatbot/services/firestore_service.dart';
 import 'package:edu_chatbot/services/local_data_service.dart';
+import 'package:edu_chatbot/ui/chat/ai_model_selector.dart';
 import 'package:edu_chatbot/ui/chat/gemini_chat_widget.dart';
+import 'package:edu_chatbot/ui/chat/gemini_text_chat_widget.dart';
 import 'package:edu_chatbot/ui/misc/busy_indicator.dart';
 import 'package:edu_chatbot/ui/misc/sponsored_by.dart';
-import 'package:edu_chatbot/ui/open_ai/open_ai_chat_widget.dart';
+import 'package:edu_chatbot/ui/open_ai/open_ai_image_chat_widget.dart';
 import 'package:edu_chatbot/ui/organization/org_logo_widget.dart';
 import 'package:edu_chatbot/util/dark_light_control.dart';
 import 'package:edu_chatbot/util/navigation_util.dart';
 import 'package:edu_chatbot/util/prefs.dart';
 import 'package:flutter/material.dart';
-import 'package:fluttertoast/fluttertoast.dart';
 import 'package:get_it/get_it.dart';
 import 'package:responsive_builder/responsive_builder.dart';
 
@@ -99,18 +100,34 @@ class ExamPageContentSelectorState extends State<ExamPageContentSelector> {
     selectedExamPageContents
         .sort((a, b) => a.pageIndex!.compareTo(b.pageIndex!));
 
-    if (_getImageCount() > 0) {
-      NavigationUtils.navigateToPage(
-          context: context,
-          widget: GeminiChatWidget(
-              examLink: widget.examLink,
-              examPageContents: selectedExamPageContents));
+    if (widget.aiModelName == modelGeminiAI) {
+      if (_getImageCount() > 0) {
+        NavigationUtils.navigateToPage(
+            context: context,
+            widget: GeminiImageChatWidget(
+                examLink: widget.examLink,
+                examPageContents: selectedExamPageContents));
+      } else {
+        NavigationUtils.navigateToPage(
+            context: context,
+            widget: GeminiTextChatWidget(
+                examLink: widget.examLink,
+                examPageContents: selectedExamPageContents));
+      }
     } else {
-      NavigationUtils.navigateToPage(
-          context: context,
-          widget: OpenAIChatWidget(
-              examLink: widget.examLink,
-              examPageContents: selectedExamPageContents));
+      if (_getImageCount() > 0) {
+        NavigationUtils.navigateToPage(
+            context: context,
+            widget: OpenAIImageChatWidget(
+                examLink: widget.examLink,
+                examPageContents: selectedExamPageContents));
+      } else {
+        NavigationUtils.navigateToPage(
+            context: context,
+            widget: OpenAIImageChatWidget(
+                examLink: widget.examLink,
+                examPageContents: selectedExamPageContents));
+      }
     }
   }
 
@@ -184,7 +201,7 @@ class ExamPageContentSelectorState extends State<ExamPageContentSelector> {
     return imageCount;
   }
 
-  String? modelName;
+  String? modelName = 'Gemini Pro';
 
   String replaceKeywordsWithBlanks(String text) {
     String modifiedText = text
@@ -203,7 +220,8 @@ class ExamPageContentSelectorState extends State<ExamPageContentSelector> {
         title: branding == null
             ? const Text('SgelaAI')
             : OrgLogoWidget(
-                branding: branding,height: 24,
+                branding: branding,
+                height: 24,
               ),
         actions: [
           IconButton(
@@ -216,26 +234,29 @@ class ExamPageContentSelectorState extends State<ExamPageContentSelector> {
         ],
         bottom: PreferredSize(
             preferredSize: Size.fromHeight(_showHelp ? 120.0 : 48.0),
-            child:  Column(
+            child: Column(
               children: [
-                _showHelp?  Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: GestureDetector(
-                    onTap: (){
-                      setState(() {
-                        _showHelp = false;
-                      });
-                    },
-                    child: const Card(
-                      elevation: 8,
-                      child: Padding(
-                        padding: EdgeInsets.all(12.0),
-                        child: Text('Tap once to select, double tap to de-select, '
-                            'long press to view contents '),
-                      ),
-                    ),
-                  ),
-                ): gapH4,
+                _showHelp
+                    ? Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: GestureDetector(
+                          onTap: () {
+                            setState(() {
+                              _showHelp = false;
+                            });
+                          },
+                          child: const Card(
+                            elevation: 8,
+                            child: Padding(
+                              padding: EdgeInsets.all(12.0),
+                              child: Text(
+                                  'Tap once to select, double tap to de-select, '
+                                  'long press to view contents '),
+                            ),
+                          ),
+                        ),
+                      )
+                    : gapH4,
                 gapH8,
               ],
             )),
@@ -342,8 +363,11 @@ class ExamPageContentSelectorState extends State<ExamPageContentSelector> {
               ),
               const Positioned(
                   bottom: 8,
-                  left: 48, right: 48,
-                  child: SponsoredBy(logoHeight: 24,)),
+                  left: 48,
+                  right: 48,
+                  child: SponsoredBy(
+                    logoHeight: 24,
+                  )),
             ],
           );
         },
@@ -362,13 +386,13 @@ class ExamPageContentSelectorState extends State<ExamPageContentSelector> {
     if (_getImageCount() > 0) {
       NavigationUtils.navigateToPage(
           context: context,
-          widget: GeminiChatWidget(
+          widget: GeminiImageChatWidget(
               examLink: widget.examLink,
               examPageContents: [bag.examPageContent]));
     } else {
       NavigationUtils.navigateToPage(
           context: context,
-          widget: OpenAIChatWidget(
+          widget: OpenAIImageChatWidget(
               examLink: widget.examLink,
               examPageContents: [bag.examPageContent]));
     }

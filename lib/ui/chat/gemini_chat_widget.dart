@@ -1,3 +1,4 @@
+import 'dart:developer';
 import 'dart:io';
 import 'dart:typed_data';
 
@@ -11,6 +12,7 @@ import 'package:edu_chatbot/data/sponsoree_activity.dart';
 import 'package:edu_chatbot/services/conversion_service.dart';
 import 'package:edu_chatbot/services/firestore_service.dart';
 import 'package:edu_chatbot/ui/chat/ai_rating_widget.dart';
+import 'package:edu_chatbot/ui/chat/gemini_text_chat_widget.dart';
 import 'package:edu_chatbot/ui/chat/sgela_markdown_widget.dart';
 import 'package:edu_chatbot/ui/chat/sharing_widget.dart';
 import 'package:edu_chatbot/ui/misc/busy_indicator.dart';
@@ -30,18 +32,18 @@ import '../../util/dark_light_control.dart';
 import '../../util/functions.dart';
 import '../exam/exam_link_details.dart';
 
-class GeminiChatWidget extends StatefulWidget {
-  const GeminiChatWidget(
+class GeminiImageChatWidget extends StatefulWidget {
+  const GeminiImageChatWidget(
       {super.key, required this.examLink, required this.examPageContents});
 
   final ExamLink examLink;
   final List<ExamPageContent> examPageContents;
 
   @override
-  GeminiChatWidgetState createState() => GeminiChatWidgetState();
+  GeminiImageChatWidgetState createState() => GeminiImageChatWidgetState();
 }
 
-class GeminiChatWidgetState extends State<GeminiChatWidget>
+class GeminiImageChatWidgetState extends State<GeminiImageChatWidget>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
 
@@ -71,7 +73,7 @@ class GeminiChatWidgetState extends State<GeminiChatWidget>
     if (_getImageCount() > 0) {
       _startGeminiImageTextChat();
     } else {
-      _startGeminiChat();
+      _navigateToGeminiTextChatWidget();
     }
   }
 
@@ -97,7 +99,7 @@ class GeminiChatWidgetState extends State<GeminiChatWidget>
 
   _startGeminiImageTextChat() async {
     const mx = '😎😎😎 ';
-    pp('\n\n$mm ...$mx  _startImageTextChat .... 🍎 with ${widget.examPageContents.length} pages');
+    pp('\n\n$mm ...$mx  _startGeminiImageTextChat .... 🍎 with ${widget.examPageContents.length} pages');
     setState(() {
       aiResponseText = null;
     });
@@ -110,20 +112,7 @@ class GeminiChatWidgetState extends State<GeminiChatWidget>
     totalTokens = 0;
     aiModel = 'Gemini Pro Vision';
     try {
-      var sb = StringBuffer();
-      sb.write(
-          'These are questions and problems from an ${widget.examLink.subject?.title!} examination paper.\n');
-      sb.write('Answer all the questions or solve all the problems.\n');
-      sb.write('Think step by step.\n');
-      sb.write('Explain your answers and solutions.\n');
-      sb.write(
-          'Separate the question responses using spacing, paragraphs or headings.\n');
-      sb.write(
-          'Return your response in Markdown or LaTex format where appropriate.\n');
-      sb.write(
-          'If mathematical or other science equations are in your response, return the response in LaText format only.\n\n');
-      sb.write(
-          'Return response in either Markdown or LaTex. Do not mix the 2 formats in one response');
+      StringBuffer sb = _buildPromptContext();
       for (var page in widget.examPageContents) {
         if (page.pageImageUrl != null) {
           try {
@@ -187,9 +176,34 @@ class GeminiChatWidgetState extends State<GeminiChatWidget>
     // setState(() {});
   }
 
-  _startGeminiChat() async {
-    pp('\n\n$mm ... 🥦🥦🥦 _startGeminiChat: .... 🍎 with ${widget.examPageContents.length} pages');
+  StringBuffer _buildPromptContext() {
+    var sb = StringBuffer();
+    sb.write(
+        'These are questions and problems from an ${widget.examLink.subject?.title!} examination paper.\n');
+    sb.write('Answer all the questions or solve all the problems.\n');
+    sb.write('Think step by step.\n');
+    sb.write('Explain your answers and solutions.\n');
+    sb.write(
+        'Separate the question responses using spacing, paragraphs or headings.\n');
+    sb.write(
+        'Return your response in Markdown or LaTex format where appropriate.\n');
+    sb.write(
+        'If mathematical or other science equations are in your response, return the response in LaText format only.\n\n');
+    sb.write(
+        'Return response in either Markdown or LaTex. Do not mix the 2 formats in one response');
+    return sb;
   }
+
+  _navigateToGeminiTextChatWidget() async {
+    pp('\n\n$mm ... 🥦🥦🥦 _navigateToGeminiTextChatWidget: .... '
+        '🍎 with ${widget.examPageContents.length} pages');
+    await Future.delayed(const Duration(milliseconds: 100));
+    if (mounted) {
+      NavigationUtils.navigateToPage(context: context, widget: GeminiTextChatWidget(
+             examLink: widget.examLink, examPageContents: widget.examPageContents));
+    }
+  }
+
 
   void _resetCounters() {
     promptTokens = 0;

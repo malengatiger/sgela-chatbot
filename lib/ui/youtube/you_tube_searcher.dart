@@ -20,15 +20,10 @@ import 'package:url_launcher/url_launcher.dart';
 class YouTubeSearcher extends StatefulWidget {
   const YouTubeSearcher(
       {super.key,
-      required this.youTubeService,
-      required this.subject,
-      required this.prefs,
-      required this.colorWatcher});
+      required this.subject,});
 
-  final YouTubeService youTubeService;
   final Subject subject;
-  final Prefs prefs;
-  final ColorWatcher colorWatcher;
+
 
   @override
   YouTubeSearcherState createState() => YouTubeSearcherState();
@@ -40,6 +35,9 @@ class YouTubeSearcherState extends State<YouTubeSearcher> {
   static const mm = '🍎🍎🍎🍎 YouTubeSearcher 🍐';
   bool busy = false;
 
+  YouTubeService youTubeService  = GetIt.instance<YouTubeService>();
+  ColorWatcher colorWatcher  = GetIt.instance<ColorWatcher>();
+  Prefs prefs  = GetIt.instance<Prefs>();
   @override
   void initState() {
     super.initState();
@@ -52,7 +50,7 @@ class YouTubeSearcherState extends State<YouTubeSearcher> {
       busy = true;
     });
     try {
-      videos = await widget.youTubeService.searchByTag(
+      videos = await youTubeService.searchByTag(
           subjectId: widget.subject.id!,
           maxResults: ChatbotEnvironment.maxResults,
           tagType: 1);
@@ -74,7 +72,7 @@ class YouTubeSearcherState extends State<YouTubeSearcher> {
       busy = true;
     });
     try {
-      videos = await widget.youTubeService.searchByText(
+      videos = await youTubeService.searchByText(
           subjectId: widget.subject.id!,
           maxResults: ChatbotEnvironment.maxResults,
           query: query);
@@ -113,7 +111,7 @@ class YouTubeSearcherState extends State<YouTubeSearcher> {
     NavigationUtils.navigateToPage(
         context: context,
         widget: ColorGallery(
-            prefs: widget.prefs, colorWatcher: widget.colorWatcher));
+            prefs: prefs, colorWatcher: colorWatcher));
   }
 
   @override

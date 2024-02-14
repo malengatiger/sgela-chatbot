@@ -7,13 +7,15 @@ import 'package:edu_chatbot/repositories/repository.dart';
 import 'package:edu_chatbot/services/firestore_service.dart';
 import 'package:edu_chatbot/services/gemini_chat_service.dart';
 import 'package:edu_chatbot/services/you_tube_service.dart';
+import 'package:edu_chatbot/ui/chat/gemini_text_chat_widget.dart';
 import 'package:edu_chatbot/ui/misc/busy_indicator.dart';
 import 'package:edu_chatbot/ui/misc/sponsored_by.dart';
-import 'package:edu_chatbot/ui/open_ai/openai_multi_turn_chat_stream.dart';
+import 'package:edu_chatbot/ui/open_ai/open_ai_text_chat_widget.dart';
 import 'package:edu_chatbot/ui/youtube/you_tube_searcher.dart';
 import 'package:edu_chatbot/util/dark_light_control.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gemini/flutter_gemini.dart';
+import 'package:get_it/get_it.dart';
 
 import '../../data/exam_document.dart';
 import '../../services/local_data_service.dart';
@@ -25,31 +27,13 @@ import '../misc/color_gallery.dart';
 
 class ExamLinkListWidget extends StatefulWidget {
   final Subject subject;
-  final Repository repository;
-  final LocalDataService localDataService;
-  final GeminiChatService chatService;
-  final YouTubeService youTubeService;
-
-  // final DownloaderService downloaderService;
   final ExamDocument examDocument;
-  final Prefs prefs;
-  final ColorWatcher colorWatcher;
-  final Gemini gemini;
-  final FirestoreService firestoreService;
+
 
   const ExamLinkListWidget({
     super.key,
     required this.subject,
-    required this.repository,
-    required this.localDataService,
-    required this.chatService,
-    required this.youTubeService,
-    // required this.downloaderService,
     required this.examDocument,
-    required this.prefs,
-    required this.colorWatcher,
-    required this.gemini,
-    required this.firestoreService,
   });
 
   @override
@@ -61,6 +45,16 @@ class ExamLinkListWidgetState extends State<ExamLinkListWidget> {
   List<ExamLink> filteredExamLinks = [];
   static const mm = '🍎🍎🍎ExamLinkListWidget 🍎';
   bool busy = false;
+  final Repository repository = GetIt.instance<Repository>();
+  final LocalDataService localDataService = GetIt.instance<LocalDataService>();
+  final GeminiChatService chatService = GetIt.instance<GeminiChatService>();
+  final YouTubeService youTubeService = GetIt.instance<YouTubeService>();
+
+  // final DownloaderService downloaderService;
+  final Prefs prefs = GetIt.instance<Prefs>();
+  final ColorWatcher colorWatcher = GetIt.instance<ColorWatcher>();
+  final Gemini gemini = GetIt.instance<Gemini>();
+  final FirestoreService firestoreService = GetIt.instance<FirestoreService>();
 
   @override
   void initState() {
@@ -74,7 +68,7 @@ class ExamLinkListWidgetState extends State<ExamLinkListWidget> {
       setState(() {
         busy = true;
       });
-      examLinks = await widget.firestoreService
+      examLinks = await firestoreService
           .getExamLinksByDocumentAndSubject(
               subjectId: widget.subject.id!,
               documentId: widget.examDocument.id!);
@@ -108,7 +102,7 @@ class ExamLinkListWidgetState extends State<ExamLinkListWidget> {
     NavigationUtils.navigateToPage(
         context: context,
         widget: ColorGallery(
-            prefs: widget.prefs, colorWatcher: widget.colorWatcher));
+            prefs: prefs, colorWatcher: colorWatcher));
   }
 
   @override
@@ -269,8 +263,7 @@ class ExamLinkListWidgetState extends State<ExamLinkListWidget> {
 
     NavigationUtils.navigateToPage(
         context: context,
-        widget: GeminiMultiTurnStreamChat(
-          subject: widget.subject,
+        widget: const GeminiTextChatWidget(
         ));
   }
 
@@ -279,8 +272,7 @@ class ExamLinkListWidgetState extends State<ExamLinkListWidget> {
 
     NavigationUtils.navigateToPage(
         context: context,
-        widget: OpenAIMultiTurnStreamChat(
-          subject: widget.subject,
+        widget: const OpenAITextChatWidget(
         ));
   }
 
@@ -296,17 +288,14 @@ class ExamLinkListWidgetState extends State<ExamLinkListWidget> {
         ));
   }
 
-  String? aiModelName;
+  String? aiModelName = modelGeminiAI;
 
   void _navigateToYouTube() {
     pp('$mm _navigateToYouTube ... widget.subject.id: ${widget.subject.id}');
     NavigationUtils.navigateToPage(
         context: context,
         widget: YouTubeSearcher(
-          youTubeService: widget.youTubeService,
           subject: widget.subject,
-          prefs: widget.prefs,
-          colorWatcher: widget.colorWatcher,
         ));
   }
 }

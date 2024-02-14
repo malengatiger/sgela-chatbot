@@ -15,42 +15,42 @@ class ConversionService {
   ConversionService(this.dioUtil);
 
 //convertToHtmlFromMarkdown
-  Future convertToHtmlFromMarkdown(String markdownString, String title) async {
+  Future convertToHtmlFromMarkdown(String markdownString, String title, String fileName) async {
     pp('$mm ..... convertToPdfFromMarkdown ....');
 
     String url =
         '${urlPrefix}converter/convertToHtmlFromMarkdown?markdownString=$markdownString&title=$title';
-    File file = await downloadFile(url, 'md');
+    File file = await downloadFile(url, 'md', fileName);
     pp('$mm ... convertToHtmlFromMarkdown: ${await file.length()} bytes');
     return file;
   }
 
-  Future convertToPdfFromMarkdown(String markdownString, String title) async {
+  Future convertToPdfFromMarkdown(String markdownString, String title, String fileName) async {
     pp('$mm ..... convertToPdfFromMarkdown ....');
 
     String url =
         '${urlPrefix}converter/convertToPdfFromMarkdown?markdownString=$markdownString&title=$title';
-    File file = await downloadFile(url,'pdf');
+    File file = await downloadFile(url,'pdf', fileName);
     pp('$mm ... convertToPdfFromMarkdown: ${await file.length()} bytes');
     return file;
   }
 
-  Future convertToHtmlFromLaTeX(String laTexString, String title) async {
+  Future convertToHtmlFromLaTeX(String laTexString, String title, String fileName) async {
     pp('$mm ..... convertToHtmlFromLaTeX ....');
 
     String url =
         '${urlPrefix}converter/convertToHtmlFromLaTeX?laTexString=$laTexString&title=$title';
-    File file = await downloadFile(url, 'html');
+    File file = await downloadFile(url, 'html', fileName);
     pp('$mm ... convertToHtmlFromLaTeX: ${await file.length()} bytes');
     return file;
   }
 
-  Future convertToPdfFromLaTeX(String laTexString, String title) async {
+  Future convertToPdfFromLaTeX(String laTexString, String title, String fileName) async {
     pp('$mm ..... convertToPdfFromLaTeX ....');
 
     String url =
         '${urlPrefix}converter/convertToPdfFromLaTeX?laTexString=$laTexString&title=$title';
-    File file = await downloadFile(url,'pdf');
+    File file = await downloadFile(url,'pdf', fileName);
     pp('$mm ... convertToPdfFromLaTeX: ${await file.length()} bytes');
     return file;
   }
@@ -83,7 +83,7 @@ class ConversionService {
     }
   }
 
-  static Future<File> downloadFile(String url, String extension) async {
+  static Future<File> downloadFile(String url, String extension, String fileName) async {
     pp('$mm .... downloading file .........................\n$url ');
     var start = DateTime.now();
     try {
@@ -91,7 +91,7 @@ class ConversionService {
       var bytes = response.bodyBytes;
       Directory tempDir = Directory.systemTemp;
       var mFile =
-          File('${tempDir.path}/someFile${start.millisecondsSinceEpoch}.$extension');
+          File('${tempDir.path}/$fileName${start.millisecondsSinceEpoch}.$extension');
       mFile.writeAsBytesSync(bytes);
       var end = DateTime.now();
       pp('$mm file: ${(await mFile.length()) / 1024}K bytes '

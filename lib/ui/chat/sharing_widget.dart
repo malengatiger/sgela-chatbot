@@ -6,15 +6,17 @@ import 'package:edu_chatbot/data/country.dart';
 import 'package:edu_chatbot/data/exam_link.dart';
 import 'package:edu_chatbot/data/organization.dart';
 import 'package:edu_chatbot/services/conversion_service.dart';
+import 'package:edu_chatbot/ui/misc/sponsored_by.dart';
 import 'package:edu_chatbot/ui/organization/org_logo_widget.dart';
 import 'package:edu_chatbot/util/prefs.dart';
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
+import 'package:mailer/mailer.dart';
 import 'package:responsive_builder/responsive_builder.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:webview_flutter/webview_flutter.dart';
-
+import 'package:badges/badges.dart' as bd;
 import '../../data/exam_page_content.dart';
 import '../../util/Converter.dart';
 import '../../util/functions.dart';
@@ -67,14 +69,14 @@ class SharingWidgetState extends State<SharingWidget>
       branding = prefs.getBrand();
       if ((isValidLaTeXString(widget.aiResponseText))) {
         responseFileHTML = await conversionService.convertToHtmlFromLaTeX(
-            widget.aiResponseText, title!);
+            widget.aiResponseText, title!,widget.examLink.title!);
         responseFilePDF = await conversionService.convertToPdfFromLaTeX(
-            widget.aiResponseText, title!);
+            widget.aiResponseText, title!,widget.examLink.title!);
       } else {
         responseFileHTML = await conversionService.convertToHtmlFromMarkdown(
-            widget.aiResponseText, title!);
+            widget.aiResponseText, title!,widget.examLink.title!);
         responseFilePDF = await conversionService.convertToPdfFromMarkdown(
-            widget.aiResponseText, title!);
+            widget.aiResponseText, title!,widget.examLink.title!);
       }
       if (responseFileHTML != null) {
         pp('$mm ... responseFileHTML: ${responseFileHTML!.path} - '
@@ -186,7 +188,14 @@ class SharingWidgetState extends State<SharingWidget>
       _busy = false;
     });
   }
+_sendEmailToSelf() {
+    var msg = Message();
+    msg.from(const Address('malengadev@gmail.com'));
+    msg.recipients = ([const Address('malengadev@gmail.com')]);
+    msg.subject = 'Testing 123';
 
+
+}
   @override
   void dispose() {
     _controller.dispose();
@@ -223,7 +232,7 @@ class SharingWidgetState extends State<SharingWidget>
         child: Scaffold(
             appBar: AppBar(
               title: OrgLogoWidget(
-                branding: branding,
+                branding: branding, height: 20,
               ),
               actions: [
                 IconButton(onPressed: (){
@@ -235,21 +244,37 @@ class SharingWidgetState extends State<SharingWidget>
               mobile: (_) {
                 return Stack(
                   children: [
-                    PageView.builder(
-                        itemCount: pageWidgets.length,
-                        itemBuilder: (_,index){
-                      return Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Card(
-                          elevation: 8,
-                          color: Theme.of(context).primaryColor,
-                          child: Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: pageWidgets.elementAt(index),
+                    Column(
+                      children: [
+                        Text(title == null? 'SgelaAI Response Sharing':'$title', style: myTextStyleSmall(context),),
+                        Expanded(
+                          child: bd.Badge(
+                            badgeContent: Text('${pageWidgets.length}'),
+                            position: bd.BadgePosition.topEnd(top: 4, end: 12),
+                            badgeStyle: const bd.BadgeStyle(
+                              padding: EdgeInsets.all(12),
+                              badgeColor: Colors.blue,
+                            ),
+                            child: PageView.builder(
+                                itemCount: pageWidgets.length,
+                                itemBuilder: (_,index){
+                              return Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: Card(
+                                  elevation: 8,
+                                  // color: Theme.of(context).primaryColor,
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(8.0),
+                                    child: pageWidgets.elementAt(index),
+                                  ),
+                                ),
+                              );
+                            }),
                           ),
                         ),
-                      );
-                    }),
+                        const SponsoredBy(logoHeight: 20,),
+                      ],
+                    ),
                   ],
                 );
               },

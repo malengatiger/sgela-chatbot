@@ -2,7 +2,6 @@ import 'package:dart_openai/dart_openai.dart';
 import 'package:edu_chatbot/data/branding.dart';
 import 'package:edu_chatbot/data/exam_link.dart';
 import 'package:edu_chatbot/data/exam_page_content.dart';
-import 'package:edu_chatbot/data/subject.dart';
 import 'package:edu_chatbot/gemini/widgets/chat_input_box.dart';
 import 'package:edu_chatbot/services/firestore_service.dart';
 import 'package:edu_chatbot/services/local_data_service.dart';
@@ -19,18 +18,18 @@ import '../../data/organization.dart';
 import '../../data/sponsoree.dart';
 import '../../util/functions.dart';
 
-class OpenAIMultiTurnStreamChat extends StatefulWidget {
-  const OpenAIMultiTurnStreamChat({super.key, this.examLink, this.subject});
+class OpenAITextChatWidget extends StatefulWidget {
+  const OpenAITextChatWidget({super.key, this.examLink, this.examPageContents});
 
   final ExamLink? examLink;
-  final Subject? subject;
+  final List<ExamPageContent>? examPageContents;
 
   @override
-  State<OpenAIMultiTurnStreamChat> createState() =>
-      OpenAIMultiTurnStreamChatState();
+  State<OpenAITextChatWidget> createState() =>
+      OpenAITextChatWidgetState();
 }
 
-class OpenAIMultiTurnStreamChatState extends State<OpenAIMultiTurnStreamChat> {
+class OpenAITextChatWidgetState extends State<OpenAITextChatWidget> {
   static const mm = '🍐🍐🍐🍐 OpenApiMultiTurnStreamChat 🍐';
 
   final textEditController = TextEditingController();
@@ -83,11 +82,12 @@ class OpenAIMultiTurnStreamChatState extends State<OpenAIMultiTurnStreamChat> {
       sponsoree = prefs.getSponsoree();
       organization = prefs.getOrganization();
       branding = prefs.getBrand();
-      _startOpenAITextChat();
+
       List<OpenAIModelModel> models = await OpenAI.instance.model.list();
       for (var model in models) {
         pp('$mm OpenAI model: ${model.id} 🍎🍎ownedBy: ${model.ownedBy}');
       }
+      _startOpenAITextChat();
     } catch (e) {
       pp(e);
       if (mounted) {
@@ -182,9 +182,9 @@ class OpenAIMultiTurnStreamChatState extends State<OpenAIMultiTurnStreamChat> {
 
   OpenAIChatCompletionChoiceMessageModel _buildOpenAIUserMessage() {
     OpenAIChatCompletionChoiceMessageContentItemModel? subjectModel;
-    if (widget.subject != null) {
+    if (widget.examLink!.subject != null) {
       subjectModel = OpenAIChatCompletionChoiceMessageContentItemModel.text(
-        "I would like to talk about ${widget.subject!.title} today",
+        "I would like to talk about ${widget.examLink!.subject!.title} today",
       );
     } else if (widget.examLink != null) {
       subjectModel = OpenAIChatCompletionChoiceMessageContentItemModel.text(
@@ -205,9 +205,9 @@ class OpenAIMultiTurnStreamChatState extends State<OpenAIMultiTurnStreamChat> {
 
   OpenAIChatCompletionChoiceMessageModel _buildOpenAISystemMessage() {
     OpenAIChatCompletionChoiceMessageContentItemModel? subjectModel;
-    if (widget.subject != null) {
+    if (widget.examLink!.subject != null) {
       subjectModel = OpenAIChatCompletionChoiceMessageContentItemModel.text(
-        "This session relates to this subject: ${widget.subject!.title}",
+        "This session relates to this subject: ${widget.examLink!.subject!.title}",
       );
     }
     if (widget.examLink != null) {

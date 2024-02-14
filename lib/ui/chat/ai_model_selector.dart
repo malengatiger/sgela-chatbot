@@ -9,9 +9,9 @@ class AiModelSelector extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final List<DropdownMenuItem<String>> items = [
-      const DropdownMenuItem(value: 'OpenAI', child: Text('OpenAI')),
-      const DropdownMenuItem(value: 'GeminiAI', child: Text('GeminiAI')),
-      const DropdownMenuItem(value: 'Anthropic', child: Text('Anthropic')),
+      const DropdownMenuItem(value: modelOpenAI, child: Text(modelOpenAI)),
+      const DropdownMenuItem(value: modelGeminiAI, child: Text(modelGeminiAI)),
+      const DropdownMenuItem(value: modelAnthropic, child: Text(modelAnthropic)),
 
     ];
     return DropdownButton(
@@ -20,7 +20,13 @@ class AiModelSelector extends StatelessWidget {
         onChanged: (c) {
           if (c != null) {
             onModelSelected(c);
+          } else {
+            onModelSelected(modelGeminiAI);
           }
         });
   }
 }
+
+const modelOpenAI  = 'OpenAI';
+const modelGeminiAI  = 'GeminiAI';
+const modelAnthropic  = 'Anthropic';

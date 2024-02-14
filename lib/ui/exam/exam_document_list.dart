@@ -1,21 +1,18 @@
 import 'package:edu_chatbot/data/exam_document.dart';
 import 'package:edu_chatbot/repositories/repository.dart';
 import 'package:edu_chatbot/services/firestore_service.dart';
-import 'package:edu_chatbot/services/local_data_service.dart';
-import 'package:edu_chatbot/services/you_tube_service.dart';
 import 'package:edu_chatbot/ui/misc/busy_indicator.dart';
 import 'package:edu_chatbot/ui/exam/exam_link_list_widget.dart';
 import 'package:edu_chatbot/ui/misc/sponsored_by.dart';
 import 'package:edu_chatbot/ui/youtube/you_tube_searcher.dart';
+import 'package:edu_chatbot/util/dark_light_control.dart';
 import 'package:edu_chatbot/util/navigation_util.dart';
+import 'package:edu_chatbot/util/prefs.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_gemini/flutter_gemini.dart';
+import 'package:get_it/get_it.dart';
 
 import '../../data/subject.dart';
-import '../../services/gemini_chat_service.dart';
-import '../../util/dark_light_control.dart';
 import '../../util/functions.dart';
-import '../../util/prefs.dart';
 import '../misc/color_gallery.dart';
 
 class ExamsDocumentList extends StatefulWidget {
@@ -23,32 +20,18 @@ class ExamsDocumentList extends StatefulWidget {
       {super.key,
       required this.repository,
       required this.subject,
-      required this.localDataService,
-      required this.chatService,
-      required this.youTubeService,
-      required this.prefs,
-      required this.colorWatcher,
-      required this.gemini,
-      required this.firestoreService});
+     });
 
   final Repository repository;
   final Subject subject;
-  final LocalDataService localDataService;
-  final GeminiChatService chatService;
-  final YouTubeService youTubeService;
 
-  // final DownloaderService downloaderService;
-  final Prefs prefs;
-  final ColorWatcher colorWatcher;
-  final Gemini gemini;
-  final FirestoreService firestoreService;
 
   @override
   ExamsDocumentListState createState() => ExamsDocumentListState();
 }
 
 class ExamsDocumentListState extends State<ExamsDocumentList> {
-  static const mm = '🔵🔵🔵🔵ExamsByDocument';
+  static const mm = '🔵🔵🔵🔵ExamsDocumentList';
 
   @override
   void initState() {
@@ -58,13 +41,17 @@ class ExamsDocumentListState extends State<ExamsDocumentList> {
 
   bool busy = false;
   List<ExamDocument> examDocs = [];
+FirestoreService firestoreService  = GetIt.instance<FirestoreService>();
+  Prefs prefs = GetIt.instance<Prefs>();
+  ColorWatcher colorWatcher = GetIt.instance<ColorWatcher>();
+
 
   _fetchExamDocuments() async {
     try {
       setState(() {
         busy = true;
       });
-      examDocs = await widget.firestoreService.getExamDocuments();
+      examDocs = await firestoreService.getExamDocuments();
       examDocs.sort((b, a) => a.title!.compareTo(b.title!));
     } catch (e) {
       pp(e);
@@ -83,14 +70,6 @@ class ExamsDocumentListState extends State<ExamsDocumentList> {
           context: context,
           widget: ExamLinkListWidget(
             subject: widget.subject,
-            repository: widget.repository,
-            localDataService: widget.localDataService,
-            chatService: widget.chatService,
-            youTubeService: widget.youTubeService,
-            gemini: widget.gemini,
-            prefs: widget.prefs,
-            colorWatcher: widget.colorWatcher,
-            firestoreService: widget.firestoreService,
             examDocument: examDocument,
           ));
     }
@@ -101,10 +80,7 @@ class ExamsDocumentListState extends State<ExamsDocumentList> {
     NavigationUtils.navigateToPage(
         context: context,
         widget: YouTubeSearcher(
-          youTubeService: widget.youTubeService,
           subject: widget.subject,
-          prefs: widget.prefs,
-          colorWatcher: widget.colorWatcher,
         ));
   }
 
@@ -112,7 +88,7 @@ class ExamsDocumentListState extends State<ExamsDocumentList> {
     NavigationUtils.navigateToPage(
         context: context,
         widget: ColorGallery(
-            prefs: widget.prefs, colorWatcher: widget.colorWatcher));
+            prefs: prefs, colorWatcher: colorWatcher));
   }
 
   @override
