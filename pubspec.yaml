@@ -21,7 +21,7 @@ dependencies:
   firebase_crashlytics: ^3.4.9
   firebase_ui_auth: ^1.12.1
   firebase_ui_oauth_google: ^1.2.17
-  cloud_firestore: ^4.15.0
+  cloud_firestore: ^4.15.4
   dio: ^5.4.0
   sqflite: ^2.3.0
   cached_network_image: ^3.3.1
@@ -85,6 +85,7 @@ dependencies:
   screenshot: ^2.1.0
   flutter_email_sender: ^6.0.2
   mailer: ^6.1.0
+  google_generative_ai: ^0.2.0
 
 
 

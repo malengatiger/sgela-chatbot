@@ -6,11 +6,13 @@ import 'package:edu_chatbot/data/exam_link.dart';
 import 'package:edu_chatbot/services/firestore_service.dart';
 import 'package:edu_chatbot/services/local_data_service.dart';
 import 'package:edu_chatbot/ui/chat/ai_model_selector.dart';
-import 'package:edu_chatbot/ui/chat/gemini_chat_widget.dart';
+import 'package:edu_chatbot/ui/chat/gemini_image_chat_widget.dart';
 import 'package:edu_chatbot/ui/chat/gemini_text_chat_widget.dart';
+import 'package:edu_chatbot/ui/exam/pdf_viewer.dart';
 import 'package:edu_chatbot/ui/misc/busy_indicator.dart';
 import 'package:edu_chatbot/ui/misc/sponsored_by.dart';
 import 'package:edu_chatbot/ui/open_ai/open_ai_image_chat_widget.dart';
+import 'package:edu_chatbot/ui/open_ai/open_ai_text_chat_widget.dart';
 import 'package:edu_chatbot/ui/organization/org_logo_widget.dart';
 import 'package:edu_chatbot/util/dark_light_control.dart';
 import 'package:edu_chatbot/util/navigation_util.dart';
@@ -212,8 +214,44 @@ class ExamPageContentSelectorState extends State<ExamPageContentSelector> {
 
   bool _showHelp = false;
 
+  void _navigateToChat(ContentBag bag) {
+    pp('$mm handle choice of LLM model - Gemini or OpenAI. '
+        '💜💜Current Model: ${widget.aiModelName} 💜💜');
+
+    if (widget.aiModelName == modelGeminiAI) {
+      if (_getImageCount() > 0) {
+        NavigationUtils.navigateToPage(
+            context: context,
+            widget: GeminiImageChatWidget(
+                examLink: widget.examLink,
+                examPageContents: [bag.examPageContent]));
+      } else {
+        NavigationUtils.navigateToPage(
+            context: context,
+            widget: GeminiTextChatWidget(
+                examLink: widget.examLink,
+                examPageContents: [bag.examPageContent]));
+      }
+    } else {
+      if (_getImageCount() > 0) {
+        NavigationUtils.navigateToPage(
+            context: context,
+            widget: OpenAIImageChatWidget(
+                examLink: widget.examLink,
+                examPageContents: [bag.examPageContent]));
+      } else {
+        NavigationUtils.navigateToPage(
+            context: context,
+            widget: OpenAITextChatWidget(
+                examLink: widget.examLink,
+                examPageContents: [bag.examPageContent]));
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    int mode = prefs.getMode();
     return SafeArea(
         child: Scaffold(
       appBar: AppBar(
@@ -230,7 +268,23 @@ class ExamPageContentSelectorState extends State<ExamPageContentSelector> {
                   _showHelp = !_showHelp;
                 });
               },
-              icon: const Icon(Icons.question_mark)),
+              icon: Icon(
+                Icons.question_mark,
+                color: mode == DARK
+                    ? Theme.of(context).primaryColor
+                    : Colors.black,
+              )),
+          IconButton(
+              onPressed: () {
+                NavigationUtils.navigateToPage(
+                    context: context,
+                    widget: PDFViewer(
+                        pdfUrl: widget.examLink.link!,
+                        examLink: widget.examLink));
+              },
+              icon: Icon(Icons.file_download, color: mode == DARK
+                  ? Theme.of(context).primaryColor
+                  : Colors.black,)),
         ],
         bottom: PreferredSize(
             preferredSize: Size.fromHeight(_showHelp ? 120.0 : 48.0),
@@ -245,13 +299,40 @@ class ExamPageContentSelectorState extends State<ExamPageContentSelector> {
                               _showHelp = false;
                             });
                           },
-                          child: const Card(
+                          child: Card(
                             elevation: 8,
                             child: Padding(
-                              padding: EdgeInsets.all(12.0),
-                              child: Text(
-                                  'Tap once to select, double tap to de-select, '
-                                  'long press to view contents '),
+                              padding: const EdgeInsets.all(8.0),
+                              child: SizedBox(
+                                height: 80,
+                                child: Column(
+                                  children: [
+                                    const Text(
+                                        'Tap once to select, double tap to de-select, '
+                                        'long press to view contents '),
+                                    gapH16,
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        Text(
+                                          'AI model in play:',
+                                          style: myTextStyleSmall(context),
+                                        ),
+                                        gapW8,
+                                        Text(
+                                          widget.aiModelName,
+                                          style: myTextStyle(
+                                              context,
+                                              Theme.of(context).primaryColor,
+                                              16,
+                                              FontWeight.w900),
+                                        )
+                                      ],
+                                    )
+                                  ],
+                                ),
+                              ),
                             ),
                           ),
                         ),
@@ -379,23 +460,6 @@ class ExamPageContentSelectorState extends State<ExamPageContentSelector> {
         },
       ),
     ));
-  }
-
-  void _navigateToChat(ContentBag bag) {
-    pp('$mm todo - handle choice of LLM model - Gemini or OpenAI or both?');
-    if (_getImageCount() > 0) {
-      NavigationUtils.navigateToPage(
-          context: context,
-          widget: GeminiImageChatWidget(
-              examLink: widget.examLink,
-              examPageContents: [bag.examPageContent]));
-    } else {
-      NavigationUtils.navigateToPage(
-          context: context,
-          widget: OpenAIImageChatWidget(
-              examLink: widget.examLink,
-              examPageContents: [bag.examPageContent]));
-    }
   }
 }
 

@@ -30,7 +30,6 @@ class GeminiMultiTurnStreamChat extends StatefulWidget {
 class GeminiMultiTurnStreamChatState extends State<GeminiMultiTurnStreamChat> {
   static const mm = '🍐🍐🍐🍐 GeminiMultiTurnStreamChat 🍐';
 
-  final controller = TextEditingController();
   bool _busy = false;
    Gemini gemini = GetIt.instance<Gemini>();
 
@@ -44,6 +43,7 @@ class GeminiMultiTurnStreamChatState extends State<GeminiMultiTurnStreamChat> {
   LocalDataService localDataService = GetIt.instance<LocalDataService>();
   FirestoreService firestoreService = GetIt.instance<FirestoreService>();
   Branding? branding;
+  final controller = TextEditingController(text: 'Hello');
 
   @override
   void initState() {
@@ -61,8 +61,8 @@ class GeminiMultiTurnStreamChatState extends State<GeminiMultiTurnStreamChat> {
       }
     }
     pp('$mm ... ${examPageContents.length} examPageContents found');
+    _handleInputText();
   }
-
   _showModels() async {
     pp('$mm ... show all the AI models available');
     await gemini
@@ -82,33 +82,14 @@ class GeminiMultiTurnStreamChatState extends State<GeminiMultiTurnStreamChat> {
         .catchError((e) => pp('$mm gemini.info: $e'));
   }
 
-  _getFormattingPrompt() {
-      var sb = StringBuffer();
-      sb.write('Format the following text and improve the look and readability of the output text ');
-      if (examPageContent != null) {
-        searchedText = '${sb.toString()}\n${examPageContent!.text!}';
-        List<Parts> partsContext = [];
-        if (turnNumber == 0) {
-          partsContext = getMultiTurnContext();
-        }
-        partsContext.add(Parts(text: searchedText));
-        chats.add(Content(role: 'user', parts: partsContext));
-        controller.clear();
-        loading = true;
-        _startAndListenToChatStream();
-      } else {
-        showToast(message: 'Say something, I did not quite hear you', context: context);
-      }
-  }
-
   void _handleInputText() {
     if (controller.text.isNotEmpty) {
-      searchedText = controller.text;
+      textPrompt = controller.text;
       List<Parts> partsContext = [];
       if (turnNumber == 0) {
         partsContext = getMultiTurnContext();
       }
-      partsContext.add(Parts(text: searchedText));
+      partsContext.add(Parts(text: textPrompt));
       chats.add(Content(role: 'user', parts: partsContext));
       controller.clear();
       loading = true;
@@ -118,12 +99,13 @@ class GeminiMultiTurnStreamChatState extends State<GeminiMultiTurnStreamChat> {
     }
   }
 
-  late String searchedText;
+  late String textPrompt;
+  int chatStartCount = 0;
 
   Future<void> _startAndListenToChatStream() async {
     pp('$mm _startAndListenToChatStream ......  ');
     var tokens = await gemini
-        .countTokens(searchedText)
+        .countTokens(textPrompt)
         .then((value) => pp('$mm value: $value'))
         .catchError((e) => pp('countTokens error : $e'));
     pp('$mm ai tokens: $tokens');
@@ -205,16 +187,18 @@ class GeminiMultiTurnStreamChatState extends State<GeminiMultiTurnStreamChat> {
       appBar: AppBar(
         title: Row(
           children: [
-            Text(
+            loading? gapW4: Text(
               'Chat with ',
               style: myTextStyleSmall(context),
             ),
             gapW8,
-            Text(
+            loading? gapW4: Text(
               'SgelaAI',
               style: myTextStyle(
                   context, Theme.of(context).primaryColor, 24, FontWeight.w900),
             ),
+            gapW16,
+            Text('(Gemini AI)', style: myTextStyleTiny(context),)
           ],
         ),
         actions: [
@@ -234,7 +218,6 @@ class GeminiMultiTurnStreamChatState extends State<GeminiMultiTurnStreamChat> {
           children: [
             Column(
               children: [
-                const SponsoredBy(),
 
                 Expanded(
                     child: chats.isNotEmpty
@@ -261,6 +244,8 @@ class GeminiMultiTurnStreamChatState extends State<GeminiMultiTurnStreamChat> {
                     _handleInputText();
                   },
                 ),
+                const SponsoredBy(height: 32,),
+
               ],
             )
           ],

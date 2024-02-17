@@ -1,6 +1,10 @@
 
+import 'package:edu_chatbot/data/branding.dart';
 import 'package:edu_chatbot/data/exam_link.dart';
+import 'package:edu_chatbot/ui/organization/org_logo_widget.dart';
+import 'package:edu_chatbot/util/prefs.dart';
 import 'package:flutter/material.dart';
+import 'package:get_it/get_it.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
 import '../../util/functions.dart';
@@ -18,10 +22,12 @@ class PDFViewer extends StatefulWidget {
 class PDFViewerState extends State<PDFViewer> {
 
   late WebViewController webController;
-
+  Prefs prefs = GetIt.instance<Prefs>();
+  Branding? branding;
   @override
   void initState() {
     super.initState();
+    _getBrand();
     webController = WebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
       ..setBackgroundColor(const Color(0x00000000))
@@ -42,18 +48,18 @@ class PDFViewerState extends State<PDFViewer> {
         ),
       )
       ..loadRequest(Uri.parse(widget.pdfUrl));
+      // ..clearCache();
   }
 
+  _getBrand() {
+    branding = prefs.getBrand();
+  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Column(
-          children: [
-            Text('${widget.examLink.title}', style: myTextStyleSmall(context)),
-            Text('${widget.examLink.subject!.title}', style: myTextStyleSmallPrimaryColor(context)),
-            Text('${widget.examLink.documentTitle}', style: myTextStyleSmall(context)),
-          ],
+        title: OrgLogoWidget(
+          branding: branding, height: 24,
         ),
       ),
       body: WebViewWidget(

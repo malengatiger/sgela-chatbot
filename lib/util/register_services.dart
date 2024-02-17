@@ -27,8 +27,9 @@ import 'dio_util.dart';
 import 'environment.dart';
 import 'functions.dart';
 
-Future<void> registerServices(FirebaseFirestore firebaseFirestore, Gemini gemini) async {
-  pp('🍎🍎🍎🍎🍎🍎 registerServices: initialize service singletons with GetIt .... 🍎🍎🍎');
+Future<void> registerServices(FirebaseFirestore firebaseFirestore, FirebaseAuth firebaseAuth, Gemini gemini) async {
+  const mm  = '🍎🍎🍎🍎🍎🍎RegisterServices';
+  pp('$mm registerServices: initialize service singletons with GetIt .... 🍎🍎🍎');
 
   var lds = LocalDataService();
   await lds.init();
@@ -38,6 +39,7 @@ Future<void> registerServices(FirebaseFirestore firebaseFirestore, Gemini gemini
   var prefs = Prefs(await SharedPreferences.getInstance());
   var dlc = DarkLightControl(prefs);
   var cWatcher = ColorWatcher(dlc, prefs);
+  
   GetIt.instance.registerLazySingleton<BusyStreamService>(
           () => BusyStreamService());
   GetIt.instance.registerLazySingleton<MathService>(() => MathService());
@@ -69,14 +71,21 @@ Future<void> registerServices(FirebaseFirestore firebaseFirestore, Gemini gemini
     options: DefaultFirebaseOptions.currentPlatform,
   );
   var firestoreService = FirestoreService(prefs,
-      cWatcher, firebaseFirestore, lds);
+      cWatcher, FirebaseFirestore.instanceFor(app: app), lds);
+  pp('$mm registerServices: GetIt has registered  🔵🔵FirestoreService: $firestoreService');
+  var country =await firestoreService.getLocalCountry();
+  if (country != null) {
+    pp('$mm local country: ${country!.toJson()}');
+  }
+
   GetIt.instance.registerLazySingleton<FirestoreService>(
           () => firestoreService);
 
   GetIt.instance.registerLazySingleton<AuthService>(() => AuthService(
-      FirebaseAuth.instance, prefs, firestoreService));
+      firebaseAuth, prefs, firestoreService));
   GetIt.instance.registerLazySingleton<SkunkService>(() => SkunkService(dioUtil,lds));
   GetIt.instance.registerLazySingleton<ConversionService>(() => ConversionService(dioUtil));
 
-  pp('🍎🍎🍎🍎🍎🍎 registerServices: GetIt has registered 17 services. 🍎 Cool!! 🍎🍎🍎');
+  pp('$mm : GetIt has registered 17 services.  🔵🔵 Cool!! 🍎🍎🍎');
+
 }

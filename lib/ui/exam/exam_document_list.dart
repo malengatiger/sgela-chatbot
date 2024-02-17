@@ -1,8 +1,10 @@
+import 'package:badges/badges.dart' as bd;
 import 'package:edu_chatbot/data/exam_document.dart';
 import 'package:edu_chatbot/repositories/repository.dart';
 import 'package:edu_chatbot/services/firestore_service.dart';
-import 'package:edu_chatbot/ui/misc/busy_indicator.dart';
+import 'package:edu_chatbot/ui/chat/generative_ai.dart';
 import 'package:edu_chatbot/ui/exam/exam_link_list_widget.dart';
+import 'package:edu_chatbot/ui/misc/busy_indicator.dart';
 import 'package:edu_chatbot/ui/misc/sponsored_by.dart';
 import 'package:edu_chatbot/ui/youtube/you_tube_searcher.dart';
 import 'package:edu_chatbot/util/dark_light_control.dart';
@@ -16,15 +18,14 @@ import '../../util/functions.dart';
 import '../misc/color_gallery.dart';
 
 class ExamsDocumentList extends StatefulWidget {
-  const ExamsDocumentList(
-      {super.key,
-      required this.repository,
-      required this.subject,
-     });
+  const ExamsDocumentList({
+    super.key,
+    required this.repository,
+    required this.subject,
+  });
 
   final Repository repository;
   final Subject subject;
-
 
   @override
   ExamsDocumentListState createState() => ExamsDocumentListState();
@@ -41,10 +42,9 @@ class ExamsDocumentListState extends State<ExamsDocumentList> {
 
   bool busy = false;
   List<ExamDocument> examDocs = [];
-FirestoreService firestoreService  = GetIt.instance<FirestoreService>();
+  FirestoreService firestoreService = GetIt.instance<FirestoreService>();
   Prefs prefs = GetIt.instance<Prefs>();
   ColorWatcher colorWatcher = GetIt.instance<ColorWatcher>();
-
 
   _fetchExamDocuments() async {
     try {
@@ -87,8 +87,12 @@ FirestoreService firestoreService  = GetIt.instance<FirestoreService>();
   void _navigateToColorGallery() {
     NavigationUtils.navigateToPage(
         context: context,
-        widget: ColorGallery(
-            prefs: prefs, colorWatcher: colorWatcher));
+        widget: ColorGallery(prefs: prefs, colorWatcher: colorWatcher));
+  }
+
+  void _navigateToGenerativeAI() {
+    NavigationUtils.navigateToPage(
+        context: context, widget: const GenerativeChatScreen());
   }
 
   @override
@@ -110,6 +114,12 @@ FirestoreService firestoreService  = GetIt.instance<FirestoreService>();
                       _navigateToColorGallery();
                     },
                     icon: Icon(Icons.color_lens_outlined,
+                        color: Theme.of(context).primaryColor)),
+                IconButton(
+                    onPressed: () {
+                      _navigateToGenerativeAI();
+                    },
+                    icon: Icon(Icons.message_outlined,
                         color: Theme.of(context).primaryColor))
               ],
             ),
@@ -125,34 +135,47 @@ FirestoreService firestoreService  = GetIt.instance<FirestoreService>();
                               Theme.of(context).primaryColor,
                               18,
                               FontWeight.w900)),
+                      gapH32,
                       Expanded(
                         child: busy
                             ? const BusyIndicator(
                                 caption:
                                     "Loading exam documents. Gimme a second ...",
                               )
-                            : ListView.builder(
-                                itemCount: examDocs.length,
-                                itemBuilder: (_, index) {
-                                  var examDocument = examDocs.elementAt(index);
-                                  return GestureDetector(
-                                    onTap: () {
-                                      _navigateToExamLinks(examDocument);
-                                    },
-                                    child: Card(
-                                      elevation: 8,
-                                      child: ListTile(
-                                        title: Text(
-                                          '${examDocument.title}',
-                                          style: myTextStyleSmall(context),
-                                        ),
-                                        leading: Icon(Icons.edit_note,
-                                            color:
-                                                Theme.of(context).primaryColor),
-                                      ),
-                                    ),
-                                  );
-                                }),
+                            : Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: bd.Badge(
+                                  badgeContent: Text('${examDocs.length}'),
+                                  badgeStyle: const bd.BadgeStyle(
+                                    badgeColor: Colors.purple,
+                                    padding: EdgeInsets.all(12),
+                                  ),
+                                  child: ListView.builder(
+                                      itemCount: examDocs.length,
+                                      itemBuilder: (_, index) {
+                                        var examDocument =
+                                            examDocs.elementAt(index);
+                                        return GestureDetector(
+                                          onTap: () {
+                                            _navigateToExamLinks(examDocument);
+                                          },
+                                          child: Card(
+                                            elevation: 8,
+                                            child: ListTile(
+                                              title: Text(
+                                                '${examDocument.title}',
+                                                style:
+                                                    myTextStyleSmall(context),
+                                              ),
+                                              leading: Icon(Icons.edit_note,
+                                                  color: Theme.of(context)
+                                                      .primaryColor),
+                                            ),
+                                          ),
+                                        );
+                                      }),
+                                ),
+                              ),
                       ),
                       const SponsoredBy(),
                     ],

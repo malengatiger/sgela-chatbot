@@ -640,7 +640,7 @@ PODS:
   - BoringSSL-GRPC/Implementation (0.0.24):
     - BoringSSL-GRPC/Interface (= 0.0.24)
   - BoringSSL-GRPC/Interface (0.0.24)
-  - cloud_firestore (4.15.0):
+  - cloud_firestore (4.15.4):
     - Firebase/Firestore (= 10.20.0)
     - firebase_core
     - Flutter
@@ -679,7 +679,7 @@ PODS:
     - Firebase/Auth (= 10.20.0)
     - firebase_core
     - Flutter
-  - firebase_core (2.25.0):
+  - firebase_core (2.25.4):
     - Firebase/CoreOnly (= 10.20.0)
     - Flutter
   - firebase_crashlytics (3.4.9):
@@ -1129,13 +1129,13 @@ SPEC CHECKSUMS:
   abseil: 926fb7a82dc6d2b8e1f2ed7f3a718bce691d1e46
   AppAuth: 3bb1d1cd9340bd09f5ed189fb00b1cc28e1e8570
   BoringSSL-GRPC: 3175b25143e648463a56daeaaa499c6cb86dad33
-  cloud_firestore: cd4875ae7408bc6ea2ac024d9540b72e19e3ca0c
+  cloud_firestore: ba576bee785a05ff952e4da7fa4e23c196917436
   desktop_webview_auth: d645139460ef203d50bd0cdb33356785dd939cce
   device_info_plus: c6fb39579d0f423935b0c9ce7ee2f44b71b9fce6
   Firebase: 10c8cb12fb7ad2ae0c09ffc86cd9c1ab392a0031
   firebase_analytics: c460665db61552acca5c3cf4898a1cc4053c90ee
   firebase_auth: 50e205714f2f30db4908f68c485e4cbf1c8c2701
-  firebase_core: 86455a528b3b0961c5f1324fa938bcfcd30cd7ac
+  firebase_core: a46c312d8bae4defa3d009b2aa7b5b413aeb394e
   firebase_crashlytics: 426aeb9b591a6c7a413d2d26b08008c85e66f00e
   firebase_dynamic_links: 4f9df4553e88da0cfc65427c8912dae7fcb87a44
   firebase_messaging: 4a89fe9957bfcef1827867ab8d58dae2fcf62846

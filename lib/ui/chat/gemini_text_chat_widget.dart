@@ -1,9 +1,13 @@
+import 'package:edu_chatbot/ui/organization/org_logo_widget.dart';
 import 'package:edu_chatbot/util/functions.dart';
+import 'package:edu_chatbot/util/prefs.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gemini/flutter_gemini.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:get_it/get_it.dart';
+import 'package:responsive_builder/responsive_builder.dart';
 
+import '../../data/branding.dart';
 import '../../data/exam_link.dart';
 import '../../data/exam_page_content.dart';
 import '../../gemini/widgets/chat_input_box.dart';
@@ -25,20 +29,22 @@ class _GeminiTextChatWidgetState extends State<GeminiTextChatWidget> {
   bool _loading = false;
   static const mm = '🍐🍐🍐🍐 GeminiTextChatWidget 🍎🍎';
   bool get loading => _loading;
-
+  Branding? branding;
   set loading(bool set) => setState(() => _loading = set);
   final List<Content> chats = [];
-
+Prefs prefs = GetIt.instance<Prefs>();
   @override
   void initState() {
     super.initState();
     _getChatContext();
   }
 
+
   List<Content> _getChatContext() {
     setState(() {
       _loading = true;
     });
+    branding = prefs.getBrand();
     chats.add(Content(parts: [
       Parts(
           text:
@@ -129,44 +135,60 @@ class _GeminiTextChatWidgetState extends State<GeminiTextChatWidget> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Expanded(
-            child: chats.isNotEmpty
-                ? Align(
-                    alignment: Alignment.bottomCenter,
-                    child: SingleChildScrollView(
-                      reverse: true,
-                      child: ListView.builder(
-                        itemBuilder: _buildChatItem,
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        itemCount: chats.length,
-                        reverse: false,
-                      ),
-                    ),
-                  )
-                : const Center(child: Text('Search something!'))),
-        if (loading) const CircularProgressIndicator(),
-        ChatInputBox(
-          controller: controller,
-          onSend: () {
-            if (controller.text.isNotEmpty) {
-              final searchedText = controller.text;
-              chats.add(
-                  Content(role: 'user', parts: [Parts(text: searchedText)]));
-              controller.clear();
-              loading = true;
+    return SafeArea(child: Scaffold(
+      appBar: AppBar(
+        title: OrgLogoWidget(branding: branding,),
+      ),
+      body: ScreenTypeLayout.builder(
+        mobile: (_){return  Stack(
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Column(
+                children: [
+                  Expanded(
+                      child: chats.isNotEmpty
+                          ? Align(
+                        alignment: Alignment.bottomCenter,
+                        child: SingleChildScrollView(
+                          reverse: true,
+                          child: ListView.builder(
+                            itemBuilder: _buildChatItem,
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            itemCount: chats.length,
+                            reverse: false,
+                          ),
+                        ),
+                      )
+                          : const Center(child: Text('Search something!'))),
+                  if (loading) const CircularProgressIndicator(),
+                  ChatInputBox(
+                    controller: controller,
+                    onSend: () {
+                      if (controller.text.isNotEmpty) {
+                        final searchedText = controller.text;
+                        chats.add(
+                            Content(role: 'user', parts: [Parts(text: searchedText)]));
+                        controller.clear();
+                        loading = true;
 
-              gemini.chat(chats).then((value) {
-                chats.add(Content(
-                    role: 'model', parts: [Parts(text: value?.output)]));
-                loading = false;
-              });
-            }
-          },
-        ),
-      ],
-    );
+                        gemini.chat(chats).then((value) {
+                          chats.add(Content(
+                              role: 'model', parts: [Parts(text: value?.output)]));
+                          loading = false;
+                        });
+                      }
+                    },
+                  ),
+                ],
+              ),
+            ),
+          ],
+        );},
+        tablet: (_){return const Stack();},
+        desktop: (_){return const Stack();},
+      ),
+    ));
   }
 }

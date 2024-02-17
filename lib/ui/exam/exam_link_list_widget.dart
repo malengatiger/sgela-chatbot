@@ -137,7 +137,7 @@ class ExamLinkListWidgetState extends State<ExamLinkListWidget> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Column(
+        title: const Column(
           children: [],
         ),
         actions: [
@@ -168,67 +168,71 @@ class ExamLinkListWidgetState extends State<ExamLinkListWidget> {
       // backgroundColor: Colors.teal,
       body: Padding(
         padding: const EdgeInsets.all(8.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          mainAxisAlignment: MainAxisAlignment.center,
+        child: Stack(
           children: [
-            Row(mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                // const Text('AI Model'),
-                gapW16,
-                AiModelSelector(onModelSelected: (m) {
-                  setState(() {
-                    aiModelName = m;
-                  });
-                }),
-                gapW32,
-                aiModelName == null ? gapW4 : Text('$aiModelName',
-                style: myTextStyleMediumLarge(context, 20),),
-              ],
-            ),
-            gapH32,
-            Text(
-              'Exam Papers',
-              style: myTextStyle(
-                  context, Theme.of(context).primaryColor, 32, FontWeight.w900),
-            ),
-            gapH32,
-            Text(
-              '${widget.subject.title}',
-              style: titleStyle,
-            ),
-            gapH4,
-            Text(
-              '${widget.examDocument.title}',
-              style: myTextStyleSmall(context),
-            ),
-            gapH32,
-            SizedBox(
-              height: height,
-              child: Padding(
-                padding: const EdgeInsets.only(left: 12.0, right: 12),
-                child: Card(
-                  elevation: 8,
-                  child: bd.Badge(
-                    position: bd.BadgePosition.topEnd(top: -16, end: -2),
-                    badgeContent: Text(
-                      '${filteredExamLinks.length}',
-                      style: const TextStyle(color: Colors.white),
-                    ),
-                    badgeStyle: bd.BadgeStyle(
-                        padding: const EdgeInsets.all(8.0),
-                        badgeColor: Colors.red.shade800,
-                        elevation: 12),
-                    child: busy
-                        ? const Padding(
+            SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  gapH32,
+                  Row(mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      // const Text('AI Model'),
+                      gapW16,
+                      AiModelSelector(onModelSelected: (m) {
+                        setState(() {
+                          aiModelName = m;
+                        });
+                      }, isDropDown: true,),
+                      gapW32,
+                      aiModelName == null ? gapW4 : Text('$aiModelName',
+                        style: myTextStyleMediumLarge(context, 20),),
+                    ],
+                  ),
+                  gapH32,
+                  Text(
+                    'Exam Papers',
+                    style: myTextStyle(
+                        context, Theme.of(context).primaryColor, 32, FontWeight.w900),
+                  ),
+                  filteredExamLinks.length < 4? gapH32: gapH16,
+                  Text(
+                    '${widget.subject.title}',
+                    style: titleStyle,
+                  ),
+                  gapH4,
+                  Text(
+                    '${widget.examDocument.title}',
+                    style: myTextStyleSmall(context),
+                  ),
+                  filteredExamLinks.length < 4? gapH32: gapH16,
+                  SizedBox(
+                    height: height,
+                    child: Padding(
+                      padding: const EdgeInsets.only(left: 8.0, right: 8),
+                      child: Card(
+                        elevation: 8,
+                        child: bd.Badge(
+                          position: bd.BadgePosition.topEnd(top: -16, end: -2),
+                          badgeContent: Text(
+                            '${filteredExamLinks.length}',
+                            style: const TextStyle(color: Colors.white),
+                          ),
+                          badgeStyle: bd.BadgeStyle(
+                              padding: const EdgeInsets.all(12.0),
+                              badgeColor: Colors.red.shade800,
+                              elevation: 12),
+                          child: busy
+                              ? const Padding(
                             padding: EdgeInsets.all(16.0),
                             child: BusyIndicator(
                               caption:
-                                  'Loading subject exams ... gimme a second ...',
+                              'Loading subject exams ... gimme a second ...',
                               showClock: true,
                             ),
                           )
-                        : Align(
+                              : Align(
                             alignment: Alignment.center,
                             child: ListView.builder(
                               itemCount: filteredExamLinks.length,
@@ -247,13 +251,19 @@ class ExamLinkListWidgetState extends State<ExamLinkListWidget> {
                               },
                             ),
                           ),
+                        ),
+                      ),
+                    ),
                   ),
-                ),
+                  gapH32,
+                  filteredExamLinks.length < 4? gapH32: gapH4,
+                  const SponsoredBy(),
+                ],
               ),
             ),
-            const SponsoredBy(),
+
           ],
-        ),
+        )
       ),
     );
   }
@@ -322,7 +332,7 @@ class ExamLinkWidget extends StatelessWidget {
       child: Card(
         elevation: 8,
         child: Padding(
-          padding: const EdgeInsets.all(8.0),
+          padding: const EdgeInsets.all(4.0),
           child: ListTile(
             title: Row(
               children: [

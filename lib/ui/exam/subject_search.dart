@@ -1,5 +1,4 @@
 import 'package:badges/badges.dart' as bd;
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:edu_chatbot/data/organization.dart';
 import 'package:edu_chatbot/data/sponsoree.dart';
 import 'package:edu_chatbot/data/subject.dart';
@@ -7,11 +6,14 @@ import 'package:edu_chatbot/gemini/sections/gemini_multi_turn_chat_stream.dart';
 import 'package:edu_chatbot/repositories/repository.dart';
 import 'package:edu_chatbot/services/chat_gpt_service.dart';
 import 'package:edu_chatbot/services/firestore_service.dart';
+import 'package:edu_chatbot/ui/chat/ai_model_selector.dart';
 import 'package:edu_chatbot/ui/exam/exam_document_list.dart';
 import 'package:edu_chatbot/ui/landing_page.dart';
 import 'package:edu_chatbot/ui/misc/busy_indicator.dart';
 import 'package:edu_chatbot/ui/misc/color_gallery.dart';
 import 'package:edu_chatbot/ui/misc/sponsored_by.dart';
+import 'package:edu_chatbot/ui/open_ai/open_ai_text_chat_widget.dart';
+import 'package:edu_chatbot/ui/organization/org_logo_widget.dart';
 import 'package:edu_chatbot/ui/organization/organization_splash.dart';
 import 'package:edu_chatbot/util/dark_light_control.dart';
 import 'package:edu_chatbot/util/functions.dart';
@@ -53,6 +55,8 @@ class SubjectSearchState extends State<SubjectSearch> {
   bool busy = false, _showSearchBox = false;
   static const String mm = '🍎🍎🍎🍎🍎🍎 SubjectSearch: 🍎🍎🍎 ';
   Branding? branding;
+
+  Set<String> _selectedButton = {modelGeminiAI};
 
   @override
   void initState() {
@@ -104,12 +108,8 @@ class SubjectSearchState extends State<SubjectSearch> {
     try {
       sponsorOrganization = prefs.getOrganization();
       branding = prefs.getBrand();
-      if ((sponsorOrganization != null)) {
-        pp('$mm sponsorOrganization: ${sponsorOrganization!.toJson()}');
-      }
-      if ((branding != null)) {
-        pp('$mm branding: ${branding!.toJson()}');
-      }
+      currentAIModel = prefs.getCurrentModel();
+      _selectedButton = {currentAIModel};
     } catch (e) {
       pp(e);
     }
@@ -125,7 +125,9 @@ class SubjectSearchState extends State<SubjectSearch> {
     try {
       _subjects = await firestoreService.getSubjects();
       _subjects.sort((a, b) => a.title!.compareTo(b.title!));
-      _filteredSubjects = _subjects;
+      _buildButtons();
+      _arrangeSubjects();
+      _showHelpToast();
     } catch (e) {
       // Handle error
       pp('Error fetching _subjects: $e');
@@ -165,7 +167,6 @@ class SubjectSearchState extends State<SubjectSearch> {
         widget: ExamsDocumentList(
           subject: subject,
           repository: repository,
-
         ));
   }
 
@@ -208,6 +209,111 @@ class SubjectSearchState extends State<SubjectSearch> {
   }
 
   int mode = 0;
+  List<Subject> favouriteSubjects = [];
+
+  _showHelpToast() async {
+    await Future.delayed(const Duration(seconds: 8));
+    var count = prefs.getInstructionCount();
+    if (count > 3) {
+      return;
+    }
+    prefs.saveInstructionCount(count);
+    if (mounted) {
+      showToast(
+          backgroundColor: Colors.blue[700],
+          padding: 20,
+          textStyle: const TextStyle(color: Colors.white),
+          message: 'Double tap to select a Subject as favourite',
+          context: context);
+    }
+  }
+
+  _saveFavouriteSubject(Subject subject) {
+    showToast(
+        backgroundColor: Colors.teal[700],
+        padding: 20,
+        textStyle: const TextStyle(color: Colors.white),
+        message: 'Subject is a favourite: ${subject.title}',
+        context: context);
+
+    favouriteSubjects = prefs.getSubjects();
+    bool found = false;
+    for (var sub in favouriteSubjects) {
+      if (subject.title == sub.title) {
+        found = true;
+      }
+    }
+    if (!found) {
+      prefs.saveSubject(subject);
+    }
+    _arrangeSubjects();
+    setState(() {});
+  }
+
+  void _arrangeSubjects() {
+    favouriteSubjects = prefs.getSubjects();
+    _filteredSubjects.clear();
+    _filteredSubjects.addAll(favouriteSubjects);
+
+    for (var sub in _subjects) {
+      bool found = false;
+      for (var fav in favouriteSubjects) {
+        if (fav.title == sub.title) {
+          found = true;
+        }
+      }
+      if (!found) {
+        _filteredSubjects.add(sub);
+      }
+    }
+    pp('$mm ...... _filteredSubjects: ${_filteredSubjects.length}');
+  }
+
+  void _navigateToInfo() {
+    NavigationUtils.navigateToPage(
+        context: context,
+        widget: const LandingPage(
+          hideButtons: true,
+        ));
+  }
+
+  void _navigateToColorGallery() {
+    NavigationUtils.navigateToPage(
+        context: context,
+        widget: ColorGallery(prefs: prefs, colorWatcher: colorWatcher));
+  }
+
+  void _navigateToGeminiMultiTurnChat() {
+    prefs.saveCurrentModel(modelGeminiAI);
+    currentAIModel = modelGeminiAI;
+    NavigationUtils.navigateToPage(
+        context: context, widget: const GeminiMultiTurnStreamChat());
+  }
+
+  void _navigateToOpenAIMultiTurnChat() {
+    prefs.saveCurrentModel(modelOpenAI);
+    currentAIModel = modelOpenAI;
+    NavigationUtils.navigateToPage(
+        context: context, widget: const OpenAITextChatWidget());
+  }
+
+  String currentAIModel = modelGeminiAI;
+  List<ButtonSegment<String>> buttons = [];
+
+  _buildButtons() {
+    buttons.add(ButtonSegment(
+        value: modelGeminiAI,
+        label: Text(
+          modelGeminiAI,
+          style: myTextStyleTiny(context),
+        )));
+    buttons.add(ButtonSegment(
+        value: modelOpenAI,
+        label: Text(modelOpenAI, style: myTextStyleTiny(context))));
+    buttons.add(ButtonSegment(
+        value: modelMistral,
+        label: Text(modelMistral, style: myTextStyleTiny(context))));
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -223,33 +329,25 @@ class SubjectSearchState extends State<SubjectSearch> {
       child: SafeArea(
         child: Scaffold(
           appBar: AppBar(
-            title: GestureDetector(
-              onTap: () {
-                _callChatGPT();
-              },
-              child: branding == null
-                  ? Text(
-                      'SgelaAI',
-                      style: myTextStyle(context,
-                          Theme.of(context).primaryColor, 24, FontWeight.w900),
-                    )
-                  : Card(
-                      elevation: 8,
-                      child: CachedNetworkImage(
-                        height: 40,
-                        imageUrl: branding!.logoUrl!,
-                        placeholder: (context, url) =>
-                            const CircularProgressIndicator(),
-                        errorWidget: (context, url, error) =>
-                            const Icon(Icons.error),
-                      ),
-                    ),
+            title: OrgLogoWidget(
+              branding: branding,
+              height: 24,
             ),
             leading: gapW4,
             actions: [
               IconButton(
                   onPressed: () {
-                    _navigateToAI(context);
+                    switch (currentAIModel) {
+                      case modelGeminiAI:
+                        _navigateToGeminiMultiTurnChat();
+                        break;
+                      case modelOpenAI:
+                        _navigateToOpenAIMultiTurnChat();
+                        break;
+                      default:
+                        _navigateToGeminiMultiTurnChat();
+                        break;
+                    }
                   },
                   icon: Icon(Icons.camera_alt,
                       color: isDark
@@ -257,7 +355,17 @@ class SubjectSearchState extends State<SubjectSearch> {
                           : Colors.black)),
               IconButton(
                 onPressed: () {
-                  _navigateToMultiTurnChat();
+                 switch(currentAIModel) {
+                   case modelGeminiAI:
+                     _navigateToGeminiMultiTurnChat();
+                     break;
+                   case modelOpenAI:
+                     _navigateToOpenAIMultiTurnChat();
+                     break;
+                   default:
+                     _navigateToGeminiMultiTurnChat();
+                     break;
+                 }
                 },
                 icon: Icon(
                   Icons.chat_outlined,
@@ -272,6 +380,39 @@ class SubjectSearchState extends State<SubjectSearch> {
             padding: const EdgeInsets.all(8.0),
             child: Column(
               children: [
+                gapH32,
+                buttons.isEmpty
+                    ? gapW4
+                    : SegmentedButton(
+                        emptySelectionAllowed: true,
+                        segments: buttons,
+                        onSelectionChanged: (sel) {
+                          pp('$mm ... button selected: $sel');
+                          setState(() {
+                            _selectedButton = sel;
+                          });
+                          switch (sel.first) {
+                            case modelGeminiAI:
+                              _navigateToGeminiMultiTurnChat();
+                              break;
+                            case modelOpenAI:
+                              _navigateToOpenAIMultiTurnChat();
+                              break;
+                            case modelMistral:
+                              showToast(
+                                  message: 'Mistral model not available yet',
+                                  context: context);
+                              setState(() {
+                                _selectedButton = {modelGeminiAI};
+                              });
+                              break;
+                            default:
+
+                              _navigateToGeminiMultiTurnChat();
+                          }
+                        },
+                        selected: _selectedButton,
+                      ),
                 _showSearchBox
                     ? Card(
                         elevation: 12,
@@ -294,9 +435,9 @@ class SubjectSearchState extends State<SubjectSearch> {
                     : gapH32,
                 const SizedBox(height: 4),
                 Text(
-                  'Subjects on board',
+                  'Subjects Exams on board',
                   style: myTextStyle(context, Theme.of(context).primaryColor,
-                      20, FontWeight.normal),
+                      16, FontWeight.w900),
                 ),
                 gapH16,
                 Expanded(
@@ -322,15 +463,35 @@ class SubjectSearchState extends State<SubjectSearch> {
                                   _navigateToExamsDocumentList(
                                       context, subject);
                                 },
+                                onDoubleTap: () {
+                                  _saveFavouriteSubject(subject);
+                                },
                                 child: Card(
                                   elevation: 8,
                                   shape: getDefaultRoundedBorder(),
                                   child: ListTile(
                                     leading: Icon(Icons.ac_unit,
                                         color: Theme.of(context).primaryColor),
-                                    title: Text(
-                                      subject.title ?? '',
-                                      style: titleStyle,
+                                    title: Row(
+                                      children: [
+                                        SizedBox(
+                                          width: 32,
+                                          child: Text(
+                                            '${index + 1}',
+                                            style: myTextStyle(
+                                                context,
+                                                Theme.of(context).primaryColor,
+                                                16,
+                                                FontWeight.bold),
+                                          ),
+                                        ),
+                                        Flexible(
+                                          child: Text(
+                                            subject.title ?? '',
+                                            style: titleStyle,
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                   ),
                                 ),
@@ -359,33 +520,5 @@ class SubjectSearchState extends State<SubjectSearch> {
         ),
       ),
     );
-  }
-
-  _handleMode(Brightness bright) {
-    var isDark = isDarkMode(prefs, bright);
-    if (isDark) {
-      darkLightControl.setLightMode();
-    } else {
-      darkLightControl.setDarkMode();
-    }
-  }
-
-  void _navigateToInfo() {
-    NavigationUtils.navigateToPage(
-        context: context,
-        widget: const LandingPage(
-          hideButtons: true,
-        ));
-  }
-
-  void _navigateToColorGallery() {
-    NavigationUtils.navigateToPage(
-        context: context,
-        widget: ColorGallery(prefs: prefs, colorWatcher: colorWatcher));
-  }
-
-  void _navigateToMultiTurnChat() {
-    NavigationUtils.navigateToPage(
-        context: context, widget: const GeminiMultiTurnStreamChat());
   }
 }

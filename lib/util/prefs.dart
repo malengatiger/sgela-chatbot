@@ -1,7 +1,9 @@
 import 'dart:convert';
 
-import 'package:edu_chatbot/data/sponsoree.dart';
 import 'package:edu_chatbot/data/organization.dart';
+import 'package:edu_chatbot/data/sponsoree.dart';
+import 'package:edu_chatbot/data/subject.dart';
+import 'package:edu_chatbot/ui/chat/ai_model_selector.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../data/branding.dart';
@@ -20,7 +22,6 @@ class Prefs {
     var jx = json.encode(mJson);
     sharedPreferences.setString('user', jx);
     pp('$mm ... sgelaUser saved OK');
-
   }
 
   SgelaUser? getUser() {
@@ -39,7 +40,6 @@ class Prefs {
     var jx = json.encode(mJson);
     sharedPreferences.setString('sponsoree', jx);
     pp('$mm ... sponsoree saved OK, ${sponsoree.sgelaUserName}');
-
   }
 
   Sponsoree? getSponsoree() {
@@ -59,7 +59,6 @@ class Prefs {
     var jx = json.encode(mJson);
     sharedPreferences.setString('country', jx);
     pp('$mm ... country saved OK: ${country.name}');
-
   }
 
   Country? getCountry() {
@@ -78,7 +77,6 @@ class Prefs {
     var jx = json.encode(mJson);
     sharedPreferences.setString('brand', jx);
     pp('$mm ... branding saved OK: ${brand.organizationName}');
-
   }
 
   Branding? getBrand() {
@@ -98,7 +96,6 @@ class Prefs {
     var jx = json.encode(mJson);
     sharedPreferences.setString('Organization', jx);
     pp('$mm ... organization saved OK: ${organization.name}');
-
   }
 
   Organization? getOrganization() {
@@ -115,7 +112,6 @@ class Prefs {
 
   void saveMode(int mode) {
     sharedPreferences.setInt('mode', mode);
-
   }
 
   int getMode() {
@@ -143,19 +139,52 @@ class Prefs {
     return color;
   }
 
+  void saveInstructionCount(int index) async {
+    int c = getInstructionCount();
+    sharedPreferences.setInt('instructionCount', index + c);
+
+    pp('$mm ... color index cached: $index');
+    return null;
+  }
+
+  int getInstructionCount() {
+    var count = sharedPreferences.getInt('instructionCount');
+    if (count == null) {
+      pp('$mm ... return instructionCount = 0');
+      return 0;
+    }
+    pp('$mm ... instructionCount: $count');
+    return count;
+  }
+  //
+  void saveCurrentModel(String model) async {
+    sharedPreferences.setString('aiModel', model);
+
+    pp('$mm ... current model cached: $model');
+    return null;
+  }
+
+  String getCurrentModel() {
+    var model = sharedPreferences.getString('aiModel');
+    if (model == null) {
+      return modelGeminiAI;
+    }
+    pp('$mm ... model: $model');
+    return model;
+  }
+
   saveCountries(List<Country> countries) {
     List<Map<String, dynamic>> countryStrings =
-    countries.map((pm) => pm.toJson()).toList();
+        countries.map((pm) => pm.toJson()).toList();
     List<String> countryJsonStrings =
-    countryStrings.map((pm) => json.encode(pm)).toList();
+        countryStrings.map((pm) => json.encode(pm)).toList();
     sharedPreferences.setStringList('countries', countryJsonStrings);
     pp('$mm ... countries saved OK: ${countries.length}');
-
   }
 
   List<Country> getCountries() {
     List<String>? paymentMethodJsonStrings =
-    sharedPreferences.getStringList('countries');
+        sharedPreferences.getStringList('countries');
     if (paymentMethodJsonStrings != null) {
       List<Country> countries = paymentMethodJsonStrings
           .map((pmJson) => Country.fromJson(json.decode(pmJson)))
@@ -167,20 +196,20 @@ class Prefs {
       return [];
     }
   }
+
   //
   saveBrandings(List<Branding> brandings) {
     List<Map<String, dynamic>> brandingStrings =
-    brandings.map((pm) => pm.toJson()).toList();
+        brandings.map((pm) => pm.toJson()).toList();
     List<String> brandingJsonStrings =
-    brandingStrings.map((pm) => json.encode(pm)).toList();
+        brandingStrings.map((pm) => json.encode(pm)).toList();
     sharedPreferences.setStringList('brandings', brandingJsonStrings);
     pp('$mm ... brandings saved OK: ${brandings.length}');
-
   }
 
   List<Branding> getBrandings() {
     List<String>? brandingJsonStrings =
-    sharedPreferences.getStringList('brandings');
+        sharedPreferences.getStringList('brandings');
     if (brandingJsonStrings != null) {
       List<Branding> brandings = brandingJsonStrings
           .map((pmJson) => Branding.fromJson(json.decode(pmJson)))
@@ -188,6 +217,39 @@ class Prefs {
       pp('$mm ... brandings retrieved: ${brandings.length}');
 
       return brandings;
+    } else {
+      return [];
+    }
+  }
+
+  saveSubjects(List<Subject> subjects) {
+    subjects.sort((a,b) => a.title!.compareTo(b.title!));
+    List<Map<String, dynamic>> subjectStrings =
+        subjects.map((pm) => pm.toJson()).toList();
+    List<String> brandingJsonStrings =
+        subjectStrings.map((pm) => json.encode(pm)).toList();
+    sharedPreferences.setStringList('subjects', brandingJsonStrings);
+    pp('$mm ... subjects saved OK: ${subjects.length}');
+  }
+
+  saveSubject(Subject subject) {
+    List<Subject> subjects = getSubjects();
+    subjects.add(subject);
+    subjects.sort((a,b) => a.title!.compareTo(b.title!));
+    saveSubjects(subjects);
+    pp('$mm ... subject saved OK, subjects: ${subjects.length}');
+  }
+
+  List<Subject> getSubjects() {
+    List<String>? subjectJsonStrings =
+        sharedPreferences.getStringList('subjects');
+    if (subjectJsonStrings != null) {
+      List<Subject> subjects = subjectJsonStrings
+          .map((pmJson) => Subject.fromJson(json.decode(pmJson)))
+          .toList();
+      pp('$mm ... subjects retrieved: ${subjects.length}');
+      subjects.sort((a,b) => a.title!.compareTo(b.title!));
+      return subjects;
     } else {
       return [];
     }

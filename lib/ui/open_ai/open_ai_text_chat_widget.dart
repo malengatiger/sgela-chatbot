@@ -25,8 +25,7 @@ class OpenAITextChatWidget extends StatefulWidget {
   final List<ExamPageContent>? examPageContents;
 
   @override
-  State<OpenAITextChatWidget> createState() =>
-      OpenAITextChatWidgetState();
+  State<OpenAITextChatWidget> createState() => OpenAITextChatWidgetState();
 }
 
 class OpenAITextChatWidgetState extends State<OpenAITextChatWidget> {
@@ -54,7 +53,6 @@ class OpenAITextChatWidgetState extends State<OpenAITextChatWidget> {
   void initState() {
     super.initState();
     _showModels();
-    _getPageContents();
     _getData();
   }
 
@@ -78,16 +76,18 @@ class OpenAITextChatWidgetState extends State<OpenAITextChatWidget> {
     setState(() {
       _busy = true;
     });
+    //
     try {
       sponsoree = prefs.getSponsoree();
       organization = prefs.getOrganization();
       branding = prefs.getBrand();
+      await _getPageContents();
 
       List<OpenAIModelModel> models = await OpenAI.instance.model.list();
       for (var model in models) {
         pp('$mm OpenAI model: ${model.id} 🍎🍎ownedBy: ${model.ownedBy}');
       }
-      _startOpenAITextChat();
+      _startOpenAITextChat('', true);
     } catch (e) {
       pp(e);
       if (mounted) {
@@ -103,28 +103,8 @@ class OpenAITextChatWidgetState extends State<OpenAITextChatWidget> {
     pp('$mm ... show all the AI models available');
   }
 
-  _getFormattingPrompt() {
-    var sb = StringBuffer();
-    sb.write(
-        'Format the following text and improve the look and readability of the output text ');
-    if (examPageContent != null) {
-      searchedText = '${sb.toString()}\n${examPageContent!.text!}';
-      List<Parts> partsContext = [];
-      if (turnNumber == 0) {
-        partsContext = getMultiTurnContext();
-      }
-      partsContext.add(Parts(text: searchedText));
-      chats.add(Content(role: 'user', parts: partsContext));
-      textEditController.clear();
-      loading = true;
-      // _startAndListenToChatStream();
-    } else {
-      showToast(
-          message: 'Say something, I did not quite hear you', context: context);
-    }
-  }
-
   void _handleInputText() {
+    pp('$mm ....... handling input: ${textEditController.text}');
     if (textEditController.text.isNotEmpty) {
       searchedText = textEditController.text;
       List<Parts> partsContext = [];
@@ -133,9 +113,9 @@ class OpenAITextChatWidgetState extends State<OpenAITextChatWidget> {
       }
       partsContext.add(Parts(text: searchedText));
       chats.add(Content(role: 'user', parts: partsContext));
-      textEditController.clear();
       loading = true;
-      _startOpenAITextChat();
+      _startOpenAITextChat(textEditController.text, false);
+      textEditController.clear();
     } else {
       showToast(
           message: 'Say something, I did not quite hear you', context: context);
@@ -143,46 +123,53 @@ class OpenAITextChatWidgetState extends State<OpenAITextChatWidget> {
   }
 
   late String searchedText;
+  late OpenAIChatCompletionModel completionModel;
 
-  void _startOpenAITextChat() async {
+  void _startOpenAITextChat(String text, bool isFirstTime) async {
     pp("$mm ...._startOpenAIStream .....");
     final systemMessage = _buildOpenAISystemMessage();
-    final userMessage = _buildOpenAIUserMessage();
+    OpenAIChatCompletionChoiceMessageModel userMessage;
+    if (isFirstTime) {
+      userMessage = _buildFirstTimeOpenAIUserMessage();
+    } else {
+      userMessage = _buildOpenAIUserMessage();
+    }
     //
-    final chatCompletion = await OpenAI.instance.chat.create(
-      model: "gpt-3.5-turbo",
-      messages: [
-        systemMessage,
-        userMessage,
-      ],
-      seed: 313,
-      n: 2,
-    );
+    pp('$mm ... chat.endpoint: ${OpenAI.instance.chat.endpoint}');
+    var completionModel = await OpenAI.instance.chat.create(
+        temperature: 0.0,
+        model: 'gpt-3.5-turbo',
+        messages: [systemMessage, userMessage]);
 
-    pp("$mm ...._startOpenAIStream: 💜💜 chatCompletion created, response from OpenAPI...");
-    if (chatCompletion.haveChoices) {
-      aiResponseText =
-          chatCompletion.choices.first.message.content?.first.text;
-      pp('$mm ... 🥦🥦🥦completion.choices.first.finishReason: 🍎🍎 ${chatCompletion.choices.first.finishReason}');
-      pp(aiResponseText);
-      if (chatCompletion.choices.first.finishReason == 'stop') {
-        pp('$mm ...🥦🥦🥦 💛everything is OK, Boss!!, 💛 SgelaAI has responded with answers ...');
-        _showMarkdown = true;
-      } else {
-        if (mounted) {
-          showErrorDialog(context,
-              'SgelaAI could not help you at this time. Please try again');
-        }
+    pp('$mm ... 🥦🥦🥦chat stream, finishReason: ${completionModel.choices.first.finishReason}');
+    pp('$mm ... 🥦🥦🥦chat stream, text: ${completionModel.choices.first.message.content?.first.text}');
+
+    List<Parts> partsContext = [];
+    aiResponseText = completionModel.choices.first.message.content?.first.text;
+    partsContext.add(Parts(text: aiResponseText));
+    chats.add(Content(role: 'model', parts: partsContext));
+    pp(aiResponseText);
+    if (completionModel.choices.first.finishReason == 'stop') {
+      pp('$mm ...🥦🥦🥦 💛everything is OK, Boss!!, 💛 SgelaAI has responded with answers ...');
+      _showMarkdown = true;
+    } else {
+      if (mounted) {
+        showErrorDialog(context,
+            'SgelaAI could not help you at this time. Please try again');
       }
     }
+
+    setState(() {
+      loading = false;
+    });
   }
 
-  TextEditingController textEditingController = TextEditingController();
+  // TextEditingController textEditingController = TextEditingController();
   bool _showMarkdown = false;
 
-  OpenAIChatCompletionChoiceMessageModel _buildOpenAIUserMessage() {
+  OpenAIChatCompletionChoiceMessageModel _buildFirstTimeOpenAIUserMessage() {
     OpenAIChatCompletionChoiceMessageContentItemModel? subjectModel;
-    if (widget.examLink!.subject != null) {
+    if (widget.examLink != null) {
       subjectModel = OpenAIChatCompletionChoiceMessageContentItemModel.text(
         "I would like to talk about ${widget.examLink!.subject!.title} today",
       );
@@ -192,7 +179,7 @@ class OpenAITextChatWidgetState extends State<OpenAITextChatWidget> {
       );
     } else {
       subjectModel = OpenAIChatCompletionChoiceMessageContentItemModel.text(
-        "Hi SgelaAI",
+        "I need your help to study all sorts of subjects and prepare for examinations",
       );
     }
 
@@ -203,9 +190,22 @@ class OpenAITextChatWidgetState extends State<OpenAITextChatWidget> {
     return userMessage;
   }
 
+  OpenAIChatCompletionChoiceMessageModel _buildOpenAIUserMessage() {
+    OpenAIChatCompletionChoiceMessageContentItemModel subjectModel =
+        OpenAIChatCompletionChoiceMessageContentItemModel.text(
+      textEditController.text,
+    );
+
+    final userMessage = OpenAIChatCompletionChoiceMessageModel(
+      content: [subjectModel],
+      role: OpenAIChatMessageRole.user,
+    );
+    return userMessage;
+  }
+
   OpenAIChatCompletionChoiceMessageModel _buildOpenAISystemMessage() {
     OpenAIChatCompletionChoiceMessageContentItemModel? subjectModel;
-    if (widget.examLink!.subject != null) {
+    if (widget.examLink != null) {
       subjectModel = OpenAIChatCompletionChoiceMessageContentItemModel.text(
         "This session relates to this subject: ${widget.examLink!.subject!.title}",
       );
@@ -247,26 +247,31 @@ class OpenAITextChatWidgetState extends State<OpenAITextChatWidget> {
 
   Widget chatItem(BuildContext context, int index) {
     final Content content = chats[index];
+    // pp('$mm ... chatItem: content  $content');
     var text = content.parts?.lastOrNull?.text ??
         'Sgela cannot help with your request. Try changing it ...';
     text = modifyString(text);
-    bool isLatex = false;
-    isLatex = isValidLaTeXString(text);
+    bool isLatex = isValidLaTeXString(text);
     String role = 'You';
-    if (content.role == 'model') {
+    if (content.role == 'model' || content.role == 'system') {
       role = 'SgelaAI';
     }
-
+    pp('$mm ... chatItem: role: $role');
     if (isLatex) {
       return Card(
         elevation: 0,
-        color: role == 'SgelaAI' ? Colors.blue.shade800 : Colors.transparent,
+        color: role == 'SgelaAI' ? Colors.teal.shade800 : Colors.transparent,
         child: Padding(
           padding: const EdgeInsets.all(8.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(role),
+              Text(
+                role,
+                style: role == 'SgelaAI'
+                    ? myTextStyleMediumLarge(context, 20)
+                    : myTextStyleMediumLarge(context, 14),
+              ),
               LaTexViewer(
                 text: text,
                 showHeader: false,
@@ -279,18 +284,27 @@ class OpenAITextChatWidgetState extends State<OpenAITextChatWidget> {
     return Card(
       elevation: 0,
       color:
-          content.role == 'model' ? Colors.blue.shade800 : Colors.transparent,
+          content.role == 'model' ? Colors.teal.shade800 : Colors.transparent,
       child: Padding(
         padding: const EdgeInsets.all(8.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(role),
-            Markdown(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                data: content.parts?.lastOrNull?.text ??
-                    'Sgela cannot help with your request. Try changing it ...'),
+            Card(
+              elevation: 8,
+              color: content.role == 'model'
+                  ? Colors.teal.shade800
+                  : Colors.transparent,
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Markdown(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    data: content.parts?.lastOrNull?.text ??
+                        'Sgela cannot help with your request. Try changing it ...'),
+              ),
+            ),
           ],
         ),
       ),
@@ -308,16 +322,25 @@ class OpenAITextChatWidgetState extends State<OpenAITextChatWidget> {
       appBar: AppBar(
         title: Row(
           children: [
-            Text(
-              'Chat with ',
-              style: myTextStyleSmall(context),
-            ),
+            loading
+                ? gapW4
+                : Text(
+                    'Chat with ',
+                    style: myTextStyleSmall(context),
+                  ),
             gapW8,
+            loading
+                ? gapW4
+                : Text(
+                    'SgelaAI',
+                    style: myTextStyle(context, Theme.of(context).primaryColor,
+                        24, FontWeight.w900),
+                  ),
+            gapW16,
             Text(
-              'SgelaAI',
-              style: myTextStyle(
-                  context, Theme.of(context).primaryColor, 24, FontWeight.w900),
-            ),
+              '(Open AI)',
+              style: myTextStyleTiny(context),
+            )
           ],
         ),
         actions: [
@@ -338,7 +361,6 @@ class OpenAITextChatWidgetState extends State<OpenAITextChatWidget> {
           children: [
             Column(
               children: [
-                const SponsoredBy(),
                 Expanded(
                     child: chats.isNotEmpty
                         ? Align(
@@ -348,22 +370,26 @@ class OpenAITextChatWidgetState extends State<OpenAITextChatWidget> {
                               child: Padding(
                                 padding: const EdgeInsets.all(8.0),
                                 child: ListView.builder(
-                                  itemBuilder: chatItem,
                                   shrinkWrap: true,
                                   physics: const NeverScrollableScrollPhysics(),
                                   itemCount: chats.length,
                                   reverse: false,
+                                  itemBuilder: (_, index) {
+                                    return chatItem(context, index);
+                                  },
                                 ),
                               ),
                             ),
                           )
-                        : const Center(
-                            child: Text('Say something to SgelaAI'))),
+                        : const Center(child: Text('Say hello to SgelaAI'))),
                 ChatInputBox(
                   controller: textEditController,
                   onSend: () {
                     _handleInputText();
                   },
+                ),
+                const SponsoredBy(
+                  height: 36,
                 ),
               ],
             )

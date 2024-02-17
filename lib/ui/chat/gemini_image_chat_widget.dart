@@ -419,7 +419,7 @@ class GeminiImageChatWidgetState extends State<GeminiImageChatWidget>
                           ? Theme.of(context).primaryColor
                           : Colors.black,
                     )),
-                IconButton(
+                aiResponseText == null? gapW4: IconButton(
                     onPressed: () {
                       _navigateToSharing();
                     },

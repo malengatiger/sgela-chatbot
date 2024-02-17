@@ -1,7 +1,10 @@
 import 'package:edu_chatbot/data/sgela_user.dart';
 import 'package:edu_chatbot/util/functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
 
+import '../firebase_options.dart';
+import '../util/environment.dart';
 import '../util/prefs.dart';
 import 'firestore_service.dart';
 
@@ -50,7 +53,13 @@ class AuthService {
     if (creds.user == null) {
       throw Exception('Sign in failed');
     }
-    pp('$mm Firebase User authenticated OK');
+    pp('$mm Firebase User authenticated OK, ');
+
+    var app = await Firebase.initializeApp(
+      name: ChatbotEnvironment.getFirebaseName(),
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+    pp('$mm Getting the user from Firestore ... Firebase.initializeApp again. Why????');
 
     var sgelaUser = await firestoreService.getSgelaUser(creds.user!.uid);
     if (sgelaUser != null) {
@@ -65,6 +74,9 @@ class AuthService {
       }
 
       return sgelaUser;
+    } else {
+      pp('$mm SgelaUser not found');
+      throw Exception('SgelaAI user not found');
     }
 
     return null;

@@ -12,12 +12,15 @@ import 'package:edu_chatbot/data/subject.dart';
 import 'package:edu_chatbot/services/local_data_service.dart';
 import 'package:edu_chatbot/util/dark_light_control.dart';
 import 'package:edu_chatbot/util/prefs.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:geocoding/geocoding.dart';
 
 import '../data/branding.dart';
 import '../data/city.dart';
 import '../data/country.dart';
 import '../data/sgela_user.dart';
+import '../firebase_options.dart';
+import '../util/environment.dart';
 import '../util/functions.dart';
 import '../util/image_file_util.dart';
 import '../util/location_util.dart';
@@ -33,12 +36,15 @@ class FirestoreService {
   FirestoreService(this.prefs, this.colorWatcher, this.firebaseFirestore,
       this.localDataService) {
     pp('$mm ... FirestoreService constructor ...');
-    //  firebaseFirestore.settings = const Settings(
-    //   persistenceEnabled: true,
-    // );
-    // pp('$mm ... FirestoreService constructor ... ${firebaseFirestore.settings.asMap}');
+    init();
   }
 
+  init() async {
+    var app = await Firebase.initializeApp(
+      name: ChatbotEnvironment.getFirebaseName(),
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+  }
   Future<List<ExamDocument>> getExamDocuments() async {
     List<ExamDocument> docs = [];
     var querySnapshot = await firebaseFirestore
