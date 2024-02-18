@@ -44,9 +44,9 @@ Future<void> main() async {
   try {
     var fbf = FirebaseFirestore.instanceFor(app: app);
     var auth = FirebaseAuth.instanceFor(app: app);
-    await AiInitializationUtil.initGemini();
+    var gem = await AiInitializationUtil.initGemini();
     await AiInitializationUtil.initOpenAI();
-    await registerServices(fbf, auth,Gemini.instance);
+    await registerServices(fbf, auth,gem);
     //
   } catch (e,s) {
     pp(e);

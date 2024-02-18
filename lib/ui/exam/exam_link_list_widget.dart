@@ -1,7 +1,7 @@
 import 'package:badges/badges.dart' as bd;
 import 'package:edu_chatbot/data/exam_link.dart';
 import 'package:edu_chatbot/data/subject.dart';
-import 'package:edu_chatbot/gemini/sections/exam_page_content_list.dart';
+import 'package:edu_chatbot/gemini/sections/exam_page_content_selector.dart';
 import 'package:edu_chatbot/gemini/sections/gemini_multi_turn_chat_stream.dart';
 import 'package:edu_chatbot/repositories/repository.dart';
 import 'package:edu_chatbot/services/firestore_service.dart';
@@ -28,7 +28,6 @@ import '../misc/color_gallery.dart';
 class ExamLinkListWidget extends StatefulWidget {
   final Subject subject;
   final ExamDocument examDocument;
-
 
   const ExamLinkListWidget({
     super.key,
@@ -68,10 +67,8 @@ class ExamLinkListWidgetState extends State<ExamLinkListWidget> {
       setState(() {
         busy = true;
       });
-      examLinks = await firestoreService
-          .getExamLinksByDocumentAndSubject(
-              subjectId: widget.subject.id!,
-              documentId: widget.examDocument.id!);
+      examLinks = await firestoreService.getExamLinksByDocumentAndSubject(
+          subjectId: widget.subject.id!, documentId: widget.examDocument.id!);
       pp('$mm fetchedExamLinks: examLinks: ${examLinks.length}');
       filteredExamLinks = examLinks;
       filteredExamLinks.sort((a, b) => a.title!.compareTo(b.title!));
@@ -87,22 +84,13 @@ class ExamLinkListWidgetState extends State<ExamLinkListWidget> {
     });
   }
 
-  void _filterExamLinks(String query) {
-    setState(() {
-      filteredExamLinks = examLinks
-          .where((examLink) =>
-              !examLink.title!.toLowerCase().contains(query.toLowerCase()))
-          .toList();
-    });
-  }
 
   ExamLink? selectedExamLink;
 
   void _navigateToColorGallery() {
     NavigationUtils.navigateToPage(
         context: context,
-        widget: ColorGallery(
-            prefs: prefs, colorWatcher: colorWatcher));
+        widget: ColorGallery(prefs: prefs, colorWatcher: colorWatcher));
   }
 
   @override
@@ -155,116 +143,104 @@ class ExamLinkListWidgetState extends State<ExamLinkListWidget> {
                   color: Theme.of(context).primaryColor)),
           IconButton(
               onPressed: () {
-                _navigateToGeminiMultiTurnStreamChat();
+                if (aiModelName == modelGeminiAI) {
+                  _navigateToGeminiMultiTurnStreamChat();
+                }
+                if (aiModelName == modelOpenAI) {
+                  _navigateToOpenAIMultiTurnStreamChat();
+                }
               },
               icon: Icon(Icons.chat, color: Theme.of(context).primaryColor)),
-          IconButton(
-              onPressed: () {
-                _navigateToOpenAIMultiTurnStreamChat();
-              },
-              icon: const Icon(Icons.message, color: Colors.teal))
         ],
       ),
       // backgroundColor: Colors.teal,
       body: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: Stack(
-          children: [
-            SingleChildScrollView(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  gapH32,
-                  Row(mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      // const Text('AI Model'),
-                      gapW16,
-                      AiModelSelector(onModelSelected: (m) {
-                        setState(() {
-                          aiModelName = m;
-                        });
-                      }, isDropDown: true,),
-                      gapW32,
-                      aiModelName == null ? gapW4 : Text('$aiModelName',
-                        style: myTextStyleMediumLarge(context, 20),),
-                    ],
-                  ),
-                  gapH32,
-                  Text(
-                    'Exam Papers',
-                    style: myTextStyle(
-                        context, Theme.of(context).primaryColor, 32, FontWeight.w900),
-                  ),
-                  filteredExamLinks.length < 4? gapH32: gapH16,
-                  Text(
-                    '${widget.subject.title}',
-                    style: titleStyle,
-                  ),
-                  gapH4,
-                  Text(
-                    '${widget.examDocument.title}',
-                    style: myTextStyleSmall(context),
-                  ),
-                  filteredExamLinks.length < 4? gapH32: gapH16,
-                  SizedBox(
-                    height: height,
-                    child: Padding(
-                      padding: const EdgeInsets.only(left: 8.0, right: 8),
-                      child: Card(
-                        elevation: 8,
-                        child: bd.Badge(
-                          position: bd.BadgePosition.topEnd(top: -16, end: -2),
-                          badgeContent: Text(
-                            '${filteredExamLinks.length}',
-                            style: const TextStyle(color: Colors.white),
-                          ),
-                          badgeStyle: bd.BadgeStyle(
-                              padding: const EdgeInsets.all(12.0),
-                              badgeColor: Colors.red.shade800,
-                              elevation: 12),
-                          child: busy
-                              ? const Padding(
-                            padding: EdgeInsets.all(16.0),
-                            child: BusyIndicator(
-                              caption:
-                              'Loading subject exams ... gimme a second ...',
-                              showClock: true,
+          padding: const EdgeInsets.all(8.0),
+          child: Stack(
+            children: [
+              SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    gapH32,
+                    gapH32,
+                    Text(
+                      'Exam Papers',
+                      style: myTextStyle(context,
+                          Theme.of(context).primaryColor, 32, FontWeight.w900),
+                    ),
+                    filteredExamLinks.length < 4 ? gapH32 : gapH16,
+                    Text(
+                      '${widget.subject.title}',
+                      style: titleStyle,
+                    ),
+                    gapH4,
+                    Text(
+                      '${widget.examDocument.title}',
+                      style: myTextStyleSmall(context),
+                    ),
+                    filteredExamLinks.length < 4 ? gapH32 : gapH16,
+                    SizedBox(
+                      height: height,
+                      child: Padding(
+                        padding: const EdgeInsets.only(left: 8.0, right: 8),
+                        child: Card(
+                          elevation: 8,
+                          child: bd.Badge(
+                            position:
+                                bd.BadgePosition.topEnd(top: -16, end: -2),
+                            badgeContent: Text(
+                              '${filteredExamLinks.length}',
+                              style: const TextStyle(color: Colors.white),
                             ),
-                          )
-                              : Align(
-                            alignment: Alignment.center,
-                            child: ListView.builder(
-                              itemCount: filteredExamLinks.length,
-                              itemBuilder: (context, index) {
-                                ExamLink examLink = filteredExamLinks[index];
-                                return GestureDetector(
-                                  onTap: () {
-                                    selectedExamLink = examLink;
-                                    _navigateToExamPageContentSelector(
-                                        examLink);
-                                  },
-                                  child: ExamLinkWidget(
-                                    examLink: examLink,
+                            badgeStyle: bd.BadgeStyle(
+                                padding: const EdgeInsets.all(12.0),
+                                badgeColor: Colors.red.shade800,
+                                elevation: 12),
+                            child: busy
+                                ? const Padding(
+                                    padding: EdgeInsets.all(16.0),
+                                    child: BusyIndicator(
+                                      caption:
+                                          'Loading subject exams ... gimme a second ...',
+                                      showClock: true,
+                                    ),
+                                  )
+                                : Align(
+                                    alignment: Alignment.center,
+                                    child: ListView.builder(
+                                      itemCount: filteredExamLinks.length,
+                                      itemBuilder: (context, index) {
+                                        ExamLink examLink =
+                                            filteredExamLinks[index];
+                                        return GestureDetector(
+                                          onTap: () {
+                                            selectedExamLink = examLink;
+                                            _navigateToExamPageContentSelector(
+                                                examLink);
+                                          },
+                                          child: ExamLinkWidget(
+                                            examLink: examLink,
+                                          ),
+                                        );
+                                      },
+                                    ),
                                   ),
-                                );
-                              },
-                            ),
                           ),
                         ),
                       ),
                     ),
-                  ),
-                  gapH32,
-                  filteredExamLinks.length < 4? gapH32: gapH4,
-                  const SponsoredBy(),
-                ],
+                    gapH32,
+                    filteredExamLinks.length < 4 ? gapH32 : gapH4,
+                    gapH32,
+                    const SponsoredBy(height: 40,),
+                  ],
+                ),
               ),
-            ),
-
-          ],
-        )
-      ),
+              
+            ],
+          )),
     );
   }
 
@@ -272,18 +248,14 @@ class ExamLinkListWidgetState extends State<ExamLinkListWidget> {
     pp('$mm _navigateToGeminiMultiTurnStreamChat ...');
 
     NavigationUtils.navigateToPage(
-        context: context,
-        widget: const GeminiTextChatWidget(
-        ));
+        context: context, widget: GeminiMultiTurnStreamChat(subject: widget.subject,));
   }
 
   void _navigateToOpenAIMultiTurnStreamChat() {
     pp('$mm _navigateToOpenAIMultiTurnStreamChat ...');
 
     NavigationUtils.navigateToPage(
-        context: context,
-        widget: const OpenAITextChatWidget(
-        ));
+        context: context, widget: OpenAITextChatWidget(subject: widget.subject));
   }
 
   void _navigateToExamPageContentSelector(ExamLink examLink) {
@@ -294,7 +266,6 @@ class ExamLinkListWidgetState extends State<ExamLinkListWidget> {
         context: context,
         widget: ExamPageContentSelector(
           examLink: examLink,
-          aiModelName: aiModelName!,
         ));
   }
 

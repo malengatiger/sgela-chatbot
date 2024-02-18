@@ -155,11 +155,6 @@ class SubjectSearchState extends State<SubjectSearch> {
         ));
   }
 
-  _callChatGPT() {
-    pp('$mm _callChatGPT ............');
-    var gpt = GetIt.instance<ChatGptService>();
-    gpt.sendPrompt('Help me study for a Math test');
-  }
 
   _navigateToExamsDocumentList(BuildContext context, Subject subject) {
     NavigationUtils.navigateToPage(
@@ -210,20 +205,16 @@ class SubjectSearchState extends State<SubjectSearch> {
 
   int mode = 0;
   List<Subject> favouriteSubjects = [];
+  final ScrollController _scrollController = ScrollController();
 
   _showHelpToast() async {
-    await Future.delayed(const Duration(seconds: 8));
-    var count = prefs.getInstructionCount();
-    if (count > 3) {
-      return;
-    }
-    prefs.saveInstructionCount(count);
+
     if (mounted) {
       showToast(
-          backgroundColor: Colors.blue[700],
-          padding: 20,
+          backgroundColor: Colors.black,
+          padding: 24,
           textStyle: const TextStyle(color: Colors.white),
-          message: 'Double tap to select a Subject as favourite',
+          message: 'Double tap to move a Subject near the top of the list',
           context: context);
     }
   }
@@ -314,7 +305,13 @@ class SubjectSearchState extends State<SubjectSearch> {
         value: modelMistral,
         label: Text(modelMistral, style: myTextStyleTiny(context))));
   }
-
+  void scrollToTop() {
+    _scrollController.animateTo(
+      0,
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
+    );
+  }
   @override
   Widget build(BuildContext context) {
     final TextStyle titleStyle =
@@ -388,15 +385,13 @@ class SubjectSearchState extends State<SubjectSearch> {
                         segments: buttons,
                         onSelectionChanged: (sel) {
                           pp('$mm ... button selected: $sel');
-                          setState(() {
-                            _selectedButton = sel;
-                          });
+
                           switch (sel.first) {
                             case modelGeminiAI:
-                              _navigateToGeminiMultiTurnChat();
+                              currentAIModel = modelGeminiAI;
                               break;
                             case modelOpenAI:
-                              _navigateToOpenAIMultiTurnChat();
+                              currentAIModel = modelOpenAI;
                               break;
                             case modelMistral:
                               showToast(
@@ -407,9 +402,11 @@ class SubjectSearchState extends State<SubjectSearch> {
                               });
                               break;
                             default:
-
-                              _navigateToGeminiMultiTurnChat();
+                              currentAIModel = modelGeminiAI;
                           }
+                          setState(() {
+                            _selectedButton = sel;
+                          });
                         },
                         selected: _selectedButton,
                       ),
@@ -434,10 +431,18 @@ class SubjectSearchState extends State<SubjectSearch> {
                       )
                     : gapH32,
                 const SizedBox(height: 4),
-                Text(
-                  'Subjects Exams on board',
-                  style: myTextStyle(context, Theme.of(context).primaryColor,
-                      16, FontWeight.w900),
+                Row(mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      'Subjects Exams on board',
+                      style: myTextStyle(context, Theme.of(context).primaryColor,
+                          16, FontWeight.w900),
+                    ),
+                    gapW32,
+                    IconButton(onPressed: (){
+                      _showHelpToast();
+                    }, icon: const Icon(Icons.question_mark))
+                  ],
                 ),
                 gapH16,
                 Expanded(
@@ -456,6 +461,7 @@ class SubjectSearchState extends State<SubjectSearch> {
                             caption: 'Loading subjects ... just a second ...')
                         : ListView.builder(
                             itemCount: _filteredSubjects.length,
+                            controller: _scrollController,
                             itemBuilder: (context, index) {
                               Subject subject = _filteredSubjects[index];
                               return GestureDetector(
@@ -465,6 +471,7 @@ class SubjectSearchState extends State<SubjectSearch> {
                                 },
                                 onDoubleTap: () {
                                   _saveFavouriteSubject(subject);
+                                  scrollToTop();
                                 },
                                 child: Card(
                                   elevation: 8,
@@ -511,7 +518,7 @@ class SubjectSearchState extends State<SubjectSearch> {
                   },
                   child: const Card(
                     elevation: 8,
-                    child: SponsoredBy(),
+                    child: SponsoredBy(logoHeight: 20,),
                   ),
                 ),
               ],

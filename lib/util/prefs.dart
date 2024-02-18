@@ -156,6 +156,42 @@ class Prefs {
     pp('$mm ... instructionCount: $count');
     return count;
   }
+
+  //
+  void saveGeminiHelloCount(int index) async {
+    int c = getGeminiHelloCount();
+    sharedPreferences.setInt('geminiHello', index + c);
+    pp('$mm ... geminiHelloCount cached: $index');
+    return null;
+  }
+
+  int getGeminiHelloCount() {
+    var count = sharedPreferences.getInt('geminiHello');
+    if (count == null) {
+      pp('$mm ... return geminiHelloCount = 0');
+      return 0;
+    }
+    pp('$mm ... geminiHelloCount: $count');
+    return count;
+  }
+
+  void saveOpenAPIHelloCount() async {
+    int c = getOpenAIHelloCount();
+    sharedPreferences.setInt('openAPIHello', c + 1);
+    pp('$mm ... geminiHelloCount cached: ${c+1}');
+    return null;
+  }
+
+  int getOpenAIHelloCount() {
+    var count = sharedPreferences.getInt('openAPIHello');
+    if (count == null) {
+      pp('$mm ... return openAPIHelloCount = 0');
+      return 0;
+    }
+    pp('$mm ... openAPIHelloCount: $count');
+    return count;
+  }
+
   //
   void saveCurrentModel(String model) async {
     sharedPreferences.setString('aiModel', model);
@@ -223,7 +259,7 @@ class Prefs {
   }
 
   saveSubjects(List<Subject> subjects) {
-    subjects.sort((a,b) => a.title!.compareTo(b.title!));
+    subjects.sort((a, b) => a.title!.compareTo(b.title!));
     List<Map<String, dynamic>> subjectStrings =
         subjects.map((pm) => pm.toJson()).toList();
     List<String> brandingJsonStrings =
@@ -235,7 +271,7 @@ class Prefs {
   saveSubject(Subject subject) {
     List<Subject> subjects = getSubjects();
     subjects.add(subject);
-    subjects.sort((a,b) => a.title!.compareTo(b.title!));
+    subjects.sort((a, b) => a.title!.compareTo(b.title!));
     saveSubjects(subjects);
     pp('$mm ... subject saved OK, subjects: ${subjects.length}');
   }
@@ -248,7 +284,7 @@ class Prefs {
           .map((pmJson) => Subject.fromJson(json.decode(pmJson)))
           .toList();
       pp('$mm ... subjects retrieved: ${subjects.length}');
-      subjects.sort((a,b) => a.title!.compareTo(b.title!));
+      subjects.sort((a, b) => a.title!.compareTo(b.title!));
       return subjects;
     } else {
       return [];

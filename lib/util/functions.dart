@@ -313,23 +313,22 @@ List<Parts> getMultiTurnContext() {
           'and college courses and subjects');
   partsList.add(p1);
   var p2 =
-      Parts(text: 'Answer questions that relates to the subject provided.');
+      Parts(text: 'I answer questions that relate to the subject provided.');
   partsList.add(p2);
-  var p3 = Parts(text: 'Example is Subject: Mathematics');
-  partsList.add(p3);
+
   var p4 =
-      Parts(text: 'For Mathematics, Physics, Engineering return responses in LaTex format where appropriate');
+      Parts(text: 'For Mathematics, Physics, Engineering I will return responses in LaTex format where equations are part of the solution.');
   partsList.add(p4);
   var p5 =
-      Parts(text: 'In all other subjects, return responses in Markdown format');
+      Parts(text: 'In all other subjects, I will return responses in Markdown format.');
   partsList.add(p5);
   var p6 = Parts(
       text:
-          'Your response must not mix Markdown and LaTex formats. It should be one or the other');
+          'My response will not mix Markdown and LaTex formats. It should be just one or the other');
   partsList.add(p6);
   var p7 = Parts(
       text:
-          'Where appropriate use headings, paragraphs and sections to enhance readability when displayed.');
+          'Where appropriate, I will use headings, paragraphs and sections to enhance readability when displayed.');
   partsList.add(p7);
 
   return partsList;

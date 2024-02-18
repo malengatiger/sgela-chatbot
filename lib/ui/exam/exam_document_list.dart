@@ -1,11 +1,14 @@
 import 'package:badges/badges.dart' as bd;
 import 'package:edu_chatbot/data/exam_document.dart';
+import 'package:edu_chatbot/gemini/sections/gemini_multi_turn_chat_stream.dart';
 import 'package:edu_chatbot/repositories/repository.dart';
 import 'package:edu_chatbot/services/firestore_service.dart';
+import 'package:edu_chatbot/ui/chat/ai_model_selector.dart';
 import 'package:edu_chatbot/ui/chat/generative_ai.dart';
 import 'package:edu_chatbot/ui/exam/exam_link_list_widget.dart';
 import 'package:edu_chatbot/ui/misc/busy_indicator.dart';
 import 'package:edu_chatbot/ui/misc/sponsored_by.dart';
+import 'package:edu_chatbot/ui/open_ai/open_ai_text_chat_widget.dart';
 import 'package:edu_chatbot/ui/youtube/you_tube_searcher.dart';
 import 'package:edu_chatbot/util/dark_light_control.dart';
 import 'package:edu_chatbot/util/navigation_util.dart';
@@ -90,9 +93,20 @@ class ExamsDocumentListState extends State<ExamsDocumentList> {
         widget: ColorGallery(prefs: prefs, colorWatcher: colorWatcher));
   }
 
-  void _navigateToGenerativeAI() {
-    NavigationUtils.navigateToPage(
-        context: context, widget: const GenerativeChatScreen());
+  void _navigateToGeminiOrOpenAIChat() {
+    var aiModel = prefs.getCurrentModel();
+    pp('$mm ... _navigateToGeminiOrOpenAIChat, model: $aiModel');
+    if (aiModel == modelGeminiAI) {
+      NavigationUtils.navigateToPage(
+          context: context, widget: GeminiMultiTurnStreamChat(subject: widget.subject,));
+    }  else if (aiModel == modelOpenAI) {
+      NavigationUtils.navigateToPage(
+          context: context, widget: OpenAITextChatWidget(subject: widget.subject,));
+    } else {
+      NavigationUtils.navigateToPage(
+          context: context, widget: GeminiMultiTurnStreamChat(subject: widget.subject,));
+    }
+
   }
 
   @override
@@ -117,7 +131,7 @@ class ExamsDocumentListState extends State<ExamsDocumentList> {
                         color: Theme.of(context).primaryColor)),
                 IconButton(
                     onPressed: () {
-                      _navigateToGenerativeAI();
+                      _navigateToGeminiOrOpenAIChat();
                     },
                     icon: Icon(Icons.message_outlined,
                         color: Theme.of(context).primaryColor))

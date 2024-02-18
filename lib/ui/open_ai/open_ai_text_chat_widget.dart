@@ -1,7 +1,10 @@
+
 import 'package:dart_openai/dart_openai.dart';
+import 'package:dart_openai/src/instance/chat/chat.dart';
 import 'package:edu_chatbot/data/branding.dart';
 import 'package:edu_chatbot/data/exam_link.dart';
 import 'package:edu_chatbot/data/exam_page_content.dart';
+import 'package:edu_chatbot/data/subject.dart';
 import 'package:edu_chatbot/gemini/widgets/chat_input_box.dart';
 import 'package:edu_chatbot/services/firestore_service.dart';
 import 'package:edu_chatbot/services/local_data_service.dart';
@@ -19,10 +22,11 @@ import '../../data/sponsoree.dart';
 import '../../util/functions.dart';
 
 class OpenAITextChatWidget extends StatefulWidget {
-  const OpenAITextChatWidget({super.key, this.examLink, this.examPageContents});
+  const OpenAITextChatWidget({super.key, this.examLink, this.examPageContents, this.subject});
 
   final ExamLink? examLink;
   final List<ExamPageContent>? examPageContents;
+  final Subject? subject;
 
   @override
   State<OpenAITextChatWidget> createState() => OpenAITextChatWidgetState();
@@ -43,7 +47,7 @@ class OpenAITextChatWidgetState extends State<OpenAITextChatWidget> {
   Organization? organization;
   Prefs prefs = GetIt.instance<Prefs>();
   Sponsoree? sponsoree;
-  String? aiResponseText, fingerPrint;
+  String? fingerPrint;
   int? totalTokens, promptTokens, completionTokens;
   LocalDataService localDataService = GetIt.instance<LocalDataService>();
   FirestoreService firestoreService = GetIt.instance<FirestoreService>();
@@ -123,32 +127,50 @@ class OpenAITextChatWidgetState extends State<OpenAITextChatWidget> {
   }
 
   late String searchedText;
+  late OpenAIChat openAIChat = OpenAI.instance.chat;
   late OpenAIChatCompletionModel completionModel;
+  List<OpenAIChatCompletionChoiceMessageModel> messages = [];
+
+  void _arrangeMessages() {
+    List<OpenAIChatCompletionChoiceMessageModel> arrangedMessages = [];
+    for (var msg in messages) {
+      if (msg.role.name != 'system') {
+        arrangedMessages.add(msg);
+      }
+    }
+    //arrangedMessages.add(_buildOpenAISystemMessage());
+    int index = arrangedMessages.length ~/2;
+    pp("$mm ....arrangedMessages: .....index: $index length: ${arrangedMessages.length}");
+
+    messages.clear();
+    messages.addAll(arrangedMessages);
+    messages.insert(index, _buildOpenAISystemMessage());
+  }
 
   void _startOpenAITextChat(String text, bool isFirstTime) async {
-    pp("$mm ...._startOpenAIStream .....");
-    final systemMessage = _buildOpenAISystemMessage();
-    OpenAIChatCompletionChoiceMessageModel userMessage;
+    pp("$mm ...._startOpenAITextChat ..... isFirstTime: $isFirstTime");
+
     if (isFirstTime) {
-      userMessage = _buildFirstTimeOpenAIUserMessage();
+      messages.add(_buildFirstTimeOpenAIUserMessage());
+      messages.add(_buildOpenAISystemMessage());
     } else {
-      userMessage = _buildOpenAIUserMessage();
+      messages.add(_buildOpenAIUserMessage());
+      _arrangeMessages();
     }
     //
-    pp('$mm ... chat.endpoint: ${OpenAI.instance.chat.endpoint}');
-    var completionModel = await OpenAI.instance.chat.create(
-        temperature: 0.0,
-        model: 'gpt-3.5-turbo',
-        messages: [systemMessage, userMessage]);
+    pp('$mm ... chat.endpoint: ${OpenAI.instance.chat.endpoint} '
+        '... starting chat ... messages: ${messages.length}');
+
+    completionModel = await openAIChat.create(
+        temperature: 0.0, model: 'gpt-3.5-turbo-0613', messages: messages);
 
     pp('$mm ... 🥦🥦🥦chat stream, finishReason: ${completionModel.choices.first.finishReason}');
     pp('$mm ... 🥦🥦🥦chat stream, text: ${completionModel.choices.first.message.content?.first.text}');
+    pp('$mm ... 🥦🥦🥦chat stream, usage: ${completionModel.usage.toMap()}');
 
     List<Parts> partsContext = [];
-    aiResponseText = completionModel.choices.first.message.content?.first.text;
-    partsContext.add(Parts(text: aiResponseText));
+    partsContext.add(Parts(text: completionModel.choices.first.message.content?.first.text));
     chats.add(Content(role: 'model', parts: partsContext));
-    pp(aiResponseText);
     if (completionModel.choices.first.finishReason == 'stop') {
       pp('$mm ...🥦🥦🥦 💛everything is OK, Boss!!, 💛 SgelaAI has responded with answers ...');
       _showMarkdown = true;
@@ -209,8 +231,7 @@ class OpenAITextChatWidgetState extends State<OpenAITextChatWidget> {
       subjectModel = OpenAIChatCompletionChoiceMessageContentItemModel.text(
         "This session relates to this subject: ${widget.examLink!.subject!.title}",
       );
-    }
-    if (widget.examLink != null) {
+    } else if (widget.examLink != null) {
       subjectModel = OpenAIChatCompletionChoiceMessageContentItemModel.text(
         "This session relates to this subject: ${widget.examLink!.subject!.title}",
       );
@@ -218,26 +239,26 @@ class OpenAITextChatWidgetState extends State<OpenAITextChatWidget> {
     final systemMessage = OpenAIChatCompletionChoiceMessageModel(
       content: [
         OpenAIChatCompletionChoiceMessageContentItemModel.text(
-          "Your name is SgelaAI and you are a super tutor and educational assistant.",
+          "My name is SgelaAI and I am a super tutor and educational assistant.",
         ),
         OpenAIChatCompletionChoiceMessageContentItemModel.text(
-          "You answer all the questions or solve all the problems you find in the text.",
+          "I answer all the questions or solve all the problems you find in the text.",
         ),
         OpenAIChatCompletionChoiceMessageContentItemModel.text(
-          "You think step by step for each question or problem",
+          "I think step by step for each question or problem",
         ),
         OpenAIChatCompletionChoiceMessageContentItemModel.text(
-          "You use paragraphs, spacing or headings to separate your responses.",
+          "I use paragraphs, spacing or headings to separate your responses.",
         ),
         OpenAIChatCompletionChoiceMessageContentItemModel.text(
-          "You suggest the ways that the reader can improve their mastery of the subject.",
+          "I suggest the ways that the reader can improve their mastery of the subject.",
         ),
         OpenAIChatCompletionChoiceMessageContentItemModel.text(
-          "Return any response you make as Markdown. When working with mathematics "
+          "I return any response you make as Markdown. When working with mathematics "
           "or physics equations, return as LaTex",
         ),
       ],
-      role: OpenAIChatMessageRole.assistant,
+      role: OpenAIChatMessageRole.system,
     );
     if (subjectModel != null) {
       systemMessage.content?.add(subjectModel);

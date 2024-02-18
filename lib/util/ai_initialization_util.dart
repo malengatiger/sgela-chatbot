@@ -1,4 +1,3 @@
-
 import 'package:dart_openai/dart_openai.dart';
 import 'package:flutter_gemini/flutter_gemini.dart';
 
@@ -34,23 +33,26 @@ class AiInitializationUtil {
     pp('\n$mx OpenAI initialized!\n');
   }
 
-  static Future<void> initGemini() async {
+  static Future<Gemini> initGemini() async {
     pp('$mx ............. _initGemini ....');
     var geminiAPIKey = ChatbotEnvironment.getGeminiAPIKey();
-    Gemini.init(
+    var gem = Gemini.init(
         apiKey: geminiAPIKey,
+        generationConfig:
+            GenerationConfig(temperature: 0.1, maxOutputTokens: 1000),
         enableDebugging: ChatbotEnvironment.isChatDebuggingEnabled());
 
     try {
       var geminiModels = await Gemini.instance.listModels();
       for (var model in geminiModels) {
-            pp('$mx Gemini AI model: ${model.displayName} 🔵🔵name: ${model.name} 🔵🔵 ${model.description}');
-          }
-    } catch (e,s) {
+        pp('$mx Gemini AI model: ${model.displayName} 🔵🔵name: ${model.name} 🔵🔵 ${model.description}');
+      }
+    } catch (e, s) {
       pp('$mx $e $s');
     }
 
     pp('$mx Gemini AI API has been initialized!! \n$mx'
         ' 🔵🔵 Gemini apiKey: $geminiAPIKey 🔵🔵 ');
+    return gem;
   }
 }
