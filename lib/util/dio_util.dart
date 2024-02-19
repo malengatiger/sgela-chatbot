@@ -1,15 +1,60 @@
+import 'dart:io';
 
 import 'package:dio/dio.dart';
+import 'package:edu_chatbot/util/environment.dart';
 import 'package:edu_chatbot/util/functions.dart';
+import 'package:http_parser/http_parser.dart';
 
 import '../services/local_data_service.dart';
+import 'image_file_util.dart';
 
 class DioUtil {
   final Dio dio;
   static const mm = '🥬🥬🥬🥬 DioUtil 🥬';
-final LocalDataService localDataService;
+  final LocalDataService localDataService;
+
   DioUtil(this.dio, this.localDataService);
 
+  /*
+  curl https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:countTokens?key=$API_KEY \
+    -H 'Content-Type: application/json' \
+    -X POST \
+    -d '{
+      "contents": [{
+        "parts":[{
+          "text": "Write a story about a magic backpack."}]}]}' > response.json
+   */
+
+  static const urlPrefix =
+      'https://generativelanguage.googleapis.com/v1beta/models/';
+
+  Future countGeminiTokens(
+      {required String prompt,
+      required List<File> files,
+      required String model}) async {
+    try {
+      List<MultipartFile> mFiles = [];
+      for (var file in files) {
+        String mimeType = ImageFileUtil.getMimeType(file);
+        mFiles.add(await MultipartFile.fromFile(file.path,
+            contentType: MediaType.parse(mimeType)));
+      }
+      FormData formData = FormData.fromMap({
+        'prompt': prompt,
+        'model': model,
+        'mimeType': ImageFileUtil.getMimeType(files.first),
+        'files': mFiles,
+      });
+      final response = await dio.post(
+          '${ChatbotEnvironment.getGeminiUrl()}textImage/countGeminiTokens',
+          data: formData);
+      pp('$mm response: ${response.statusCode} data:${response.data}');
+      return response.data;
+    } catch (e, s) {
+      pp('$mm $e - $s');
+    }
+    throw Exception('Failed to send tokensUsed');
+  }
 
   Future<dynamic> sendGetRequest(
       String path, Map<String, dynamic> queryParameters) async {
@@ -42,10 +87,10 @@ final LocalDataService localDataService;
             data: body,
             options: Options(responseType: ResponseType.json),
             onReceiveProgress: (count, total) {
-              // pp('$mm onReceiveProgress: count: $count total: $total');
+              pp('$mm onReceiveProgress: count: $count total: $total');
             },
             onSendProgress: (count, total) {
-              // pp('$mm onSendProgress: count: $count total: $total');
+              pp('$mm onSendProgress: count: $count total: $total');
             },
           )
           .timeout(const Duration(seconds: 300))

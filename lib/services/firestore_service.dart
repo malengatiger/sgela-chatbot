@@ -9,6 +9,7 @@ import 'package:edu_chatbot/data/organization.dart';
 import 'package:edu_chatbot/data/sponsoree.dart';
 import 'package:edu_chatbot/data/sponsoree_activity.dart';
 import 'package:edu_chatbot/data/subject.dart';
+import 'package:edu_chatbot/data/tokens_used.dart';
 import 'package:edu_chatbot/services/local_data_service.dart';
 import 'package:edu_chatbot/util/dark_light_control.dart';
 import 'package:edu_chatbot/util/file_downloader_widget.dart';
@@ -163,6 +164,13 @@ class FirestoreService {
   Future addRating(AIResponseRating rating) async {
     var colRef = firebaseFirestore.collection('AIResponseRating');
     await colRef.add(rating.toJson());
+  }
+
+  Future addTokensUsed(TokensUsed tokensUsed) async {
+    var colRef = firebaseFirestore.collection(
+        'TokensUsed');
+    await colRef.add(tokensUsed.toJson());
+    pp('$mm ... tokensUsed added to database: ${tokensUsed.toJson()}');
   }
 
   Future addOrgSponsoree(Sponsoree sponsoree) async {

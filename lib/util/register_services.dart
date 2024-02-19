@@ -65,6 +65,8 @@ Future<void> registerServices(FirebaseFirestore firebaseFirestore, FirebaseAuth 
           () => gemini);
   GetIt.instance.registerLazySingleton<ChatGptService>(
           () => ChatGptService());
+  GetIt.instance.registerLazySingleton<DioUtil>(
+          () => dioUtil);
   //
   var app = await Firebase.initializeApp(
     name: ChatbotEnvironment.getFirebaseName(),
@@ -75,7 +77,7 @@ Future<void> registerServices(FirebaseFirestore firebaseFirestore, FirebaseAuth 
   pp('$mm registerServices: GetIt has registered  🔵🔵FirestoreService: $firestoreService');
   var country =await firestoreService.getLocalCountry();
   if (country != null) {
-    pp('$mm local country: ${country!.toJson()}');
+    pp('$mm local country: ${country.toJson()}');
   }
 
   GetIt.instance.registerLazySingleton<FirestoreService>(

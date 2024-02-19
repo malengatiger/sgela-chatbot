@@ -1,3 +1,6 @@
+import 'dart:io';
+
+import 'package:badges/badges.dart' as bd;
 import 'package:edu_chatbot/data/branding.dart';
 import 'package:edu_chatbot/data/exam_link.dart';
 import 'package:edu_chatbot/data/exam_page_content.dart';
@@ -8,12 +11,13 @@ import 'package:edu_chatbot/services/local_data_service.dart';
 import 'package:edu_chatbot/ui/chat/latex_math_viewer.dart';
 import 'package:edu_chatbot/ui/misc/busy_indicator.dart';
 import 'package:edu_chatbot/ui/misc/sponsored_by.dart';
+import 'package:edu_chatbot/util/dio_util.dart';
 import 'package:edu_chatbot/util/prefs.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gemini/flutter_gemini.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:get_it/get_it.dart';
-import 'package:badges/badges.dart' as bd;
+
 import '../../util/functions.dart';
 
 class GeminiMultiTurnStreamChat extends StatefulWidget {
@@ -64,7 +68,8 @@ class GeminiMultiTurnStreamChatState extends State<GeminiMultiTurnStreamChat> {
     }
     if (widget.examLink != null) {
       _chatInputController = TextEditingController(
-          text: 'I need help with this subject: ${widget.examLink!.subject?.title}');
+          text:
+              'I need help with this subject: ${widget.examLink!.subject?.title}');
     }
     if (widget.examPageContents != null) {
       widget.examPageContents?.forEach((page) {
@@ -106,17 +111,16 @@ class GeminiMultiTurnStreamChatState extends State<GeminiMultiTurnStreamChat> {
         systemPartsContext = getMultiTurnContext();
       }
       userPartsContext.add(Parts(text: textPrompt));
-      if (isFirstTime) {
-        //chats.add(Content(role: 'model', parts: systemPartsContext));
-      }
-      chats.add(Content(role: 'user', parts: userPartsContext));
+
       if (chats.length > insertIndex) {
         systemPartsContext = getMultiTurnContext();
-        int index = chats.length ~/ 2;
-        chats.insert(index, Content(role: 'model', parts: systemPartsContext));
-        insertIndex += 6;
-        pp('$mm ... System Context inserted at index: $index -- chats: ${chats.length}');
+        int rem = chats.length % 7;
+        if (rem == 0) {
+          chats.add(Content(role: 'model', parts: systemPartsContext));
+          pp('$mm ... System Context inserted  -- chats: ${chats.length}');
+        }
       }
+      chats.add(Content(role: 'user', parts: userPartsContext));
       _chatInputController.clear();
       _startAndListenToChatStream();
     } else {
@@ -129,6 +133,37 @@ class GeminiMultiTurnStreamChatState extends State<GeminiMultiTurnStreamChat> {
   late String textPrompt;
   int chatStartCount = 0;
 
+  DioUtil dioUtil = GetIt.instance<DioUtil>();
+
+  int totalTokens = 0;
+  Future _countTokens(
+      {required String prompt,
+      required List<String> systemStrings}) async {
+
+    var sb = StringBuffer();
+    for (var element in systemStrings) {
+      sb.write('$element\n');
+    }
+    sb.write(prompt);
+    var res = await dioUtil.countGeminiTokens(prompt: sb.toString(),
+        files: [], model: 'gemini-pro');
+    pp('$mm token response: $res ... will write TokensUsed');
+  }
+
+  List<String> systemStrings = [];
+
+  void _addTokensUsed() {
+
+    var sb = StringBuffer();
+    for (var content in chats) {
+      if (content.role == 'user') {
+        sb.write(content.parts?.first.text);
+        sb.write('\n');
+      }
+
+    }
+    _countTokens(prompt: sb.toString(), systemStrings: systemStrings);
+  }
   Future<void> _startAndListenToChatStream() async {
     pp('$mm _startAndListenToChatStream ...... 🍎🍎🍎🍎🍎🍎🍎🍎🍎 ');
 
@@ -136,17 +171,17 @@ class GeminiMultiTurnStreamChatState extends State<GeminiMultiTurnStreamChat> {
       setState(() {
         _busy = true;
       });
-      gemini.streamChat(chats).listen((candidates) {
+      gemini.streamChat(chats).listen((candidates) async {
         pp("\n\n$mm gemini.streamChat fired!: chats: ${chats.length} turnNumber: $turnNumber"
             " 🍎🍎🍎🍎🍎🍎🍎🍎🍎--------->");
         turnNumber++;
         loading = false;
         if (chats.isNotEmpty && chats.last.role == candidates.content?.role) {
           chats.last.parts!.last.text =
-          '${chats.last.parts!.last.text}${candidates.output}';
+              '${chats.last.parts!.last.text}${candidates.output}';
         } else {
-          chats.add(Content(
-              role: 'model', parts: [Parts(text: candidates.output)]));
+          chats.add(
+              Content(role: 'model', parts: [Parts(text: candidates.output)]));
         }
         setState(() {
           _busy = false;
@@ -236,6 +271,9 @@ class GeminiMultiTurnStreamChatState extends State<GeminiMultiTurnStreamChat> {
     return SafeArea(
         child: Scaffold(
       appBar: AppBar(
+        leading: IconButton(onPressed: (){
+          _addTokensUsed();
+        }, icon: Platform.isAndroid? const Icon(Icons.arrow_back):const Icon(Icons.arrow_back_ios) ,),
         title: Row(
           children: [
             loading
@@ -283,7 +321,8 @@ class GeminiMultiTurnStreamChatState extends State<GeminiMultiTurnStreamChat> {
                             alignment: Alignment.bottomCenter,
                             child: bd.Badge(
                               badgeContent: Text('${chats.length}'),
-                              position: bd.BadgePosition.topEnd(top: -16, end: -8),
+                              position:
+                                  bd.BadgePosition.topEnd(top: -16, end: -8),
                               badgeStyle: const bd.BadgeStyle(
                                 padding: EdgeInsets.all(12.0),
                               ),
@@ -297,7 +336,8 @@ class GeminiMultiTurnStreamChatState extends State<GeminiMultiTurnStreamChat> {
                                   child: ListView.builder(
                                     itemBuilder: chatItem,
                                     shrinkWrap: true,
-                                    physics: const NeverScrollableScrollPhysics(),
+                                    physics:
+                                        const NeverScrollableScrollPhysics(),
                                     itemCount: chats.length,
                                     reverse: false,
                                   ),

@@ -37,7 +37,6 @@ class ExamPageMultiTurnChatState extends State<ExamPageMultiTurnChat> {
   Gemini gemini = GetIt.instance<Gemini>();
 
   bool get loading => _busy;
-  int turnNumber = 0;
 
   set loading(bool set) => setState(() => _busy = set);
   final List<Content> chats = [];
@@ -139,16 +138,23 @@ class ExamPageMultiTurnChatState extends State<ExamPageMultiTurnChat> {
     List<Parts> userPrompt = [];
     userPrompt.add(parts);
 
-    if (turnNumber == 0) {
+    if (chats.isEmpty) {
       systemPromptContext = getMultiTurnContext();
+      for (var element in systemPromptContext) {
+        systemStrings.add(element.text!);
+      }
     }
 
-    systemPromptContext.add(Parts(text: sb.toString()));
+    //add prompt
 
-    chats.add(Content(role: 'system', parts: systemPromptContext));
+    if ((chats.isEmpty)) {
+      chats.add(Content(role: 'system', parts: systemPromptContext));
+    }
+
     chats.add(Content(role: 'user', parts: userPrompt));
     controller.clear();
     loading = true;
+
     Future.delayed(const Duration(milliseconds: 100),(){
       _startAndListenToChatStream();
     });
@@ -158,7 +164,7 @@ class ExamPageMultiTurnChatState extends State<ExamPageMultiTurnChat> {
     if (controller.text.isNotEmpty) {
       queryText = controller.text;
       List<Parts> partsContext = [];
-      if (turnNumber == 0) {
+      if (chats.isEmpty) {
         partsContext = getMultiTurnContext();
       }
       partsContext.add(Parts(text: queryText));
@@ -173,15 +179,13 @@ class ExamPageMultiTurnChatState extends State<ExamPageMultiTurnChat> {
   }
 
   late String queryText;
-
+  List<String> systemStrings = [];
   Future<void> _startAndListenToChatStream() async {
     pp('$mm _startAndListenToChatStream ............');
 
     gemini.streamChat(chats).listen((candidates) {
-      pp("$mm gemini.streamChat fired!: chats: ${chats.length} "
-          "------------------------------->>>");
+      pp("$mm gemini.streamChat fired!: chats: ${chats.length} ");
       pp('$mm ${candidates.output}');
-      turnNumber++;
       loading = false;
       setState(() {
         if (chats.isNotEmpty && chats.last.role == candidates.content?.role) {
@@ -190,11 +194,18 @@ class ExamPageMultiTurnChatState extends State<ExamPageMultiTurnChat> {
         } else {
           chats.add(
               Content(role: 'model', parts: [Parts(text: candidates.output)]));
-          pp('$mm ... added to chats, now we have ${chats.length} chats. turnNumber: $turnNumber');
+          pp('$mm ... added to chats, now we have ${chats.length} chats.');
+          if (chats.length > 7) {
+            var rem = chats.length % 7;
+            if (rem == 0) {
+              chats.add(Content(role: 'system', parts: getMultiTurnContext()));
+            }
+          }
         }
       });
     });
   }
+
 
   Widget chatItem(BuildContext context, int index) {
     final Content content = chats[index];

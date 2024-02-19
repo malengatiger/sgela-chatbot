@@ -5,9 +5,11 @@ import 'package:edu_chatbot/data/branding.dart';
 import 'package:edu_chatbot/data/exam_link.dart';
 import 'package:edu_chatbot/data/exam_page_content.dart';
 import 'package:edu_chatbot/data/subject.dart';
+import 'package:edu_chatbot/data/tokens_used.dart';
 import 'package:edu_chatbot/gemini/widgets/chat_input_box.dart';
 import 'package:edu_chatbot/services/firestore_service.dart';
 import 'package:edu_chatbot/services/local_data_service.dart';
+import 'package:edu_chatbot/ui/chat/ai_model_selector.dart';
 import 'package:edu_chatbot/ui/chat/latex_math_viewer.dart';
 import 'package:edu_chatbot/ui/misc/busy_indicator.dart';
 import 'package:edu_chatbot/ui/misc/sponsored_by.dart';
@@ -19,6 +21,7 @@ import 'package:get_it/get_it.dart';
 
 import '../../data/organization.dart';
 import '../../data/sponsoree.dart';
+import '../../util/dio_util.dart';
 import '../../util/functions.dart';
 
 class OpenAITextChatWidget extends StatefulWidget {
@@ -169,7 +172,7 @@ class OpenAITextChatWidgetState extends State<OpenAITextChatWidget> {
       completionModel = await openAIChat.create(
           temperature: 0.0, model: 'gpt-3.5-turbo-0613', messages: messages);
       _print();
-
+      _addTokensUsed();
       partsContext.add(Parts(
           text: completionModel.choices.first.message.content?.first.text));
       chats.add(Content(role: 'model', parts: partsContext));
@@ -193,6 +196,19 @@ class OpenAITextChatWidgetState extends State<OpenAITextChatWidget> {
       loading = false;
     });
   }
+  DioUtil dioUtil = GetIt.instance<DioUtil>();
+
+  // Future _countTokens(
+  //     {required String prompt,
+  //       required List<String> systemStrings}) async {
+  //
+  //   var res = await dioUtil.countGeminiTokens(
+  //       prompt: prompt, files: [], model: 'gpt-3.5-turbo-16k-0613');
+  //   pp('$mm token response: $res ... will write TokensUsed');
+  // }
+
+  List<String> systemStrings = [];
+
 
   void _prepareMessages(bool isFirstTime, String text) {
     if (isFirstTime) {
@@ -208,7 +224,17 @@ class OpenAITextChatWidgetState extends State<OpenAITextChatWidget> {
   void _print() {
     pp('$mm ... 🥦🥦🥦chat stream, finishReason: ${completionModel.choices.first.finishReason}');
     // pp('$mm ... 🥦🥦🥦chat stream, text: ${completionModel.choices.first.message.content?.first.text}');
-    pp('$mm ... 🥦🥦🥦chat stream, usage: ${completionModel.usage.toMap()}');
+    pp('$mm ... 🥦🥦🥦chat stream, 🍎🍎🍎 usage: ${completionModel.usage.toMap()} 🍎🍎🍎');
+  }
+  _addTokensUsed() {
+    promptTokens = completionModel.usage.promptTokens;
+    completionTokens = completionModel.usage.completionTokens;
+    totalTokens = completionModel.usage.totalTokens;
+
+    var tokensUsed = TokensUsed(organization!.id!, sponsoree!.id!, DateTime.now().toUtc().toIso8601String(), sponsoree!.sgelaUserName!,
+        organization!.name, promptTokens, completionTokens, modelOpenAI, totalTokens);
+
+    firestoreService.addTokensUsed(tokensUsed);
   }
 
   bool _showMarkdown = false;

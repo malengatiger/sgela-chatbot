@@ -7,6 +7,7 @@ import 'package:edu_chatbot/data/organization.dart';
 import 'package:edu_chatbot/data/sponsoree.dart';
 import 'package:edu_chatbot/data/sponsoree_activity.dart';
 import 'package:edu_chatbot/services/firestore_service.dart';
+import 'package:edu_chatbot/ui/chat/ai_model_selector.dart';
 import 'package:edu_chatbot/ui/chat/ai_rating_widget.dart';
 import 'package:edu_chatbot/ui/chat/sgela_markdown_widget.dart';
 import 'package:edu_chatbot/ui/misc/busy_indicator.dart';
@@ -19,6 +20,7 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:get_it/get_it.dart';
 import 'package:responsive_builder/responsive_builder.dart';
 
+import '../../data/tokens_used.dart';
 import '../../util/dark_light_control.dart';
 import '../../util/functions.dart';
 import '../exam/exam_link_details.dart';
@@ -101,11 +103,11 @@ class OpenAIImageChatWidgetState extends State<OpenAIImageChatWidget>
     });
     // the system message that will be sent to the request.
     OpenAIChatCompletionChoiceMessageModel systemMessage =
-        _buildOpenAISystemMessage();
+    _buildOpenAISystemMessage();
 
     // the user message that will be sent to the request.
     OpenAIChatCompletionChoiceMessageModel userMessage =
-        _buildOpenAIUserMessageWithImages();
+    _buildOpenAIUserMessageWithImages();
 
     final requestMessages = [
       systemMessage,
@@ -113,9 +115,10 @@ class OpenAIImageChatWidgetState extends State<OpenAIImageChatWidget>
     ];
 
     try {
-      pp('$mm ... 🥦🥦🥦creating OpenAIChatCompletionModel ....'); // the actual request.
+      pp(
+          '$mm ... 🥦🥦🥦creating OpenAIChatCompletionModel ....'); // the actual request.
       OpenAIChatCompletionModel chatCompletion =
-          await OpenAI.instance.chat.create(
+      await OpenAI.instance.chat.create(
         model: "gpt-4-vision-preview",
         // responseFormat: {"type": "markdown"},
         seed: 6,
@@ -131,14 +134,17 @@ class OpenAIImageChatWidgetState extends State<OpenAIImageChatWidget>
       completionTokens = chatCompletion.usage.completionTokens;
       totalTokens = chatCompletion.usage.totalTokens;
       fingerPrint = chatCompletion.systemFingerprint;
-
+      _addTokensUsed(chatCompletion);
       //
       if (chatCompletion.haveChoices) {
         aiResponseText =
             chatCompletion.choices.first.message.content?.first.text;
-        pp('$mm ... 🥦🥦🥦completion.choices.first.finishReason: 🍎🍎 ${chatCompletion.choices.first.finishReason}');
+        pp(
+            '$mm ... 🥦🥦🥦completion.choices.first.finishReason: 🍎🍎 ${chatCompletion
+                .choices.first.finishReason}');
         if (chatCompletion.choices.first.finishReason == 'stop') {
-          pp('$mm ...🥦🥦🥦 💛everything is OK, Boss!!, 💛 SgelaAI has responded with answers ...');
+          pp(
+              '$mm ...🥦🥦🥦 💛everything is OK, Boss!!, 💛 OpenAI has responded with answers ...');
           _showMarkdown = true;
         } else {
           if (mounted) {
@@ -155,7 +161,9 @@ class OpenAIImageChatWidgetState extends State<OpenAIImageChatWidget>
       }
     }
     var end = DateTime.now();
-    elapsedTimeInSeconds = end.difference(start).inSeconds;
+    elapsedTimeInSeconds = end
+        .difference(start)
+        .inSeconds;
     _writeSponsoreeActivity('gpt-4-vision-preview');
 
     setState(() {
@@ -206,7 +214,7 @@ class OpenAIImageChatWidgetState extends State<OpenAIImageChatWidget>
         ),
         OpenAIChatCompletionChoiceMessageContentItemModel.text(
           "Return any response you make as Markdown. When working with mathematics "
-          "or physics equations, return as LaTex",
+              "or physics equations, return as LaTex",
         ),
       ],
       role: OpenAIChatMessageRole.system,
@@ -234,7 +242,7 @@ class OpenAIImageChatWidgetState extends State<OpenAIImageChatWidget>
         ),
         OpenAIChatCompletionChoiceMessageContentItemModel.text(
           "Return any response you make as Markdown. When working with mathematics "
-          "or physics equations, return as LaTex",
+              "or physics equations, return as LaTex",
         ),
       ],
       role: OpenAIChatMessageRole.system,
@@ -243,22 +251,45 @@ class OpenAIImageChatWidgetState extends State<OpenAIImageChatWidget>
   }
 
   void _printResults(OpenAIChatCompletionModel chatCompletion) {
-    pp('$mm OpenAIChatCompletion completion.choices.first.message: 🍎🍎 ${chatCompletion.choices.first.message}'); // ...
-    pp('$mm OpenAIChatCompletion promptTokens : 🍎🍎${chatCompletion.usage.promptTokens}'); // ...
-    pp('$mm OpenAIChatCompletion completionTokens: 🍎🍎${chatCompletion.usage.completionTokens}');
-    pp('$mm OpenAIChatCompletion totalTokens: 🍎🍎${chatCompletion.usage.totalTokens}');
+    pp(
+        '$mm OpenAIChatCompletion completion.choices.first.message: 🍎🍎 ${chatCompletion
+            .choices.first.message}'); // ...
+    pp('$mm OpenAIChatCompletion promptTokens : 🍎🍎${chatCompletion.usage
+        .promptTokens}'); // ...
+    pp('$mm OpenAIChatCompletion completionTokens: 🍎🍎${chatCompletion.usage
+        .completionTokens}');
+    pp('$mm OpenAIChatCompletion totalTokens: 🍎🍎${chatCompletion.usage
+        .totalTokens}');
     pp('$mm OpenAIChatCompletion chatCompletion.id: 🍎🍎${chatCompletion.id}');
-    pp('$mm OpenAIChatCompletion systemFingerprint: 🍎🍎${chatCompletion.systemFingerprint}');
+    pp('$mm OpenAIChatCompletion systemFingerprint: 🍎🍎${chatCompletion
+        .systemFingerprint}');
+  }
+
+  _addTokensUsed(OpenAIChatCompletionModel chatCompletion) {
+    promptTokens = chatCompletion.usage.promptTokens;
+    completionTokens = chatCompletion.usage.completionTokens;
+    totalTokens = chatCompletion.usage.totalTokens;
+
+    var tokensUsed = TokensUsed(
+        organization!.id!,
+        sponsoree!.id!,
+        DateTime.now().toUtc().toIso8601String(),
+        sponsoree!.sgelaUserName!,
+        organization!.name,
+        promptTokens,
+        completionTokens,
+        modelOpenAI, totalTokens);
+
+    firestoreService.addTokensUsed(tokensUsed);
   }
 
   String aiModel = 'OpenAI';
   bool ratingHasBeenDone = false;
 
-  _openRatingToast(
-      {Color? backgroundColor,
-      Duration? duration,
-      double? padding,
-      ToastGravity? toastGravity}) {
+  _openRatingToast({Color? backgroundColor,
+    Duration? duration,
+    double? padding,
+    ToastGravity? toastGravity}) {
     FToast fToast = FToast();
     const mm = 'FunctionsAndShit: 💀 💀 💀 💀 💀 : ';
     try {
@@ -312,7 +343,9 @@ class OpenAIImageChatWidgetState extends State<OpenAIImageChatWidget>
           sponsoreeCellphone: sponsoree?.sgelaCellphone,
           subjectId: subjectId,
           subject: subject,
-          id: DateTime.now().millisecondsSinceEpoch,
+          id: DateTime
+              .now()
+              .millisecondsSinceEpoch,
           rating: rating.toInt(),
           userId: sponsoree?.sgelaUserId,
           examTitle: examTitle,
@@ -341,7 +374,8 @@ class OpenAIImageChatWidgetState extends State<OpenAIImageChatWidget>
     subjectId = widget.examLink.subject!.id!;
     subject = widget.examLink.subject!.title!;
     examTitle =
-        '${widget.examLink.documentTitle!} - ${widget.examLink.subject!.title!} - ${widget.examLink.title}';
+    '${widget.examLink.documentTitle!} - ${widget.examLink.subject!
+        .title!} - ${widget.examLink.title}';
   }
 
   String replaceKeywordsWithBlanks(String text) {
@@ -355,7 +389,8 @@ class OpenAIImageChatWidgetState extends State<OpenAIImageChatWidget>
     int cnt = 0;
     for (var value in widget.examPageContents) {
       if (value.pageImageUrl != null) {
-        pp('$mm ... contentBag: image in the page, index: 🍎🍎${value.pageIndex} 🍎🍎');
+        pp('$mm ... contentBag: image in the page, index: 🍎🍎${value
+            .pageIndex} 🍎🍎');
         cnt++;
       }
     }
@@ -374,7 +409,9 @@ class OpenAIImageChatWidgetState extends State<OpenAIImageChatWidget>
       _setVariables();
       var act = SponsoreeActivity(
           organizationId: organization?.id,
-          id: DateTime.now().millisecondsSinceEpoch,
+          id: DateTime
+              .now()
+              .millisecondsSinceEpoch,
           date: DateTime.now().toUtc().toIso8601String(),
           organizationName: organization?.name,
           examLinkId: examLinkId,
@@ -410,7 +447,9 @@ class OpenAIImageChatWidgetState extends State<OpenAIImageChatWidget>
     _controller.dispose();
     super.dispose();
   }
+
   bool _showExamDetails = false;
+
   @override
   Widget build(BuildContext context) {
     var mode = prefs.getMode();
@@ -420,20 +459,22 @@ class OpenAIImageChatWidgetState extends State<OpenAIImageChatWidget>
               title: branding == null
                   ? const Text('OpenAI Driver')
                   : OrgLogoWidget(
-                      branding: branding,
-                      height: 28,
-                    ),
+                branding: branding,
+                height: 28,
+              ),
               actions: [
                 IconButton(
                     onPressed: () {
-                     setState(() {
-                       _showExamDetails = !_showExamDetails;
-                     });
+                      setState(() {
+                        _showExamDetails = !_showExamDetails;
+                      });
                     },
                     icon: Icon(
                       Icons.question_mark,
                       color: mode == DARK
-                          ? Theme.of(context).primaryColor
+                          ? Theme
+                          .of(context)
+                          .primaryColor
                           : Colors.black,
                     )),
                 // IconButton(
@@ -453,7 +494,9 @@ class OpenAIImageChatWidgetState extends State<OpenAIImageChatWidget>
                     icon: Icon(
                       Icons.share,
                       color: mode == DARK
-                          ? Theme.of(context).primaryColor
+                          ? Theme
+                          .of(context)
+                          .primaryColor
                           : Colors.black,
                     )),
               ],
@@ -466,8 +509,8 @@ class OpenAIImageChatWidgetState extends State<OpenAIImageChatWidget>
                       padding: const EdgeInsets.all(12.0),
                       child: Column(
                         children: [
-                          _showExamDetails? GestureDetector(
-                            onTap: (){
+                          _showExamDetails ? GestureDetector(
+                            onTap: () {
                               setState(() {
                                 _showExamDetails = false;
                               });
@@ -475,70 +518,71 @@ class OpenAIImageChatWidgetState extends State<OpenAIImageChatWidget>
                             child: ExamLinkDetails(
                               examLink: widget.examLink,
                               pageNumber:
-                                  widget.examPageContents.first.pageIndex! + 1,
+                              widget.examPageContents.first.pageIndex! + 1,
                             ),
-                          ): gapW4,
+                          ) : gapW4,
                           gapH4,
                           aiResponseText == null
                               ? gapW4
                               : Row(
-                                  crossAxisAlignment: CrossAxisAlignment.center,
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Text(
-                                      'SgelaAI Response',
-                                      style: myTextStyleMediumLargeWithSize(
-                                          context, 18),
-                                    ),
-                                    aiResponseText == null
-                                        ? gapW4
-                                        : Row(
-                                            children: [
-                                              gapW32,
-                                              IconButton(
-                                                  onPressed: () {
-                                                    _openRatingToast();
-                                                  },
-                                                  icon: Icon(
-                                                    Icons.star_rate,
-                                                    color: mode == DARK
-                                                        ? Theme.of(context)
-                                                            .primaryColor
-                                                        : Colors.black,
-                                                  ))
-                                            ],
-                                          )
-                                  ],
-                                ),
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                'SgelaAI Response',
+                                style: myTextStyleMediumLargeWithSize(
+                                    context, 18),
+                              ),
+                              aiResponseText == null
+                                  ? gapW4
+                                  : Row(
+                                children: [
+                                  gapW32,
+                                  IconButton(
+                                      onPressed: () {
+                                        _openRatingToast();
+                                      },
+                                      icon: Icon(
+                                        Icons.star_rate,
+                                        color: mode == DARK
+                                            ? Theme
+                                            .of(context)
+                                            .primaryColor
+                                            : Colors.black,
+                                      ))
+                                ],
+                              )
+                            ],
+                          ),
                           gapH4,
                           aiResponseText == null
                               ? const BusyIndicator(
-                                  caption: 'Talking to SgelaAI ...',
-                                  showClock: true,
-                                )
+                            caption: 'Talking to SgelaAI ...',
+                            showClock: true,
+                          )
                               : Expanded(
-                                  child: _showMarkdown
-                                      ? SgelaMarkdownWidget(
-                                          text: aiResponseText!,
-                                          backgroundColor: Colors.teal[700]!,
-                                        )
-                                      : TeXView(
-                                          style: TeXViewStyle(
-                                            contentColor: Colors.white,
-                                            backgroundColor: Colors.teal[700]!,
-                                            padding:
-                                                const TeXViewPadding.all(8),
-                                          ),
-                                          renderingEngine:
-                                              const TeXViewRenderingEngine
-                                                  .katex(),
-                                          child: TeXViewColumn(
-                                            children: [
-                                              TeXViewDocument(aiResponseText!),
-                                            ],
-                                          ),
-                                        ),
-                                ),
+                            child: _showMarkdown
+                                ? SgelaMarkdownWidget(
+                              text: aiResponseText!,
+                              backgroundColor: Colors.teal[700]!,
+                            )
+                                : TeXView(
+                              style: TeXViewStyle(
+                                contentColor: Colors.white,
+                                backgroundColor: Colors.teal[700]!,
+                                padding:
+                                const TeXViewPadding.all(8),
+                              ),
+                              renderingEngine:
+                              const TeXViewRenderingEngine
+                                  .katex(),
+                              child: TeXViewColumn(
+                                children: [
+                                  TeXViewDocument(aiResponseText!),
+                                ],
+                              ),
+                            ),
+                          ),
                           const SponsoredBy(),
                         ],
                       ),
