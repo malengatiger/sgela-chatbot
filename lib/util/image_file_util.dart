@@ -40,14 +40,14 @@ class ImageFileUtil {
       rethrow;
     }
   }
-  static Future<File> downloadFile(String url) async {
+  static Future<File> downloadFile(String url, String fileName) async {
     pp('$mm .... downloading file .........................\n$url ');
     var start = DateTime.now();
     try {
       var response = await http.get(Uri.parse(url));
       var bytes = response.bodyBytes;
       Directory tempDir = Directory.systemTemp;
-      var mFile = File('${tempDir.path}/someFile.zip');
+      var mFile = File('${tempDir.path}/$fileName');
       mFile.writeAsBytesSync(bytes);
       var end = DateTime.now();
       pp('$mm file: ${(await mFile.length()) / 1024}K bytes '

@@ -135,7 +135,6 @@ class Prefs {
       pp('$mm ... return default color index 0');
       return 0;
     }
-    pp('$mm ... color index: $color');
     return color;
   }
 

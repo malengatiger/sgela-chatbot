@@ -1436,7 +1436,8 @@ showToast(
     fToast.showToast(
       child: toastContainer,
       gravity: toastGravity ?? ToastGravity.CENTER,
-      toastDuration: duration ?? const Duration(seconds: 3),
+      isDismissable: true,
+      toastDuration: duration ??  const Duration(seconds: 5),
     );
   } catch (e) {
     pp('$mm 👿👿👿👿👿 we have a small TOAST problem, Boss! - 👿 $e');

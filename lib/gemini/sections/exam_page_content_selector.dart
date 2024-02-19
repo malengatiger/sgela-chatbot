@@ -63,12 +63,9 @@ class ExamPageContentSelectorState extends State<ExamPageContentSelector> {
       aiModel = prefs.getCurrentModel();
       branding = prefs.getBrand();
       examPageContents =
-          await localDataService.getExamPageContents(widget.examLink.id!);
-      if (examPageContents.isEmpty) {
-        examPageContents =
-            await firestoreService.getExamPageContents(widget.examLink.id!);
-      }
+          await firestoreService.getExamPageContents(widget.examLink.id!);
       examPageContents.sort((a, b) => a.pageIndex!.compareTo(b.pageIndex!));
+
       for (var page in examPageContents) {
         contentBags.add(ContentBag(
             selected: false,
@@ -77,11 +74,10 @@ class ExamPageContentSelectorState extends State<ExamPageContentSelector> {
             charactersToShow: 360,
             height: 56));
       }
-      _getImageCount();
-      pp('$mm ... ${examPageContents.length} examPageContents found');
+      var cnt = _getImageCount();
+      pp('$mm ... ${examPageContents.length} examPageContents found, images: $cnt');
     } catch (e, s) {
-      pp(e);
-      pp(s);
+      pp("$mm $s $e");
       if (mounted) {
         showErrorDialog(context, '$e');
       }
@@ -92,48 +88,6 @@ class ExamPageContentSelectorState extends State<ExamPageContentSelector> {
   }
 
   //
-  void _handleSelected() {
-    selectedExamPageContents.clear();
-    for (var bag in contentBags) {
-      if (bag.selected) {
-        selectedExamPageContents.add(bag.examPageContent);
-      }
-    }
-    //
-    pp('$mm ... selectedExamPageContents: ${selectedExamPageContents.length}');
-    selectedExamPageContents
-        .sort((a, b) => a.pageIndex!.compareTo(b.pageIndex!));
-
-    if (aiModel == modelGeminiAI) {
-      if (_getImageCount() > 0) {
-        NavigationUtils.navigateToPage(
-            context: context,
-            widget: GeminiImageChatWidget(
-                examLink: widget.examLink,
-                examPageContents: selectedExamPageContents));
-      } else {
-        NavigationUtils.navigateToPage(
-            context: context,
-            widget: GeminiMultiTurnStreamChat(
-                examLink: widget.examLink,
-                examPageContents: selectedExamPageContents));
-      }
-    } else {
-      if (_getImageCount() > 0) {
-        NavigationUtils.navigateToPage(
-            context: context,
-            widget: OpenAIImageChatWidget(
-                examLink: widget.examLink,
-                examPageContents: selectedExamPageContents));
-      } else {
-        NavigationUtils.navigateToPage(
-            context: context,
-            widget: OpenAIImageChatWidget(
-                examLink: widget.examLink,
-                examPageContents: selectedExamPageContents));
-      }
-    }
-  }
 
   _handleLongPress(ContentBag bag) {
     showDialog(
@@ -193,16 +147,6 @@ class ExamPageContentSelectorState extends State<ExamPageContentSelector> {
 
   List<ContentBag> selectedBags = [];
 
-  List<ContentBag> _getSelectedBags() {
-    selectedBags.clear();
-    for (var bag in contentBags) {
-      if (bag.selected) {
-        selectedBags.add(bag);
-      }
-    }
-    return selectedBags;
-  }
-
   int imageCount = 0;
 
   int _getImageCount() {
@@ -210,7 +154,6 @@ class ExamPageContentSelectorState extends State<ExamPageContentSelector> {
     for (var value in contentBags) {
       if (value.examPageContent.pageImageUrl != null &&
           value.examPageContent.pageIndex! > 0) {
-        pp('$mm ... contentBag": image in the page, index: 🍎🍎${value.examPageContent.pageIndex} 🍎🍎');
         cnt++;
       }
     }
@@ -231,49 +174,159 @@ class ExamPageContentSelectorState extends State<ExamPageContentSelector> {
 
   void _navigateToChat() {
     pp('$mm ... _navigateToChat ..... selectedBags: ${selectedBags.length}');
-
     var aiModelName = prefs.getCurrentModel();
     List<ExamPageContent> mPages = [];
     for (var bag in selectedBags) {
+      if (bag.examPageContent.pageIndex == 0 &&
+          bag.examPageContent.pageImageUrl != null) {
+        continue;
+      }
       mPages.add(bag.examPageContent);
     }
     if (aiModelName == modelGeminiAI) {
       _goToGemini(mPages);
     } else if (aiModelName == modelOpenAI) {
       _goToOpenAI(mPages);
-    } else if (aiModelName == modelMistral) {}
+    } else if (aiModelName == modelMistral) {
+      _goToGemini(mPages);
+    }
   }
 
-  void _goToOpenAI(List<ExamPageContent> mPages) {
+  void _goToOpenAI(List<ExamPageContent> mPages) async {
     pp('$mm ... geToOpenAI ..... contentPages: ${mPages.length}');
+    if (mPages.isEmpty) {
+      _showNoPagesToast();
+      return;
+    }
+    _clearSelected();
 
-    if (_getImageCount() > 0) {
-      NavigationUtils.navigateToPage(
-          context: context,
-          widget: OpenAIImageChatWidget(
-              examLink: widget.examLink, examPageContents: mPages));
-    } else {
-      NavigationUtils.navigateToPage(
-          context: context,
-          widget: OpenAITextChatWidget(
-              examLink: widget.examLink, examPageContents: mPages));
+    for (var page in mPages) {
+      if (page.pageImageUrl != null) {
+        pp('$mm ... go to OpenAIImageChatWidget ..... page index: ${page.pageIndex}');
+        await NavigationUtils.navigateToPage(
+            context: context,
+            widget: OpenAIImageChatWidget(
+              examPageContents: [page],
+              examLink: widget.examLink,
+            ));
+      } else {
+        pp('$mm ... go to OpenAITextChatWidget ..... page index: ${page.pageIndex}');
+
+        await NavigationUtils.navigateToPage(
+            context: context,
+            widget: OpenAITextChatWidget(examPageContents: [page]));
+      }
     }
   }
 
-  void _goToGemini(List<ExamPageContent> mPages) {
-    pp('$mm ... geToGemini..... contentPages: ${mPages.length}');
-
-    if (_getImageCount() > 0) {
-      NavigationUtils.navigateToPage(
-          context: context,
-          widget: GeminiImageChatWidget(
-              examLink: widget.examLink, examPageContents: mPages));
-    } else {
-      NavigationUtils.navigateToPage(
-          context: context,
-          widget: GeminiMultiTurnStreamChat(
-              examLink: widget.examLink, examPageContents: mPages));
+  _showNoPagesToast() {
+    showToast(
+        duration: const Duration(seconds: 3),
+        message: 'No content to send, this may be the first cover page', context: context);
+    _clearSelected();
+  }
+  Future<void> _goToGemini(List<ExamPageContent> mPages) async {
+    pp('$mm ... _goToGemini..... contentPages: ${mPages.length}');
+    if (mPages.isEmpty) {
+      _showNoPagesToast();
+      return;
     }
+    _clearSelected();
+    for (var page in mPages) {
+      if (page.pageImageUrl != null) {
+        pp('$mm ... go to GeminiImageChatWidget ..... page index: ${page.pageIndex}');
+
+        await NavigationUtils.navigateToPage(
+            context: context,
+            widget: GeminiImageChatWidget(
+                examLink: widget.examLink, examPageContents: [page]));
+      } else {
+        pp('$mm ... go to GeminiMultiTurnStreamChat ..... page index: ${page.pageIndex}');
+
+        await NavigationUtils.navigateToPage(
+            context: context,
+            widget: GeminiMultiTurnStreamChat(
+                examLink: widget.examLink, examPageContents: [page]));
+      }
+    }
+  }
+
+  void _clearSelected() {
+    for (var element in contentBags) {
+      element.selected = false;
+    }
+    setState(() {
+      selectedBags.clear();
+    });
+  }
+
+
+  _showModelDialog() {
+    showDialog(
+        context: context,
+        builder: (_) {
+          return AlertDialog(
+             title:  Text('AI Model Selection', style: myTextStyleMedium(context),),
+              content: SizedBox(
+            height: 300,
+            child: Card(
+              elevation: 8,
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Column(mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    GestureDetector(
+                        onTap: () {
+                          prefs.saveCurrentModel(modelGeminiAI);
+                          Navigator.of(context).pop();
+                          _showResult(modelGeminiAI);
+                          setState(() {
+                            aiModel = modelGeminiAI;
+                          });
+                        },
+                        child: Text(
+                          modelGeminiAI,
+                          style: myTextStyleMediumLargePrimaryColor(context),
+                        )),
+                    gapH32,
+                    GestureDetector(
+                        onTap: () {
+                          prefs.saveCurrentModel(modelOpenAI);
+                          Navigator.of(context).pop();
+                          _showResult(modelOpenAI);
+                          setState(() {
+                            aiModel = modelOpenAI;
+                          });
+                        },
+                        child: Text(modelOpenAI,
+                            style: myTextStyleMediumLargePrimaryColor(context, ))),
+                  ],
+                ),
+              ),
+            ),
+          ));
+        });
+  }
+
+  _showResult(String model) {
+    showToast(
+        duration: const Duration(seconds: 2),
+        message: 'AI Model selected: $model', context: context);
+  }
+  _addToSelected(ContentBag contentBag) {
+    bool found = false;
+    for (var element in selectedBags) {
+      if (contentBag.examPageContent.pageIndex == element.examPageContent.pageIndex) {
+        found = true;
+      }
+    }
+    if (!found) {
+      selectedBags.add(contentBag);
+    }
+  }
+  _removeContentBag(ContentBag contentBag) {
+    selectedBags.remove(contentBag);
   }
 
   @override
@@ -289,6 +342,16 @@ class ExamPageContentSelectorState extends State<ExamPageContentSelector> {
                 height: 24,
               ),
         actions: [
+          IconButton(
+              onPressed: () {
+                _showModelDialog();
+              },
+              icon: Icon(
+                Icons.ac_unit,
+                color: mode == DARK
+                    ? Theme.of(context).primaryColor
+                    : Colors.black,
+              )),
           IconButton(
               onPressed: () {
                 setState(() {
@@ -317,7 +380,7 @@ class ExamPageContentSelectorState extends State<ExamPageContentSelector> {
               )),
         ],
         bottom: PreferredSize(
-            preferredSize: Size.fromHeight(_showHelp ? 120.0 : 48.0),
+            preferredSize: Size.fromHeight(_showHelp ? 160.0 : 8.0),
             child: Column(
               children: [
                 _showHelp
@@ -334,19 +397,20 @@ class ExamPageContentSelectorState extends State<ExamPageContentSelector> {
                             child: Padding(
                               padding: const EdgeInsets.all(8.0),
                               child: SizedBox(
-                                height: 80,
+                                height: 120,
                                 child: Column(
                                   children: [
+                                    gapH16,
                                     const Text(
-                                        'Tap once to select, double tap to de-select, '
-                                        'long press to view contents '),
+                                        'Tap the list once to select an exam page, double tap to de-select, '
+                                        'long press to view the page content. '),
                                     gapH16,
                                     Row(
                                       mainAxisAlignment:
                                           MainAxisAlignment.center,
                                       children: [
                                         Text(
-                                          'AI model in play:',
+                                          'Artificial Intelligence model:',
                                           style: myTextStyleSmall(context),
                                         ),
                                         gapW8,
@@ -400,6 +464,9 @@ class ExamPageContentSelectorState extends State<ExamPageContentSelector> {
                               : Padding(
                                   padding: const EdgeInsets.all(8.0),
                                   child: bd.Badge(
+                                    badgeStyle: const bd.BadgeStyle(
+                                      padding: EdgeInsets.all(12),
+                                    ),
                                     position: bd.BadgePosition.topEnd(
                                         top: -8, end: -4),
                                     badgeContent:
@@ -416,7 +483,7 @@ class ExamPageContentSelectorState extends State<ExamPageContentSelector> {
                                               onTap: () {
                                                 pp('$mm ... onTap ... contentBag, pageIndex: '
                                                     '${contentBag.examPageContent.pageIndex}');
-                                                selectedBags.add(contentBag);
+                                                _addToSelected(contentBag);
                                                 setState(() {
                                                   contentBag.selected = true;
                                                   contentBag.height = 52.0;
@@ -429,7 +496,7 @@ class ExamPageContentSelectorState extends State<ExamPageContentSelector> {
                                               onLongPress: () {
                                                 pp('$mm ... onLongPress ... contentBag, pageIndex: '
                                                     '${contentBag.examPageContent.pageIndex}');
-                                                selectedBags.add(contentBag);
+                                                _addToSelected(contentBag);
                                                 setState(() {
                                                   contentBag.selected = true;
                                                 });
@@ -438,6 +505,7 @@ class ExamPageContentSelectorState extends State<ExamPageContentSelector> {
                                               onDoubleTap: () {
                                                 pp('$mm ... onDoubleTap ... contentBag, pageIndex: '
                                                     '${contentBag.examPageContent.pageIndex}');
+                                                _removeContentBag(contentBag);
                                                 setState(() {
                                                   contentBag.selected = false;
                                                   contentBag.height = 40.0;
@@ -465,7 +533,7 @@ class ExamPageContentSelectorState extends State<ExamPageContentSelector> {
                                         elevation:
                                             MaterialStatePropertyAll(16.0)),
                                     onPressed: () {
-                                      _handleSelected();
+                                      _navigateToChat();
                                     },
                                     child: Padding(
                                       padding: const EdgeInsets.all(20.0),

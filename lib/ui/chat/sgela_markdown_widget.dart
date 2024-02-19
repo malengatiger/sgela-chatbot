@@ -3,15 +3,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 
 class SgelaMarkdownWidget extends StatelessWidget {
-  const SgelaMarkdownWidget({super.key, required this.text});
+  const SgelaMarkdownWidget({super.key, required this.text,  this.backgroundColor});
 
   final String text;
+  final Color? backgroundColor;
 
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
       child: Card(
         elevation: 8,
+        color: backgroundColor?? Colors.purple,
         child: SizedBox(
           height: 600, width:420,
           child: Markdown(

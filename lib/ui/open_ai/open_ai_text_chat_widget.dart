@@ -1,4 +1,4 @@
-
+import 'package:badges/badges.dart' as bd;
 import 'package:dart_openai/dart_openai.dart';
 import 'package:dart_openai/src/instance/chat/chat.dart';
 import 'package:edu_chatbot/data/branding.dart';
@@ -22,7 +22,8 @@ import '../../data/sponsoree.dart';
 import '../../util/functions.dart';
 
 class OpenAITextChatWidget extends StatefulWidget {
-  const OpenAITextChatWidget({super.key, this.examLink, this.examPageContents, this.subject});
+  const OpenAITextChatWidget(
+      {super.key, this.examLink, this.examPageContents, this.subject});
 
   final ExamLink? examLink;
   final List<ExamPageContent>? examPageContents;
@@ -56,23 +57,37 @@ class OpenAITextChatWidgetState extends State<OpenAITextChatWidget> {
   @override
   void initState() {
     super.initState();
-    _showModels();
     _getData();
   }
 
-  List<ExamPageContent> examPageContents = [];
   ExamPageContent? examPageContent;
+  String inputText = 'Hello!';
 
   _getPageContents() async {
-    if (widget.examLink != null) {
-      examPageContents =
-          await localDataService.getExamPageContents(widget.examLink!.id!);
-      if (examPageContents.isEmpty) {
-        examPageContents =
-            await firestoreService.getExamPageContents(widget.examLink!.id!);
+    var sb = StringBuffer();
+    if (widget.examPageContents != null) {
+      pp('$mm ... ${widget.examPageContents!.length} examPageContents found');
+      for (var page in widget.examPageContents!) {
+        if (page.text != null) {
+          sb.write(page.text!);
+        }
       }
     }
-    pp('$mm ... ${examPageContents.length} examPageContents found');
+    if (sb.isNotEmpty) {
+      inputText = _replaceKeywordsWithBlanks(sb.toString());
+      inputText =
+          'Find the questions or problems in the text below and respond with the solutions in markdown format.\n'
+          'Show solution steps where necessary.\n The text: $inputText';
+    }
+    if (widget.examLink != null) {
+      inputText =
+          'Help me with this subject: ${widget.examLink!.subject!.title!}';
+    }
+    if (widget.subject != null) {
+      inputText = 'Help me with this subject: ${widget.subject!.title!}';
+    }
+
+    pp('$mm ... examPageContents: inputText: ${inputText.length} bytes');
   }
 
   _getData() async {
@@ -85,13 +100,11 @@ class OpenAITextChatWidgetState extends State<OpenAITextChatWidget> {
       sponsoree = prefs.getSponsoree();
       organization = prefs.getOrganization();
       branding = prefs.getBrand();
-      await _getPageContents();
-
-      List<OpenAIModelModel> models = await OpenAI.instance.model.list();
-      for (var model in models) {
-        pp('$mm OpenAI model: ${model.id} 🍎🍎ownedBy: ${model.ownedBy}');
+      if (widget.subject != null) {
+        inputText = widget.subject!.title!;
       }
-      _startOpenAITextChat('', true);
+      await _getPageContents();
+      _startOpenAITextChat(inputText, true);
     } catch (e) {
       pp(e);
       if (mounted) {
@@ -101,10 +114,6 @@ class OpenAITextChatWidgetState extends State<OpenAITextChatWidget> {
     setState(() {
       _busy = false;
     });
-  }
-
-  _showModels() async {
-    pp('$mm ... show all the AI models available');
   }
 
   void _handleInputText() {
@@ -139,7 +148,7 @@ class OpenAITextChatWidgetState extends State<OpenAITextChatWidget> {
       }
     }
     //arrangedMessages.add(_buildOpenAISystemMessage());
-    int index = arrangedMessages.length ~/2;
+    int index = arrangedMessages.length ~/ 2;
     pp("$mm ....arrangedMessages: .....index: $index length: ${arrangedMessages.length}");
 
     messages.clear();
@@ -148,36 +157,35 @@ class OpenAITextChatWidgetState extends State<OpenAITextChatWidget> {
   }
 
   void _startOpenAITextChat(String text, bool isFirstTime) async {
-    pp("$mm ...._startOpenAITextChat ..... isFirstTime: $isFirstTime");
-
-    if (isFirstTime) {
-      messages.add(_buildFirstTimeOpenAIUserMessage());
-      messages.add(_buildOpenAISystemMessage());
-    } else {
-      messages.add(_buildOpenAIUserMessage());
-      _arrangeMessages();
-    }
-    //
-    pp('$mm ... chat.endpoint: ${OpenAI.instance.chat.endpoint} '
-        '... starting chat ... messages: ${messages.length}');
-
-    completionModel = await openAIChat.create(
-        temperature: 0.0, model: 'gpt-3.5-turbo-0613', messages: messages);
-
-    pp('$mm ... 🥦🥦🥦chat stream, finishReason: ${completionModel.choices.first.finishReason}');
-    pp('$mm ... 🥦🥦🥦chat stream, text: ${completionModel.choices.first.message.content?.first.text}');
-    pp('$mm ... 🥦🥦🥦chat stream, usage: ${completionModel.usage.toMap()}');
-
+    pp("$mm ...._startOpenAITextChat ..... isFirstTime: $isFirstTime text: $text");
+    _prepareMessages(isFirstTime, text);
     List<Parts> partsContext = [];
-    partsContext.add(Parts(text: completionModel.choices.first.message.content?.first.text));
-    chats.add(Content(role: 'model', parts: partsContext));
-    if (completionModel.choices.first.finishReason == 'stop') {
-      pp('$mm ...🥦🥦🥦 💛everything is OK, Boss!!, 💛 SgelaAI has responded with answers ...');
-      _showMarkdown = true;
-    } else {
+
+    try {
+      setState(() {
+        loading = true;
+      });
+
+      completionModel = await openAIChat.create(
+          temperature: 0.0, model: 'gpt-3.5-turbo-0613', messages: messages);
+      _print();
+
+      partsContext.add(Parts(
+          text: completionModel.choices.first.message.content?.first.text));
+      chats.add(Content(role: 'model', parts: partsContext));
+      if (completionModel.choices.first.finishReason == 'stop') {
+        pp('$mm ...🥦🥦🥦 💛everything is OK, Boss!!, 💛 OpenAI has responded with answers ...');
+        _showMarkdown = true;
+      } else {
+        if (mounted) {
+          showErrorDialog(context,
+              'SgelaAI could not help you at this time. Please try again with Gemini model');
+        }
+      }
+    } catch (e, s) {
+      pp('$mm $e $s');
       if (mounted) {
-        showErrorDialog(context,
-            'SgelaAI could not help you at this time. Please try again');
+        showErrorDialog(context, '$e');
       }
     }
 
@@ -186,11 +194,30 @@ class OpenAITextChatWidgetState extends State<OpenAITextChatWidget> {
     });
   }
 
-  // TextEditingController textEditingController = TextEditingController();
+  void _prepareMessages(bool isFirstTime, String text) {
+    if (isFirstTime) {
+      messages
+          .add(_buildFirstTimeOpenAIUserMessage(text.isEmpty ? 'Hi!' : text));
+      messages.add(_buildOpenAISystemMessage());
+    } else {
+      messages.add(_buildOpenAIUserMessage());
+      _arrangeMessages();
+    }
+  }
+
+  void _print() {
+    pp('$mm ... 🥦🥦🥦chat stream, finishReason: ${completionModel.choices.first.finishReason}');
+    // pp('$mm ... 🥦🥦🥦chat stream, text: ${completionModel.choices.first.message.content?.first.text}');
+    pp('$mm ... 🥦🥦🥦chat stream, usage: ${completionModel.usage.toMap()}');
+  }
+
   bool _showMarkdown = false;
 
-  OpenAIChatCompletionChoiceMessageModel _buildFirstTimeOpenAIUserMessage() {
+  OpenAIChatCompletionChoiceMessageModel _buildFirstTimeOpenAIUserMessage(
+      String? text) {
     OpenAIChatCompletionChoiceMessageContentItemModel? subjectModel;
+    OpenAIChatCompletionChoiceMessageContentItemModel? userModel;
+
     if (widget.examLink != null) {
       subjectModel = OpenAIChatCompletionChoiceMessageContentItemModel.text(
         "I would like to talk about ${widget.examLink!.subject!.title} today",
@@ -204,18 +231,28 @@ class OpenAITextChatWidgetState extends State<OpenAITextChatWidget> {
         "I need your help to study all sorts of subjects and prepare for examinations",
       );
     }
+    if (text != null) {
+      userModel = OpenAIChatCompletionChoiceMessageContentItemModel.text(text);
+    } else {
+      userModel =
+          OpenAIChatCompletionChoiceMessageContentItemModel.text('Hello!');
+    }
 
     final userMessage = OpenAIChatCompletionChoiceMessageModel(
-      content: [subjectModel],
+      content: [subjectModel, userModel],
       role: OpenAIChatMessageRole.user,
     );
     return userMessage;
   }
 
   OpenAIChatCompletionChoiceMessageModel _buildOpenAIUserMessage() {
+    var text = 'Hello!';
+    if (textEditController.text.isNotEmpty) {
+      text = textEditController.text;
+    }
     OpenAIChatCompletionChoiceMessageContentItemModel subjectModel =
         OpenAIChatCompletionChoiceMessageContentItemModel.text(
-      textEditController.text,
+      text,
     );
 
     final userMessage = OpenAIChatCompletionChoiceMessageModel(
@@ -277,7 +314,6 @@ class OpenAITextChatWidgetState extends State<OpenAITextChatWidget> {
     if (content.role == 'model' || content.role == 'system') {
       role = 'SgelaAI';
     }
-    pp('$mm ... chatItem: role: $role');
     if (isLatex) {
       return Card(
         elevation: 0,
@@ -335,7 +371,12 @@ class OpenAITextChatWidgetState extends State<OpenAITextChatWidget> {
   String modifyString(String input) {
     return input.replaceAll('**', '\n');
   }
-
+  String _replaceKeywordsWithBlanks(String text) {
+    String modifiedText = text
+        .replaceAll("Copyright reserved", "")
+        .replaceAll("Please turn over", "");
+    return modifiedText;
+  }
   @override
   Widget build(BuildContext context) {
     return SafeArea(
@@ -386,18 +427,29 @@ class OpenAITextChatWidgetState extends State<OpenAITextChatWidget> {
                     child: chats.isNotEmpty
                         ? Align(
                             alignment: Alignment.bottomCenter,
-                            child: SingleChildScrollView(
-                              reverse: true,
-                              child: Padding(
-                                padding: const EdgeInsets.all(8.0),
-                                child: ListView.builder(
-                                  shrinkWrap: true,
-                                  physics: const NeverScrollableScrollPhysics(),
-                                  itemCount: chats.length,
-                                  reverse: false,
-                                  itemBuilder: (_, index) {
-                                    return chatItem(context, index);
-                                  },
+                            child: bd.Badge(
+                              badgeContent: Text('${chats.length}'),
+                              position: bd.BadgePosition.topEnd(top: -16, end: -8),
+                              badgeStyle: const bd.BadgeStyle(
+                                padding: EdgeInsets.all(12.0),
+                              ),
+                              onTap: () {
+                                pp('$mm badge tapped, scroll up or down');
+                              },
+                              child: SingleChildScrollView(
+                                reverse: true,
+                                child: Padding(
+                                  padding: const EdgeInsets.all(8.0),
+                                  child: ListView.builder(
+                                    shrinkWrap: true,
+                                    physics:
+                                        const NeverScrollableScrollPhysics(),
+                                    itemCount: chats.length,
+                                    reverse: false,
+                                    itemBuilder: (_, index) {
+                                      return chatItem(context, index);
+                                    },
+                                  ),
                                 ),
                               ),
                             ),
@@ -413,7 +465,20 @@ class OpenAITextChatWidgetState extends State<OpenAITextChatWidget> {
                   height: 36,
                 ),
               ],
-            )
+            ),
+            loading
+                ? const Positioned(
+                    bottom: 24,
+                    left: 24,
+                    child: SizedBox(
+                        width: 100,
+                        height: 100,
+                        child: Center(
+                          child: BusyIndicator(
+                            showTimerOnly: true,
+                          ),
+                        )))
+                : gapW4,
           ],
         ),
       ),

@@ -11,6 +11,8 @@ import 'package:edu_chatbot/data/sponsoree_activity.dart';
 import 'package:edu_chatbot/data/subject.dart';
 import 'package:edu_chatbot/services/local_data_service.dart';
 import 'package:edu_chatbot/util/dark_light_control.dart';
+import 'package:edu_chatbot/util/file_downloader_widget.dart';
+import 'package:edu_chatbot/util/image_file_util.dart';
 import 'package:edu_chatbot/util/prefs.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:geocoding/geocoding.dart';
@@ -22,7 +24,6 @@ import '../data/sgela_user.dart';
 import '../firebase_options.dart';
 import '../util/environment.dart';
 import '../util/functions.dart';
-import '../util/image_file_util.dart';
 import '../util/location_util.dart';
 
 class FirestoreService {
@@ -45,6 +46,7 @@ class FirestoreService {
       options: DefaultFirebaseOptions.currentPlatform,
     );
   }
+
   Future<List<ExamDocument>> getExamDocuments() async {
     List<ExamDocument> docs = [];
     var querySnapshot = await firebaseFirestore
@@ -96,24 +98,34 @@ class FirestoreService {
   }
 
   Future<List<ExamPageContent>> getExamPageContents(int examLinkId) async {
-    List<ExamPageContent> examPageContents = [];
+    List<ExamPageContent> examPageContents =
+        await localDataService.getExamPageContents(examLinkId);
+    if (examPageContents.isNotEmpty) {
+      return examPageContents;
+    }
+    var start = DateTime.now();
     var querySnapshot = await firebaseFirestore
         .collection('ExamPageContent')
         .where('examLinkId', isEqualTo: examLinkId)
         .get();
-    for (var s in querySnapshot.docs) {
-      var content = ExamPageContent.fromJson(s.data());
+
+    for (var snapshot in querySnapshot.docs) {
+      var content = ExamPageContent.fromJson(snapshot.data());
       examPageContents.add(content);
     }
-    pp('$mm ... examPageContents: ${examPageContents.length}');
-    for (var value in examPageContents) {
-      if (value.pageImageUrl != null) {
-        pp('$mm ... examPageContents: downloading exam page image ....');
-        File file = await ImageFileUtil.downloadFile(value.pageImageUrl!);
-        value.uBytes = file.readAsBytesSync();
+    pp('$mm ... examPageContents: ${examPageContents.length} ... '
+        'will download the page images ......... ');
+      for (var value in examPageContents) {
+        if (value.pageImageUrl != null) {
+          File file = await ImageFileUtil.downloadFile(
+              value.pageImageUrl!, 'file${value.pageIndex!}.png');
+          value.uBytes = file.readAsBytesSync();
+        }
+        await localDataService.addExamPageContent(value);
       }
-      await localDataService.addExamPageContent(value);
-    }
+
+    var end = DateTime.now();
+    pp('$mm Files downloaded: elapsed time: ${end.difference(start).inSeconds} seconds');
     return examPageContents;
   }
 
@@ -149,8 +161,7 @@ class FirestoreService {
   }
 
   Future addRating(AIResponseRating rating) async {
-    var colRef =
-    firebaseFirestore.collection('AIResponseRating');
+    var colRef = firebaseFirestore.collection('AIResponseRating');
     await colRef.add(rating.toJson());
   }
 
@@ -184,6 +195,7 @@ class FirestoreService {
     }
     return activities;
   }
+
   Future<List<SponsoreeActivity>> getSponsoreeActivityByDate(
       int organizationId, String date) async {
     var querySnapshot = await firebaseFirestore
@@ -431,4 +443,11 @@ class FirestoreService {
     return brandings;
   }
 //
+}
+
+class UrlBag {
+  late int pageIndex;
+  late String url;
+
+  UrlBag(this.pageIndex, this.url);
 }

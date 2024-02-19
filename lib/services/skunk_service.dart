@@ -30,7 +30,7 @@ class SkunkService {
     for (var value in examPageContents) {
       if (value.pageImageUrl != null) {
         pp('$mm ... examPageContents: downloading exam page image ....');
-        File file = await ImageFileUtil.downloadFile(value.pageImageUrl!);
+        File file = await ImageFileUtil.downloadFile(value.pageImageUrl!, 'file${value.pageIndex}.png');
         value.uBytes = file.readAsBytesSync();
       }
       await localDataService.addExamPageContent(value);

@@ -4,7 +4,6 @@ import 'package:edu_chatbot/data/sponsoree.dart';
 import 'package:edu_chatbot/data/subject.dart';
 import 'package:edu_chatbot/gemini/sections/gemini_multi_turn_chat_stream.dart';
 import 'package:edu_chatbot/repositories/repository.dart';
-import 'package:edu_chatbot/services/chat_gpt_service.dart';
 import 'package:edu_chatbot/services/firestore_service.dart';
 import 'package:edu_chatbot/ui/chat/ai_model_selector.dart';
 import 'package:edu_chatbot/ui/exam/exam_document_list.dart';
@@ -19,6 +18,7 @@ import 'package:edu_chatbot/util/dark_light_control.dart';
 import 'package:edu_chatbot/util/functions.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gemini/flutter_gemini.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:get_it/get_it.dart';
 
 import '../../data/branding.dart';
@@ -155,7 +155,6 @@ class SubjectSearchState extends State<SubjectSearch> {
         ));
   }
 
-
   _navigateToExamsDocumentList(BuildContext context, Subject subject) {
     NavigationUtils.navigateToPage(
         context: context,
@@ -208,14 +207,16 @@ class SubjectSearchState extends State<SubjectSearch> {
   final ScrollController _scrollController = ScrollController();
 
   _showHelpToast() async {
-
     if (mounted) {
-      showToast(
-          backgroundColor: Colors.black,
-          padding: 24,
-          textStyle: const TextStyle(color: Colors.white),
-          message: 'Double tap to move a Subject near the top of the list',
-          context: context);
+      Future.delayed(const Duration(seconds: 6), () {
+        showToast(
+            backgroundColor: Colors.black,
+            padding: 24,
+            textStyle: const TextStyle(color: Colors.white),
+            message: 'Double tap to move a Subject near the top of the list',
+            toastGravity: ToastGravity.BOTTOM,
+            context: context);
+      });
     }
   }
 
@@ -224,7 +225,8 @@ class SubjectSearchState extends State<SubjectSearch> {
         backgroundColor: Colors.teal[700],
         padding: 20,
         textStyle: const TextStyle(color: Colors.white),
-        message: 'Subject is a favourite: ${subject.title}',
+        message: '${subject.title} will be moved near the top of the list',
+        duration: const Duration(seconds: 2),
         context: context);
 
     favouriteSubjects = prefs.getSubjects();
@@ -305,6 +307,7 @@ class SubjectSearchState extends State<SubjectSearch> {
         value: modelMistral,
         label: Text(modelMistral, style: myTextStyleTiny(context))));
   }
+
   void scrollToTop() {
     _scrollController.animateTo(
       0,
@@ -312,6 +315,7 @@ class SubjectSearchState extends State<SubjectSearch> {
       curve: Curves.easeInOut,
     );
   }
+
   @override
   Widget build(BuildContext context) {
     final TextStyle titleStyle =
@@ -352,17 +356,17 @@ class SubjectSearchState extends State<SubjectSearch> {
                           : Colors.black)),
               IconButton(
                 onPressed: () {
-                 switch(currentAIModel) {
-                   case modelGeminiAI:
-                     _navigateToGeminiMultiTurnChat();
-                     break;
-                   case modelOpenAI:
-                     _navigateToOpenAIMultiTurnChat();
-                     break;
-                   default:
-                     _navigateToGeminiMultiTurnChat();
-                     break;
-                 }
+                  switch (currentAIModel) {
+                    case modelGeminiAI:
+                      _navigateToGeminiMultiTurnChat();
+                      break;
+                    case modelOpenAI:
+                      _navigateToOpenAIMultiTurnChat();
+                      break;
+                    default:
+                      _navigateToGeminiMultiTurnChat();
+                      break;
+                  }
                 },
                 icon: Icon(
                   Icons.chat_outlined,
@@ -384,29 +388,33 @@ class SubjectSearchState extends State<SubjectSearch> {
                         emptySelectionAllowed: true,
                         segments: buttons,
                         onSelectionChanged: (sel) {
-                          pp('$mm ... button selected: $sel');
-
-                          switch (sel.first) {
-                            case modelGeminiAI:
-                              currentAIModel = modelGeminiAI;
-                              break;
-                            case modelOpenAI:
-                              currentAIModel = modelOpenAI;
-                              break;
-                            case modelMistral:
-                              showToast(
-                                  message: 'Mistral model not available yet',
-                                  context: context);
-                              setState(() {
-                                _selectedButton = {modelGeminiAI};
-                              });
-                              break;
-                            default:
-                              currentAIModel = modelGeminiAI;
+                          pp('$mm ... ai model selection button selected: $sel');
+                          if (sel.isNotEmpty) {
+                            switch (sel.first) {
+                              case modelGeminiAI:
+                                currentAIModel = modelGeminiAI;
+                                prefs.saveCurrentModel(modelGeminiAI);
+                                break;
+                              case modelOpenAI:
+                                currentAIModel = modelOpenAI;
+                                prefs.saveCurrentModel(modelOpenAI);
+                                break;
+                              case modelMistral:
+                                showToast(
+                                    message: 'Mistral model not available yet',
+                                    context: context);
+                                currentAIModel = modelGeminiAI;
+                                prefs.saveCurrentModel(modelGeminiAI);
+                                break;
+                              default:
+                                currentAIModel = modelGeminiAI;
+                                break;
+                            }
+                            _selectedButton = {currentAIModel};
+                          } else {
+                            _selectedButton = {modelGeminiAI};
                           }
-                          setState(() {
-                            _selectedButton = sel;
-                          });
+                          setState(() {});
                         },
                         selected: _selectedButton,
                       ),
@@ -431,17 +439,20 @@ class SubjectSearchState extends State<SubjectSearch> {
                       )
                     : gapH32,
                 const SizedBox(height: 4),
-                Row(mainAxisAlignment: MainAxisAlignment.center,
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
                       'Subjects Exams on board',
-                      style: myTextStyle(context, Theme.of(context).primaryColor,
-                          16, FontWeight.w900),
+                      style: myTextStyle(context,
+                          Theme.of(context).primaryColor, 16, FontWeight.w900),
                     ),
                     gapW32,
-                    IconButton(onPressed: (){
-                      _showHelpToast();
-                    }, icon: const Icon(Icons.question_mark))
+                    IconButton(
+                        onPressed: () {
+                          _showHelpToast();
+                        },
+                        icon: const Icon(Icons.question_mark))
                   ],
                 ),
                 gapH16,
@@ -518,7 +529,9 @@ class SubjectSearchState extends State<SubjectSearch> {
                   },
                   child: const Card(
                     elevation: 8,
-                    child: SponsoredBy(logoHeight: 20,),
+                    child: SponsoredBy(
+                      logoHeight: 20,
+                    ),
                   ),
                 ),
               ],
@@ -529,3 +542,4 @@ class SubjectSearchState extends State<SubjectSearch> {
     );
   }
 }
+

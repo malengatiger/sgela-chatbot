@@ -1,6 +1,3 @@
-import 'dart:io';
-import 'dart:typed_data';
-
 import 'package:dart_openai/dart_openai.dart';
 import 'package:edu_chatbot/data/branding.dart';
 import 'package:edu_chatbot/data/exam_link.dart';
@@ -10,18 +7,16 @@ import 'package:edu_chatbot/data/organization.dart';
 import 'package:edu_chatbot/data/sponsoree.dart';
 import 'package:edu_chatbot/data/sponsoree_activity.dart';
 import 'package:edu_chatbot/services/firestore_service.dart';
-import 'package:edu_chatbot/ui/chat/sgela_markdown_widget.dart';
 import 'package:edu_chatbot/ui/chat/ai_rating_widget.dart';
+import 'package:edu_chatbot/ui/chat/sgela_markdown_widget.dart';
 import 'package:edu_chatbot/ui/misc/busy_indicator.dart';
 import 'package:edu_chatbot/ui/misc/sponsored_by.dart';
 import 'package:edu_chatbot/ui/organization/org_logo_widget.dart';
 import 'package:edu_chatbot/util/prefs.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_gemini/flutter_gemini.dart';
 import 'package:flutter_tex/flutter_tex.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:get_it/get_it.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:responsive_builder/responsive_builder.dart';
 
 import '../../util/dark_light_control.dart';
@@ -29,8 +24,11 @@ import '../../util/functions.dart';
 import '../exam/exam_link_details.dart';
 
 class OpenAIImageChatWidget extends StatefulWidget {
-  const OpenAIImageChatWidget(
-      {super.key, required this.examLink, required this.examPageContents});
+  const OpenAIImageChatWidget({
+    super.key,
+    required this.examLink,
+    required this.examPageContents,
+  });
 
   final ExamLink examLink;
   final List<ExamPageContent> examPageContents;
@@ -79,10 +77,6 @@ class OpenAIImageChatWidgetState extends State<OpenAIImageChatWidget>
       sponsoree = prefs.getSponsoree();
       organization = prefs.getOrganization();
       branding = prefs.getBrand();
-      List<OpenAIModelModel> models = await OpenAI.instance.model.list();
-      for (var model in models) {
-        pp('$mm OpenAI model: ${model.id} 🍎🍎ownedBy: ${model.ownedBy}');
-      }
     } catch (e) {
       pp(e);
       if (mounted) {
@@ -94,8 +88,8 @@ class OpenAIImageChatWidgetState extends State<OpenAIImageChatWidget>
     });
   }
 
-  _startOpenAIChat() async {
-    pp('\n\n$mm ... 🥦🥦🥦 _startOpenAIChat: .... 🍎 with ${widget.examPageContents.length} pages');
+  _startOpenAIChatWithImages() async {
+    pp('\n\n$mm ... 🥦🥦🥦 _startOpenAIChatWithImages: .... 🍎 ');
     var start = DateTime.now();
     aiModel = 'OpenAI';
     _resetCounters();
@@ -111,7 +105,7 @@ class OpenAIImageChatWidgetState extends State<OpenAIImageChatWidget>
 
     // the user message that will be sent to the request.
     OpenAIChatCompletionChoiceMessageModel userMessage =
-        _buildOpenAIUserMessage();
+        _buildOpenAIUserMessageWithImages();
 
     final requestMessages = [
       systemMessage,
@@ -122,81 +116,6 @@ class OpenAIImageChatWidgetState extends State<OpenAIImageChatWidget>
       pp('$mm ... 🥦🥦🥦creating OpenAIChatCompletionModel ....'); // the actual request.
       OpenAIChatCompletionModel chatCompletion =
           await OpenAI.instance.chat.create(
-        model: "gpt-3.5-turbo-1106",
-        // responseFormat: {"type": "markdown"},
-        seed: 6,
-        messages: requestMessages,
-        temperature: 0.0,
-        maxTokens: 1000,
-        // toolChoice: "auto",
-      );
-
-      _printResults(chatCompletion);
-
-      promptTokens = chatCompletion.usage.promptTokens;
-      completionTokens = chatCompletion.usage.completionTokens;
-      totalTokens = chatCompletion.usage.totalTokens;
-      fingerPrint = chatCompletion.systemFingerprint;
-
-      //
-      if (chatCompletion.haveChoices) {
-        aiResponseText =
-            chatCompletion.choices.first.message.content?.first.text;
-        pp('$mm ... 🥦🥦🥦completion.choices.first.finishReason: 🍎🍎 ${chatCompletion.choices.first.finishReason}');
-        if (chatCompletion.choices.first.finishReason == 'stop') {
-          pp('$mm ...🥦🥦🥦 💛everything is OK, Boss!!, 💛 SgelaAI has responded with answers ...');
-          _showMarkdown = true;
-        } else {
-          if (mounted) {
-            showErrorDialog(context,
-                'SgelaAI could not help you at this time. Please try again');
-          }
-        }
-      }
-    } catch (e, s) {
-      pp(e);
-      pp(s);
-      if (mounted) {
-        showErrorDialog(context, '$e');
-      }
-    }
-    var end = DateTime.now();
-    elapsedTimeInSeconds = end.difference(start).inSeconds;
-    _writeSponsoreeActivity('Gemini Pro Vision');
-
-    setState(() {
-      _busy = false;
-    });
-  }
-
-  _startOpenAIChatWithImages() async {
-    pp('\n\n$mm ... 🥦🥦🥦 _startOpenAIChatWithImages: .... 🍎 with ${widget.examPageContents.length} pages');
-    var start = DateTime.now();
-    aiModel = 'OpenAI';
-    _resetCounters();
-
-    await Future.delayed(const Duration(milliseconds: 20));
-    setState(() {
-      _busy = true;
-      aiResponseText = null;
-    });
-    // the system message that will be sent to the request.
-    OpenAIChatCompletionChoiceMessageModel systemMessage =
-    _buildOpenAISystemMessage();
-
-    // the user message that will be sent to the request.
-    OpenAIChatCompletionChoiceMessageModel userMessage =
-    _buildOpenAIUserMessageWithImages();
-
-    final requestMessages = [
-      systemMessage,
-      userMessage,
-    ];
-
-    try {
-      pp('$mm ... 🥦🥦🥦creating OpenAIChatCompletionModel ....'); // the actual request.
-      OpenAIChatCompletionModel chatCompletion =
-      await OpenAI.instance.chat.create(
         model: "gpt-4-vision-preview",
         // responseFormat: {"type": "markdown"},
         seed: 6,
@@ -244,26 +163,10 @@ class OpenAIImageChatWidgetState extends State<OpenAIImageChatWidget>
     });
   }
 
-
-  OpenAIChatCompletionChoiceMessageModel _buildOpenAIUserMessage() {
-    StringBuffer stringBuffer = StringBuffer();
-    for (var page in widget.examPageContents) {
-      stringBuffer.write('${replaceKeywordsWithBlanks(page.text!)}\n');
-    }
-    final userMessage = OpenAIChatCompletionChoiceMessageModel(
-      content: [
-        OpenAIChatCompletionChoiceMessageContentItemModel.text(
-          stringBuffer.toString(),
-        ),
-      ],
-      role: OpenAIChatMessageRole.user,
-    );
-    return userMessage;
-  }
-
   OpenAIChatCompletionChoiceMessageModel _buildOpenAIUserMessageWithImages() {
     List<OpenAIChatCompletionChoiceMessageContentItemModel> messages = [];
-    for (var page in widget.examPageContents) {
+
+    for (var page in widget.examPageContents!) {
       if (page.pageImageUrl != null) {
         messages.add(OpenAIChatCompletionChoiceMessageContentItemModel.imageUrl(
           page.pageImageUrl!,
@@ -339,83 +242,6 @@ class OpenAIImageChatWidgetState extends State<OpenAIImageChatWidget>
     return systemMessage;
   }
 
-  void _startOpenAIStream() async {
-    pp("$mm ...._startOpenAIStream .....");
-
-    // The user message to be sent to the request.
-    final systemMessage = _buildOpenAISystemMessage();
-    final userMessage = _buildOpenAIUserMessage();
-// The request to be sent.
-    final chatStream = OpenAI.instance.chat.createStream(
-      model: "gpt-3.5-turbo",
-      messages: [
-        systemMessage,
-        userMessage,
-      ],
-      seed: 313,
-      n: 2,
-    );
-
-// Listen to the stream.
-    chatStream.listen(
-      (streamChatCompletion) {
-        final content = streamChatCompletion.choices.first.delta.content;
-        pp(content);
-        var sb = StringBuffer();
-        sb.write(aiResponseText);
-        sb.write('\n');
-        content?.forEach((element) {
-          sb.write('${element.text}');
-          pp('$mm streamed response: ${element.text}');
-        });
-        setState(() {
-          aiResponseText = sb.toString();
-        });
-      },
-      onDone: () {
-        pp("$mm .... on OpenAI stream done!");
-      },
-    );
-  }
-
-  void _startOpenAIStreamWithImages() async {
-    pp("$mm ...._startOpenAIStreamWithImages .....");
-
-    // The user message to be sent to the request.
-    final systemMessage = _buildOpenAISystemMessageWithImages();
-    final userMessage = _buildOpenAIUserMessageWithImages();
-    final chatStream = OpenAI.instance.chat.createStream(
-      model: "gpt-4-vision-preview",
-      messages: [
-        systemMessage,
-        userMessage,
-      ],
-      seed: 313,
-      n: 2,
-    );
-
-    pp('$mm _startOpenAIStreamWithImages: Listen to the OpenAI stream .......');
-    chatStream.listen(
-      (streamChatCompletion) {
-        final content = streamChatCompletion.choices.first.delta.content;
-        pp('$mm ... stream data coming in, content length: ${content?.length}');
-        var sb = StringBuffer();
-        sb.write(aiResponseText);
-        sb.write('\n');
-        content?.forEach((element) {
-          sb.write('${element.text}');
-          pp('$mm streamed response: ${element.text}');
-        });
-        setState(() {
-          aiResponseText = sb.toString();
-        });
-      },
-      onDone: () {
-        pp("$mm .... on ai stream done!");
-      },
-    );
-  }
-
   void _printResults(OpenAIChatCompletionModel chatCompletion) {
     pp('$mm OpenAIChatCompletion completion.choices.first.message: 🍎🍎 ${chatCompletion.choices.first.message}'); // ...
     pp('$mm OpenAIChatCompletion promptTokens : 🍎🍎${chatCompletion.usage.promptTokens}'); // ...
@@ -467,11 +293,16 @@ class OpenAIImageChatWidgetState extends State<OpenAIImageChatWidget>
     }
   }
 
+  int? subjectId, examLinkId;
+  String? subject, examTitle;
+
   _writeRating(double rating) async {
     try {
       setState(() {
         ratingHasBeenDone = false;
       });
+
+      _setVariables();
       var mr = AIResponseRating(
           aiModel: aiModel,
           organizationId: organization?.id,
@@ -479,17 +310,16 @@ class OpenAIImageChatWidgetState extends State<OpenAIImageChatWidget>
           sponsoreeName: sponsoree?.sgelaUserName,
           sponsoreeEmail: sponsoree?.sgelaEmail,
           sponsoreeCellphone: sponsoree?.sgelaCellphone,
-          subjectId: widget.examLink.subject?.id,
-          subject: widget.examLink.subject?.title,
+          subjectId: subjectId,
+          subject: subject,
           id: DateTime.now().millisecondsSinceEpoch,
           rating: rating.toInt(),
           userId: sponsoree?.sgelaUserId,
-          examTitle:
-              '${widget.examLink.documentTitle} - ${widget.examLink.title}',
+          examTitle: examTitle,
           date: DateTime.now().toUtc().toIso8601String(),
           numberOfPagesInQuery: widget.examPageContents.length,
           tokensUsed: totalTokens,
-          examLinkId: widget.examLink.id);
+          examLinkId: examLinkId);
 
       pp('$mm ....... add AIResponseRating to database ... ');
       myPrettyJsonPrint(mr.toJson());
@@ -504,6 +334,14 @@ class OpenAIImageChatWidgetState extends State<OpenAIImageChatWidget>
         showErrorDialog(context, '$e');
       }
     }
+  }
+
+  void _setVariables() {
+    examLinkId = widget.examLink.id!;
+    subjectId = widget.examLink.subject!.id!;
+    subject = widget.examLink.subject!.title!;
+    examTitle =
+        '${widget.examLink.documentTitle!} - ${widget.examLink.subject!.title!} - ${widget.examLink.title}';
   }
 
   String replaceKeywordsWithBlanks(String text) {
@@ -533,22 +371,22 @@ class OpenAIImageChatWidgetState extends State<OpenAIImageChatWidget>
       _busy = true;
     });
     try {
+      _setVariables();
       var act = SponsoreeActivity(
           organizationId: organization?.id,
           id: DateTime.now().millisecondsSinceEpoch,
           date: DateTime.now().toUtc().toIso8601String(),
           organizationName: organization?.name,
-          examLinkId: widget.examLink.id!,
+          examLinkId: examLinkId,
           totalTokens: totalTokens,
           aiModel: model,
           elapsedTimeInSeconds: elapsedTimeInSeconds,
           sponsoreeCellphone: sponsoree?.sgelaCellphone,
           sponsoreeEmail: sponsoree?.sgelaEmail,
           sponsoreeName: sponsoree?.sgelaUserName,
-          subjectId: widget.examLink.subject?.id!,
-          examTitle:
-              '${widget.examLink.documentTitle} - ${widget.examLink.title}',
-          subject: widget.examLink.subject?.title,
+          subjectId: subjectId,
+          examTitle: examTitle,
+          subject: subject,
           userId: sponsoree?.sgelaUserId,
           sponsoreeId: sponsoree?.id!);
 
@@ -572,7 +410,7 @@ class OpenAIImageChatWidgetState extends State<OpenAIImageChatWidget>
     _controller.dispose();
     super.dispose();
   }
-
+  bool _showExamDetails = false;
   @override
   Widget build(BuildContext context) {
     var mode = prefs.getMode();
@@ -588,14 +426,26 @@ class OpenAIImageChatWidgetState extends State<OpenAIImageChatWidget>
               actions: [
                 IconButton(
                     onPressed: () {
-                      _controlTraffic();
+                     setState(() {
+                       _showExamDetails = !_showExamDetails;
+                     });
                     },
                     icon: Icon(
-                      Icons.refresh,
+                      Icons.question_mark,
                       color: mode == DARK
                           ? Theme.of(context).primaryColor
                           : Colors.black,
                     )),
+                // IconButton(
+                //     onPressed: () {
+                //       _controlTraffic();
+                //     },
+                //     icon: Icon(
+                //       Icons.refresh,
+                //       color: mode == DARK
+                //           ? Theme.of(context).primaryColor
+                //           : Colors.black,
+                //     )),
                 IconButton(
                     onPressed: () {
                       _openRatingToast();
@@ -616,12 +466,19 @@ class OpenAIImageChatWidgetState extends State<OpenAIImageChatWidget>
                       padding: const EdgeInsets.all(12.0),
                       child: Column(
                         children: [
-                          ExamLinkDetails(
-                            examLink: widget.examLink,
-                            pageNumber:
-                                widget.examPageContents.first.pageIndex! + 1,
-                          ),
-                          gapH16,
+                          _showExamDetails? GestureDetector(
+                            onTap: (){
+                              setState(() {
+                                _showExamDetails = false;
+                              });
+                            },
+                            child: ExamLinkDetails(
+                              examLink: widget.examLink,
+                              pageNumber:
+                                  widget.examPageContents.first.pageIndex! + 1,
+                            ),
+                          ): gapW4,
+                          gapH4,
                           aiResponseText == null
                               ? gapW4
                               : Row(
@@ -653,7 +510,7 @@ class OpenAIImageChatWidgetState extends State<OpenAIImageChatWidget>
                                           )
                                   ],
                                 ),
-                          gapH16,
+                          gapH4,
                           aiResponseText == null
                               ? const BusyIndicator(
                                   caption: 'Talking to SgelaAI ...',
@@ -661,12 +518,16 @@ class OpenAIImageChatWidgetState extends State<OpenAIImageChatWidget>
                                 )
                               : Expanded(
                                   child: _showMarkdown
-                                      ? SgelaMarkdownWidget(text: aiResponseText!)
+                                      ? SgelaMarkdownWidget(
+                                          text: aiResponseText!,
+                                          backgroundColor: Colors.teal[700]!,
+                                        )
                                       : TeXView(
-                                          style: const TeXViewStyle(
+                                          style: TeXViewStyle(
                                             contentColor: Colors.white,
-                                            backgroundColor: Colors.transparent,
-                                            padding: TeXViewPadding.all(8),
+                                            backgroundColor: Colors.teal[700]!,
+                                            padding:
+                                                const TeXViewPadding.all(8),
                                           ),
                                           renderingEngine:
                                               const TeXViewRenderingEngine
@@ -694,4 +555,3 @@ class OpenAIImageChatWidgetState extends State<OpenAIImageChatWidget>
             )));
   }
 }
-

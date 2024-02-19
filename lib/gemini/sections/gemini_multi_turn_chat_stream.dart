@@ -13,7 +13,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_gemini/flutter_gemini.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:get_it/get_it.dart';
-
+import 'package:badges/badges.dart' as bd;
 import '../../util/functions.dart';
 
 class GeminiMultiTurnStreamChat extends StatefulWidget {
@@ -45,7 +45,7 @@ class GeminiMultiTurnStreamChatState extends State<GeminiMultiTurnStreamChat> {
   LocalDataService localDataService = GetIt.instance<LocalDataService>();
   FirestoreService firestoreService = GetIt.instance<FirestoreService>();
   Branding? branding;
-  var controller = TextEditingController();
+  var _chatInputController = TextEditingController();
 
   @override
   void initState() {
@@ -59,8 +59,12 @@ class GeminiMultiTurnStreamChatState extends State<GeminiMultiTurnStreamChat> {
   _getPageContents() async {
     var sb = StringBuffer();
     if (widget.subject != null) {
-      controller = TextEditingController(
+      _chatInputController = TextEditingController(
           text: 'I need help with this subject: ${widget.subject?.title}');
+    }
+    if (widget.examLink != null) {
+      _chatInputController = TextEditingController(
+          text: 'I need help with this subject: ${widget.examLink!.subject?.title}');
     }
     if (widget.examPageContents != null) {
       widget.examPageContents?.forEach((page) {
@@ -73,21 +77,23 @@ class GeminiMultiTurnStreamChatState extends State<GeminiMultiTurnStreamChat> {
     if (_examPageText != null && _examPageText!.isNotEmpty) {
       _examPageText =
           'Find the questions or problems in the text below and respond with the solutions in markdown format.\n'
-              'Show solution steps where necessary.\n The text: $_examPageText';
+          'Show solution steps where necessary.\n The text: $_examPageText';
       pp('$mm ... length of examText: ${_examPageText!.length}  bytes');
     }
     _handleInputText(true);
     setState(() {});
   }
 
-
   int insertIndex = 10;
+
   void _handleInputText(bool isFirstTime) {
-    if (_examPageText != null && _examPageText!.isNotEmpty) {
-      textPrompt = _examPageText!;
+    if (isFirstTime) {
+      if (_examPageText != null && _examPageText!.isNotEmpty) {
+        textPrompt = _examPageText!;
+      }
     } else {
-      if (controller.text.isNotEmpty) {
-        textPrompt = controller.text;
+      if (_chatInputController.text.isNotEmpty) {
+        textPrompt = _chatInputController.text;
       } else {
         textPrompt = '';
       }
@@ -106,17 +112,17 @@ class GeminiMultiTurnStreamChatState extends State<GeminiMultiTurnStreamChat> {
       chats.add(Content(role: 'user', parts: userPartsContext));
       if (chats.length > insertIndex) {
         systemPartsContext = getMultiTurnContext();
-        int index = (chats.length / 2) as int;
+        int index = chats.length ~/ 2;
         chats.insert(index, Content(role: 'model', parts: systemPartsContext));
         insertIndex += 6;
         pp('$mm ... System Context inserted at index: $index -- chats: ${chats.length}');
       }
-      controller.clear();
-      loading = true;
+      _chatInputController.clear();
       _startAndListenToChatStream();
     } else {
       showToast(
-          message: 'Say something, I did not quite hear you 🍎🍎🍎', context: context);
+          message: 'Say something, I did not quite hear you 🍎🍎🍎',
+          context: context);
     }
   }
 
@@ -127,32 +133,28 @@ class GeminiMultiTurnStreamChatState extends State<GeminiMultiTurnStreamChat> {
     pp('$mm _startAndListenToChatStream ...... 🍎🍎🍎🍎🍎🍎🍎🍎🍎 ');
 
     try {
-      // var tokens = await gemini
-      //     .countTokens(textPrompt)
-      //     .catchError((e) => pp('countTokens error : $e'));
-      // pp('$mm ai tokens for prompt: $tokens');
-
+      setState(() {
+        _busy = true;
+      });
       gemini.streamChat(chats).listen((candidates) {
-            pp("\n\n$mm gemini.streamChat fired!: chats: ${chats.length} turnNumber: $turnNumber"
-                " 🍎🍎🍎🍎🍎🍎🍎🍎🍎--------->");
-            turnNumber++;
-            loading = false;
-            setState(() {
-              if (chats.isNotEmpty && chats.last.role == candidates.content?.role) {
-                chats.last.parts!.last.text =
-                    '${chats.last.parts!.last.text}${candidates.output}';
-              } else {
-                chats.add(
-                    Content(role: 'model', parts: [Parts(text: candidates.output)]));
-              }
-            });
-            pp('$mm ... added to chats, now we have ${chats.length} chats. '
-                '💜💜 turnNumber: $turnNumber');
-            for (var value in chats) {
-              myPrettyJsonPrint(value.toJson());
-            }
-          });
-    } catch (e,s) {
+        pp("\n\n$mm gemini.streamChat fired!: chats: ${chats.length} turnNumber: $turnNumber"
+            " 🍎🍎🍎🍎🍎🍎🍎🍎🍎--------->");
+        turnNumber++;
+        loading = false;
+        if (chats.isNotEmpty && chats.last.role == candidates.content?.role) {
+          chats.last.parts!.last.text =
+          '${chats.last.parts!.last.text}${candidates.output}';
+        } else {
+          chats.add(Content(
+              role: 'model', parts: [Parts(text: candidates.output)]));
+        }
+        setState(() {
+          _busy = false;
+        });
+        pp('$mm ... added to chats, now we have ${chats.length} chats. '
+            '💜💜 ');
+      });
+    } catch (e, s) {
       pp('$mm ERROR: $e - $s');
     }
   }
@@ -203,8 +205,9 @@ class GeminiMultiTurnStreamChatState extends State<GeminiMultiTurnStreamChat> {
             Text(role),
             Card(
               elevation: 8,
-              color: content.role == 'model' ? Colors.blue.shade800 : Colors.transparent,
-
+              color: content.role == 'model'
+                  ? Colors.blue.shade800
+                  : Colors.transparent,
               child: Markdown(
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
@@ -220,12 +223,14 @@ class GeminiMultiTurnStreamChatState extends State<GeminiMultiTurnStreamChat> {
   String modifyString(String input) {
     return input.replaceAll('**', '\n');
   }
+
   String _replaceKeywordsWithBlanks(String text) {
     String modifiedText = text
         .replaceAll("Copyright reserved", "")
         .replaceAll("Please turn over", "");
     return modifiedText;
   }
+
   @override
   Widget build(BuildContext context) {
     return SafeArea(
@@ -276,16 +281,26 @@ class GeminiMultiTurnStreamChatState extends State<GeminiMultiTurnStreamChat> {
                     child: chats.isNotEmpty
                         ? Align(
                             alignment: Alignment.bottomCenter,
-                            child: SingleChildScrollView(
-                              reverse: true,
-                              child: Padding(
-                                padding: const EdgeInsets.all(8.0),
-                                child: ListView.builder(
-                                  itemBuilder: chatItem,
-                                  shrinkWrap: true,
-                                  physics: const NeverScrollableScrollPhysics(),
-                                  itemCount: chats.length,
-                                  reverse: false,
+                            child: bd.Badge(
+                              badgeContent: Text('${chats.length}'),
+                              position: bd.BadgePosition.topEnd(top: -16, end: -8),
+                              badgeStyle: const bd.BadgeStyle(
+                                padding: EdgeInsets.all(12.0),
+                              ),
+                              onTap: () {
+                                pp('$mm badge tapped, scroll up or down');
+                              },
+                              child: SingleChildScrollView(
+                                reverse: true,
+                                child: Padding(
+                                  padding: const EdgeInsets.all(8.0),
+                                  child: ListView.builder(
+                                    itemBuilder: chatItem,
+                                    shrinkWrap: true,
+                                    physics: const NeverScrollableScrollPhysics(),
+                                    itemCount: chats.length,
+                                    reverse: false,
+                                  ),
                                 ),
                               ),
                             ),
@@ -297,7 +312,7 @@ class GeminiMultiTurnStreamChatState extends State<GeminiMultiTurnStreamChat> {
                   child: Padding(
                     padding: const EdgeInsets.all(8.0),
                     child: ChatInputBox(
-                      controller: controller,
+                      controller: _chatInputController,
                       onSend: () {
                         _handleInputText(false);
                       },
@@ -308,7 +323,19 @@ class GeminiMultiTurnStreamChatState extends State<GeminiMultiTurnStreamChat> {
                   height: 32,
                 ),
               ],
-            )
+            ),
+            loading
+                ? const Positioned(
+                    bottom: 24,
+                    left: 24,
+                    child: SizedBox(
+                        width: 100,
+                        height: 100,
+                        child: Center(
+                            child: BusyIndicator(
+                          showTimerOnly: true,
+                        ))))
+                : gapW4,
           ],
         ),
       ),

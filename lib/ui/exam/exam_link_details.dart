@@ -15,7 +15,7 @@ class ExamLinkDetails extends StatelessWidget {
     return Card(
       elevation: 8,
       child: SizedBox(
-        height: pageNumber == 0 ? 64 : 80,
+        height: pageNumber == 0 ? 96 : 120,
         child: Padding(
           padding: const EdgeInsets.only(
               left: 20.0, right: 20.0, top: 8.0, bottom: 8.0),
@@ -27,6 +27,12 @@ class ExamLinkDetails extends StatelessWidget {
                 '${examLink.documentTitle}',
                 style: myTextStyleSmall(context),
               ),
+              gapH8,
+              Text(
+                examLink.subject!.title!,
+                style: myTextStyleSmallBoldPrimaryColor(context),
+              ),
+              gapH8,
               Text(
                 '${examLink.title}',
                 style: myTextStyleSmall(context),

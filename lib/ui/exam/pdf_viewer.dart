@@ -7,7 +7,6 @@ import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
-import '../../util/functions.dart';
 
 class PDFViewer extends StatefulWidget {
   final String pdfUrl;
