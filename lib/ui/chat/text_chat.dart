@@ -3,12 +3,13 @@ import 'dart:async';
 import 'package:badges/badges.dart' as bd;
 import 'package:flutter/material.dart';
 import 'package:flutter_tex/flutter_tex.dart';
+import 'package:sgela_services/data/exam_link.dart';
+import 'package:sgela_services/data/subject.dart';
+import 'package:sgela_services/repositories/repository.dart';
+import 'package:sgela_services/services/gemini_chat_service.dart';
+import 'package:sgela_services/sgela_util/functions.dart';
 
-import '../../data/exam_link.dart';
-import '../../data/subject.dart';
-import '../../repositories/repository.dart';
-import '../../services/gemini_chat_service.dart';
-import '../../util/functions.dart';
+import '../../local_util/functions.dart';
 import 'sgela_markdown_widget.dart';
 
 class TextChat extends StatefulWidget {

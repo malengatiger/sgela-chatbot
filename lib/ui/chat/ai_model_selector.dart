@@ -1,5 +1,7 @@
-import 'package:edu_chatbot/util/functions.dart';
 import 'package:flutter/material.dart';
+import 'package:sgela_services/sgela_util/prefs.dart';
+
+import '../../local_util/functions.dart';
 
 class AiModelSelector extends StatelessWidget {
   const AiModelSelector({super.key, required this.onModelSelected, required this.isDropDown});
@@ -55,6 +57,3 @@ class AiModelSelector extends StatelessWidget {
   }
 }
 
-const modelOpenAI  = 'OpenAI';
-const modelGeminiAI  = 'GeminiAI';
-const modelMistral = 'Mistral';

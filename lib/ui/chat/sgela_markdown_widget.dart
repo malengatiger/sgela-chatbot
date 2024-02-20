@@ -1,6 +1,6 @@
-import 'package:edu_chatbot/util/functions.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
+import 'package:sgela_services/sgela_util/functions.dart';
 
 class SgelaMarkdownWidget extends StatelessWidget {
   const SgelaMarkdownWidget({super.key, required this.text,  this.backgroundColor});

@@ -1,15 +1,15 @@
 
-import 'package:edu_chatbot/data/branding.dart';
-import 'package:edu_chatbot/data/exam_link.dart';
-import 'package:edu_chatbot/data/exam_page_content.dart';
 import 'package:edu_chatbot/main.dart';
 import 'package:edu_chatbot/ui/organization/org_logo_widget.dart';
-import 'package:edu_chatbot/util/environment.dart';
-import 'package:edu_chatbot/util/prefs.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:get_it/get_it.dart';
 import 'package:google_generative_ai/google_generative_ai.dart' as ai;
+import 'package:sgela_services/data/branding.dart';
+import 'package:sgela_services/data/exam_link.dart';
+import 'package:sgela_services/data/exam_page_content.dart';
+import 'package:sgela_services/sgela_util/environment.dart';
+import 'package:sgela_services/sgela_util/prefs.dart';
 
 class GenerativeChatScreen extends StatefulWidget {
   const GenerativeChatScreen({super.key,  this.examLink, this.examPageContents});

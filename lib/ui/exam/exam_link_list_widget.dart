@@ -1,28 +1,27 @@
 import 'package:badges/badges.dart' as bd;
-import 'package:edu_chatbot/data/exam_link.dart';
-import 'package:edu_chatbot/data/subject.dart';
+import 'package:sgela_services/data/exam_document.dart';
+import 'package:sgela_services/data/exam_link.dart';
+import 'package:sgela_services/data/subject.dart';
 import 'package:edu_chatbot/gemini/sections/exam_page_content_selector.dart';
 import 'package:edu_chatbot/gemini/sections/gemini_multi_turn_chat_stream.dart';
-import 'package:edu_chatbot/repositories/repository.dart';
-import 'package:edu_chatbot/services/firestore_service.dart';
-import 'package:edu_chatbot/services/gemini_chat_service.dart';
-import 'package:edu_chatbot/services/you_tube_service.dart';
-import 'package:edu_chatbot/ui/chat/gemini_text_chat_widget.dart';
+import 'package:sgela_services/repositories/repository.dart';
+import 'package:sgela_services/services/firestore_service.dart';
+import 'package:sgela_services/services/gemini_chat_service.dart';
+import 'package:sgela_services/services/local_data_service.dart';
+import 'package:sgela_services/services/you_tube_service.dart';
 import 'package:edu_chatbot/ui/misc/busy_indicator.dart';
 import 'package:edu_chatbot/ui/misc/sponsored_by.dart';
 import 'package:edu_chatbot/ui/open_ai/open_ai_text_chat_widget.dart';
 import 'package:edu_chatbot/ui/youtube/you_tube_searcher.dart';
-import 'package:edu_chatbot/util/dark_light_control.dart';
+import 'package:sgela_services/sgela_util/dark_light_control.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gemini/flutter_gemini.dart';
 import 'package:get_it/get_it.dart';
+import 'package:sgela_services/sgela_util/functions.dart';
+import 'package:sgela_services/sgela_util/navigation_util.dart';
+import 'package:sgela_services/sgela_util/prefs.dart';
 
-import '../../data/exam_document.dart';
-import '../../services/local_data_service.dart';
-import '../../util/functions.dart';
-import '../../util/navigation_util.dart';
-import '../../util/prefs.dart';
-import '../chat/ai_model_selector.dart';
+import '../../local_util/functions.dart';
 import '../misc/color_gallery.dart';
 
 class ExamLinkListWidget extends StatefulWidget {

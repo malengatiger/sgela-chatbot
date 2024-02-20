@@ -6,11 +6,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:sgela_services/data/exam_link.dart';
+import 'package:sgela_services/data/gemini/parts.dart';
+import 'package:sgela_services/services/gemini_chat_service.dart';
+import 'package:sgela_services/sgela_util/functions.dart';
 
-import '../../data/exam_link.dart';
-import '../../data/gemini/parts.dart';
-import '../../services/gemini_chat_service.dart';
-import '../../util/functions.dart';
+import '../../local_util/functions.dart';
 
 class ImagePickerWidget extends StatefulWidget {
   const ImagePickerWidget(

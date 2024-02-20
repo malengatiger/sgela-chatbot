@@ -1,20 +1,19 @@
 import 'package:edu_chatbot/ui/organization/org_logo_widget.dart';
-import 'package:edu_chatbot/util/functions.dart';
-import 'package:edu_chatbot/util/prefs.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gemini/flutter_gemini.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:get_it/get_it.dart';
 import 'package:responsive_builder/responsive_builder.dart';
+import 'package:sgela_services/data/branding.dart';
+import 'package:sgela_services/data/exam_link.dart';
+import 'package:sgela_services/data/exam_page_content.dart';
+import 'package:sgela_services/sgela_util/functions.dart';
+import 'package:sgela_services/sgela_util/prefs.dart';
 
-import '../../data/branding.dart';
-import '../../data/exam_link.dart';
-import '../../data/exam_page_content.dart';
 import '../../gemini/widgets/chat_input_box.dart';
 
 class GeminiTextChatWidget extends StatefulWidget {
-  const GeminiTextChatWidget(
-      {super.key,  this.examLink, this.examPageContents});
+  const GeminiTextChatWidget({super.key, this.examLink, this.examPageContents});
 
   final ExamLink? examLink;
   final List<ExamPageContent>? examPageContents;
@@ -28,17 +27,19 @@ class _GeminiTextChatWidgetState extends State<GeminiTextChatWidget> {
   final gemini = GetIt.instance<Gemini>();
   bool _loading = false;
   static const mm = '🍐🍐🍐🍐 GeminiTextChatWidget 🍎🍎';
+
   bool get loading => _loading;
   Branding? branding;
+
   set loading(bool set) => setState(() => _loading = set);
   final List<Content> chats = [];
-Prefs prefs = GetIt.instance<Prefs>();
+  Prefs prefs = GetIt.instance<Prefs>();
+
   @override
   void initState() {
     super.initState();
     _getChatContext();
   }
-
 
   List<Content> _getChatContext() {
     setState(() {
@@ -69,7 +70,9 @@ Prefs prefs = GetIt.instance<Prefs>();
         role: 'model'));
 
     chats.add(Content(parts: [
-      Parts(text: 'Each response to a question will be in its own paragraph and a heading where suitable')
+      Parts(
+          text:
+              'Each response to a question will be in its own paragraph and a heading where suitable')
     ], role: 'model'));
 
     chats.add(Content(parts: [
@@ -84,9 +87,8 @@ Prefs prefs = GetIt.instance<Prefs>();
       chats.add(Content(parts: [
         Parts(
             text:
-            'The subject is ${widget.examLink!.subject!.title}, the questions follow')
+                'The subject is ${widget.examLink!.subject!.title}, the questions follow')
       ], role: 'user'));
-
     }
 
     var sb = StringBuffer();
@@ -135,59 +137,71 @@ Prefs prefs = GetIt.instance<Prefs>();
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(child: Scaffold(
+    return SafeArea(
+        child: Scaffold(
       appBar: AppBar(
-        title: OrgLogoWidget(branding: branding,),
+        title: OrgLogoWidget(
+          branding: branding,
+        ),
       ),
       body: ScreenTypeLayout.builder(
-        mobile: (_){return  Stack(
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Column(
-                children: [
-                  Expanded(
-                      child: chats.isNotEmpty
-                          ? Align(
-                        alignment: Alignment.bottomCenter,
-                        child: SingleChildScrollView(
-                          reverse: true,
-                          child: ListView.builder(
-                            itemBuilder: _buildChatItem,
-                            shrinkWrap: true,
-                            physics: const NeverScrollableScrollPhysics(),
-                            itemCount: chats.length,
-                            reverse: false,
-                          ),
-                        ),
-                      )
-                          : const Center(child: Text('Search something!'))),
-                  if (loading) const CircularProgressIndicator(),
-                  ChatInputBox(
-                    controller: controller,
-                    onSend: () {
-                      if (controller.text.isNotEmpty) {
-                        final searchedText = controller.text;
-                        chats.add(
-                            Content(role: 'user', parts: [Parts(text: searchedText)]));
-                        controller.clear();
-                        loading = true;
-
-                        gemini.chat(chats).then((value) {
+        mobile: (_) {
+          return Stack(
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Column(
+                  children: [
+                    Expanded(
+                        child: chats.isNotEmpty
+                            ? Align(
+                                alignment: Alignment.bottomCenter,
+                                child: SingleChildScrollView(
+                                  reverse: true,
+                                  child: ListView.builder(
+                                    itemBuilder: _buildChatItem,
+                                    shrinkWrap: true,
+                                    physics:
+                                        const NeverScrollableScrollPhysics(),
+                                    itemCount: chats.length,
+                                    reverse: false,
+                                  ),
+                                ),
+                              )
+                            : const Center(child: Text('Search something!'))),
+                    if (loading) const CircularProgressIndicator(),
+                    ChatInputBox(
+                      controller: controller,
+                      onSend: () {
+                        if (controller.text.isNotEmpty) {
+                          final searchedText = controller.text;
                           chats.add(Content(
-                              role: 'model', parts: [Parts(text: value?.output)]));
-                          loading = false;
-                        });
-                      }
-                    },
-                  ),
-                ],
+                              role: 'user',
+                              parts: [Parts(text: searchedText)]));
+                          controller.clear();
+                          loading = true;
+
+                          gemini.chat(chats).then((value) {
+                            chats.add(Content(
+                                role: 'model',
+                                parts: [Parts(text: value?.output)]));
+                            loading = false;
+                          });
+                        }
+                      },
+                    ),
+                  ],
+                ),
               ),
-            ),
-          ],
-        );},
-        tablet: (_){return const Stack();},
-        desktop: (_){return const Stack();},
+            ],
+          );
+        },
+        tablet: (_) {
+          return const Stack();
+        },
+        desktop: (_) {
+          return const Stack();
+        },
       ),
     ));
   }

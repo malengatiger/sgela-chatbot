@@ -1,7 +1,8 @@
-import 'package:edu_chatbot/util/functions.dart';
-import 'package:edu_chatbot/util/prefs.dart';
+import 'package:sgela_services/sgela_util/prefs.dart';
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
+
+import '../../local_util/functions.dart';
 
 class ChatInputBox extends StatelessWidget {
   final TextEditingController? controller;

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:sgela_services/data/youtube_data.dart';
 
-import '../../data/youtube_data.dart';
 
 class YouTubeGallery extends StatelessWidget {
   const YouTubeGallery(

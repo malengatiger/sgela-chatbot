@@ -1,28 +1,31 @@
 import 'package:badges/badges.dart' as bd;
 import 'package:dart_openai/dart_openai.dart';
 import 'package:dart_openai/src/instance/chat/chat.dart';
-import 'package:edu_chatbot/data/branding.dart';
-import 'package:edu_chatbot/data/exam_link.dart';
-import 'package:edu_chatbot/data/exam_page_content.dart';
-import 'package:edu_chatbot/data/subject.dart';
-import 'package:edu_chatbot/data/tokens_used.dart';
+import 'package:sgela_services/data/branding.dart';
+import 'package:sgela_services/data/exam_link.dart';
+import 'package:sgela_services/data/exam_page_content.dart';
+import 'package:sgela_services/data/organization.dart';
+import 'package:sgela_services/data/sponsoree.dart';
+import 'package:sgela_services/data/subject.dart';
+import 'package:sgela_services/data/tokens_used.dart';
 import 'package:edu_chatbot/gemini/widgets/chat_input_box.dart';
-import 'package:edu_chatbot/services/firestore_service.dart';
-import 'package:edu_chatbot/services/local_data_service.dart';
+import 'package:sgela_services/services/firestore_service.dart';
+import 'package:sgela_services/services/local_data_service.dart';
 import 'package:edu_chatbot/ui/chat/ai_model_selector.dart';
 import 'package:edu_chatbot/ui/chat/latex_math_viewer.dart';
 import 'package:edu_chatbot/ui/misc/busy_indicator.dart';
 import 'package:edu_chatbot/ui/misc/sponsored_by.dart';
-import 'package:edu_chatbot/util/prefs.dart';
+import 'package:sgela_services/sgela_util/dio_util.dart';
+import 'package:sgela_services/sgela_util/environment.dart';
+import 'package:sgela_services/sgela_util/functions.dart';
+import 'package:sgela_services/sgela_util/prefs.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gemini/flutter_gemini.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:get_it/get_it.dart';
 
-import '../../data/organization.dart';
-import '../../data/sponsoree.dart';
-import '../../util/dio_util.dart';
-import '../../util/functions.dart';
+import '../../local_util/functions.dart';
+
 
 class OpenAITextChatWidget extends StatefulWidget {
   const OpenAITextChatWidget(
@@ -39,7 +42,7 @@ class OpenAITextChatWidget extends StatefulWidget {
 class OpenAITextChatWidgetState extends State<OpenAITextChatWidget> {
   static const mm = '🍐🍐🍐🍐 OpenApiMultiTurnStreamChat 🍐';
 
-  final textEditController = TextEditingController();
+  TextEditingController textEditController = TextEditingController();
   bool _busy = false;
 
   bool get loading => _busy;
@@ -63,7 +66,6 @@ class OpenAITextChatWidgetState extends State<OpenAITextChatWidget> {
     _getData();
   }
 
-  ExamPageContent? examPageContent;
   String inputText = 'Hello!';
 
   _getPageContents() async {
@@ -81,6 +83,7 @@ class OpenAITextChatWidgetState extends State<OpenAITextChatWidget> {
       inputText =
           'Find the questions or problems in the text below and respond with the solutions in markdown format.\n'
           'Show solution steps where necessary.\n The text: $inputText';
+        textEditController = TextEditingController(text: inputText);
     }
     if (widget.examLink != null) {
       inputText =
@@ -170,7 +173,7 @@ class OpenAITextChatWidgetState extends State<OpenAITextChatWidget> {
       });
 
       completionModel = await openAIChat.create(
-          temperature: 0.0, model: 'gpt-3.5-turbo-0613', messages: messages);
+          temperature: 0.0, model: ChatbotEnvironment.getOpenAIModel(), messages: messages);
       _print();
       _addTokensUsed();
       partsContext.add(Parts(

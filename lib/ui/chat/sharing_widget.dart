@@ -1,14 +1,17 @@
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:edu_chatbot/data/branding.dart';
-import 'package:edu_chatbot/data/country.dart';
-import 'package:edu_chatbot/data/exam_link.dart';
-import 'package:edu_chatbot/data/organization.dart';
-import 'package:edu_chatbot/services/conversion_service.dart';
+import 'package:sgela_services/data/branding.dart';
+import 'package:sgela_services/data/country.dart';
+import 'package:sgela_services/data/exam_link.dart';
+import 'package:sgela_services/data/exam_page_content.dart';
+import 'package:sgela_services/data/organization.dart';
+import 'package:sgela_services/services/conversion_service.dart';
 import 'package:edu_chatbot/ui/misc/sponsored_by.dart';
 import 'package:edu_chatbot/ui/organization/org_logo_widget.dart';
-import 'package:edu_chatbot/util/prefs.dart';
+import 'package:sgela_services/sgela_util/Converter.dart';
+import 'package:sgela_services/sgela_util/functions.dart';
+import 'package:sgela_services/sgela_util/prefs.dart';
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
 import 'package:mailer/mailer.dart';
@@ -17,10 +20,8 @@ import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:badges/badges.dart' as bd;
-import '../../data/exam_page_content.dart';
-import '../../util/Converter.dart';
-import '../../util/functions.dart';
 
+import '../../local_util/functions.dart';
 class SharingWidget extends StatefulWidget {
   const SharingWidget(
       {super.key,

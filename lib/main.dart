@@ -2,20 +2,21 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dart_openai/dart_openai.dart';
 import 'package:edu_chatbot/ui/chat/generative_ai.dart';
 import 'package:edu_chatbot/ui/landing_page.dart';
-import 'package:edu_chatbot/util/ai_initialization_util.dart';
-import 'package:edu_chatbot/util/dark_light_control.dart';
-import 'package:edu_chatbot/util/environment.dart';
-import 'package:edu_chatbot/util/functions.dart';
-import 'package:edu_chatbot/util/prefs.dart';
-import 'package:edu_chatbot/util/register_services.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_ui_auth/firebase_ui_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gemini/flutter_gemini.dart';
 import 'package:get_it/get_it.dart';
+import 'package:sgela_services/sgela_util/dark_light_control.dart';
+import 'package:sgela_services/sgela_util/functions.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'firebase_options.dart';
+import 'package:sgela_services/sgela_util/prefs.dart';
+import 'package:sgela_services/sgela_util/ai_initialization_util.dart';
+import 'package:sgela_services/sgela_util/register_services.dart';
+
+import 'local_util/functions.dart';
 
 const String mx = '🍎 🍎 🍎 main: ';
 final actionCodeSettings = ActionCodeSettings(

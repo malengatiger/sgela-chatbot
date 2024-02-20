@@ -1,16 +1,18 @@
-import 'package:edu_chatbot/data/sgela_user.dart';
-import 'package:edu_chatbot/services/auth_service.dart';
-import 'package:edu_chatbot/services/firestore_service.dart';
-import 'package:edu_chatbot/ui/exam/subject_search.dart';
+
 import 'package:edu_chatbot/ui/misc/busy_indicator.dart';
-import 'package:edu_chatbot/util/functions.dart';
-import 'package:edu_chatbot/util/navigation_util.dart';
+
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
 import 'package:reactive_forms/reactive_forms.dart';
+import 'package:sgela_services/data/city.dart';
+import 'package:sgela_services/data/country.dart';
+import 'package:sgela_services/data/sgela_user.dart';
+import 'package:sgela_services/services/auth_service.dart';
+import 'package:sgela_services/services/firestore_service.dart';
+import 'package:sgela_services/sgela_util/functions.dart';
 
-import '../../data/city.dart';
-import '../../data/country.dart';
+import '../../local_util/functions.dart';
+
 
 class UserSignIn extends StatefulWidget {
   const UserSignIn({super.key});

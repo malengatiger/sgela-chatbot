@@ -1,28 +1,30 @@
 import 'package:dart_openai/dart_openai.dart';
-import 'package:edu_chatbot/data/branding.dart';
-import 'package:edu_chatbot/data/exam_link.dart';
-import 'package:edu_chatbot/data/exam_page_content.dart';
-import 'package:edu_chatbot/data/gemini_response_rating.dart';
-import 'package:edu_chatbot/data/organization.dart';
-import 'package:edu_chatbot/data/sponsoree.dart';
-import 'package:edu_chatbot/data/sponsoree_activity.dart';
-import 'package:edu_chatbot/services/firestore_service.dart';
+import 'package:sgela_services/data/branding.dart';
+import 'package:sgela_services/data/exam_link.dart';
+import 'package:sgela_services/data/exam_page_content.dart';
+import 'package:sgela_services/data/gemini_response_rating.dart';
+import 'package:sgela_services/data/organization.dart';
+import 'package:sgela_services/data/sponsoree.dart';
+import 'package:sgela_services/data/sponsoree_activity.dart';
+import 'package:sgela_services/data/tokens_used.dart';
+import 'package:sgela_services/services/firestore_service.dart';
 import 'package:edu_chatbot/ui/chat/ai_model_selector.dart';
 import 'package:edu_chatbot/ui/chat/ai_rating_widget.dart';
 import 'package:edu_chatbot/ui/chat/sgela_markdown_widget.dart';
 import 'package:edu_chatbot/ui/misc/busy_indicator.dart';
 import 'package:edu_chatbot/ui/misc/sponsored_by.dart';
 import 'package:edu_chatbot/ui/organization/org_logo_widget.dart';
-import 'package:edu_chatbot/util/prefs.dart';
+import 'package:sgela_services/sgela_util/dark_light_control.dart';
+import 'package:sgela_services/sgela_util/environment.dart';
+import 'package:sgela_services/sgela_util/functions.dart';
+import 'package:sgela_services/sgela_util/prefs.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_tex/flutter_tex.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:get_it/get_it.dart';
 import 'package:responsive_builder/responsive_builder.dart';
 
-import '../../data/tokens_used.dart';
-import '../../util/dark_light_control.dart';
-import '../../util/functions.dart';
+import '../../local_util/functions.dart';
 import '../exam/exam_link_details.dart';
 
 class OpenAIImageChatWidget extends StatefulWidget {
@@ -119,7 +121,7 @@ class OpenAIImageChatWidgetState extends State<OpenAIImageChatWidget>
           '$mm ... 🥦🥦🥦creating OpenAIChatCompletionModel ....'); // the actual request.
       OpenAIChatCompletionModel chatCompletion =
       await OpenAI.instance.chat.create(
-        model: "gpt-4-vision-preview",
+        model: ChatbotEnvironment.getOpenAIVisionModel(),
         // responseFormat: {"type": "markdown"},
         seed: 6,
         messages: requestMessages,

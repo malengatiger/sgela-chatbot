@@ -1,16 +1,17 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:edu_chatbot/services/firestore_service.dart';
+import 'package:sgela_services/data/exam_link.dart';
+import 'package:sgela_services/data/exam_page_content.dart';
+import 'package:sgela_services/data/exam_page_image.dart';
+import 'package:sgela_services/services/firestore_service.dart';
 import 'package:edu_chatbot/ui/chat/ai_rating_widget.dart';
-import 'package:edu_chatbot/util/functions.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_tex/flutter_tex.dart';
 import 'package:get_it/get_it.dart';
+import 'package:sgela_services/sgela_util/functions.dart';
 
-import '../../data/exam_link.dart';
-import '../../data/exam_page_content.dart';
-import '../../data/exam_page_image.dart';
+import '../../local_util/functions.dart';
 import '../exam/exam_link_details.dart';
 
 class LaTexMathViewer extends StatefulWidget {

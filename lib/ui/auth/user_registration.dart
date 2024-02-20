@@ -1,16 +1,18 @@
-import 'package:edu_chatbot/data/branding.dart';
-import 'package:edu_chatbot/data/sgela_user.dart';
-import 'package:edu_chatbot/services/auth_service.dart';
-import 'package:edu_chatbot/services/firestore_service.dart';
+import 'package:sgela_services/data/branding.dart';
+import 'package:sgela_services/data/city.dart';
+import 'package:sgela_services/data/country.dart';
+import 'package:sgela_services/data/sgela_user.dart';
+import 'package:sgela_services/services/auth_service.dart';
+import 'package:sgela_services/services/firestore_service.dart';
 import 'package:edu_chatbot/ui/misc/busy_indicator.dart';
 import 'package:edu_chatbot/ui/organization/org_logo_widget.dart';
-import 'package:edu_chatbot/util/functions.dart';
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
 import 'package:reactive_forms/reactive_forms.dart';
+import 'package:sgela_services/sgela_util/functions.dart';
 
-import '../../data/city.dart';
-import '../../data/country.dart';
+import '../../local_util/functions.dart';
+
 
 class UserRegistration extends StatefulWidget {
   const UserRegistration({super.key, required this.branding});

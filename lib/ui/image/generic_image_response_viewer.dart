@@ -1,9 +1,9 @@
 import 'dart:io';
 
-import 'package:edu_chatbot/util/functions.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_tex/flutter_tex.dart';
 
+import '../../local_util/functions.dart';
 import '../chat/sgela_markdown_widget.dart';
 
 class GenericImageResponseViewer extends StatefulWidget {

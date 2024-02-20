@@ -3,7 +3,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_analog_clock/flutter_analog_clock.dart';
 
-import '../../util/functions.dart';
+import '../../local_util/functions.dart';
+
 
 class BusyIndicator extends StatefulWidget {
   final String? caption;

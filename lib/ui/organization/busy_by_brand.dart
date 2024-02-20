@@ -1,17 +1,18 @@
 import 'dart:async';
 
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:edu_chatbot/data/branding.dart';
-import 'package:edu_chatbot/data/country.dart';
-import 'package:edu_chatbot/data/exam_link.dart';
-import 'package:edu_chatbot/data/organization.dart';
+import 'package:sgela_services/data/branding.dart';
+import 'package:sgela_services/data/country.dart';
+import 'package:sgela_services/data/exam_link.dart';
+import 'package:sgela_services/data/organization.dart';
 import 'package:edu_chatbot/ui/organization/org_logo_widget.dart';
-import 'package:edu_chatbot/util/functions.dart';
-import 'package:edu_chatbot/util/prefs.dart';
+import 'package:sgela_services/sgela_util/functions.dart';
+import 'package:sgela_services/sgela_util/prefs.dart';
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
 import 'package:responsive_builder/responsive_builder.dart';
 
+import '../../local_util/functions.dart';
 import '../exam/exam_link_details.dart';
 
 class BusyByBrand extends StatefulWidget {

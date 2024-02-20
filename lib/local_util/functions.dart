@@ -6,7 +6,6 @@ import 'dart:ui' as ui;
 import 'dart:ui';
 
 import 'package:edu_chatbot/ui/chat/ai_rating_widget.dart';
-import 'package:edu_chatbot/util/prefs.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -22,25 +21,27 @@ import 'package:intl/intl.dart' as intl;
 import 'package:intl_phone_field/countries.dart' as cc;
 import 'package:path_provider/path_provider.dart';
 import 'package:pretty_json/pretty_json.dart';
+import 'package:sgela_services/data/gemini/gemini_response.dart';
+import 'package:sgela_services/sgela_util/dark_light_control.dart';
+import 'package:sgela_services/sgela_util/functions.dart';
+import 'package:sgela_services/sgela_util/prefs.dart';
 import 'package:video_thumbnail/video_thumbnail.dart' as vt;
 
-import '../data/gemini/gemini_response.dart';
-import 'dark_light_control.dart';
-import 'emojis.dart';
 
-pp(dynamic msg) {
-  var time = getFormattedDateHour(DateTime.now().toIso8601String());
-  if (kReleaseMode) {
-    return;
-  }
-  if (kDebugMode) {
-    if (msg is String) {
-      debugPrint('$time ==> $msg');
-    } else {
-      print('$time ==> $msg');
-    }
-  }
-}
+
+// pp(dynamic msg) {
+//   var time = getFormattedDateHour(DateTime.now().toIso8601String());
+//   if (kReleaseMode) {
+//     return;
+//   }
+//   if (kDebugMode) {
+//     if (msg is String) {
+//       debugPrint('$time ==> $msg');
+//     } else {
+//       print('$time ==> $msg');
+//     }
+//   }
+// }
 
 bool isColorDark(Color color) {
   // Calculate the luminance of the color
@@ -141,7 +142,7 @@ Future<File?> compressImage({required File file, required int quality}) async {
   final fileName = file.path.split('/').last;
   final fileType = fileName.split('.').last;
   final compressedFile =
-      File('$tempPath/f_${DateTime.now().millisecondsSinceEpoch}.$fileType');
+  File('$tempPath/f_${DateTime.now().millisecondsSinceEpoch}.$fileType');
   pp('🌍🌍🌍🌍compressing file, size: ${await file.length()} bytes, quality: $quality');
   final fileSize = await file.length();
   if (fileSize < 2 * 1024 * 1024) {
@@ -266,7 +267,7 @@ String getGenericPromptContext() {
       'Return responses in markdown format when there are no mathematical equations in the text.\n');
   sb.write(
       'If there are LaTex strings(math and physics equations) in the text, '
-      'then return response in LaTex format\n');
+          'then return response in LaTex format\n');
   sb.write(
       'Where appropriate use headings, paragraphs and sections to enhance readability when displayed.\n');
   return sb.toString();
@@ -313,22 +314,22 @@ List<Parts> getMultiTurnContext() {
           'and college courses and subjects');
   partsList.add(p1);
   var p2 =
-      Parts(text: 'I answer questions that relate to the subject provided.');
+  Parts(text: 'I answer questions that relate to the subject provided.');
   partsList.add(p2);
 
   var p4 =
-      Parts(text: 'For Mathematics, Physics, Engineering I will return responses in LaTex format where equations are part of the solution.');
+  Parts(text: 'For Mathematics, Physics, Engineering I will return responses in LaTex format where equations are part of the solution.');
   partsList.add(p4);
   var p5 =
-      Parts(text: 'In all other subjects, I will return responses in Markdown format.');
+  Parts(text: 'In all other subjects, I will return responses in Markdown format.');
   partsList.add(p5);
   var p6 = Parts(
       text:
-          'My response will not mix Markdown and LaTex formats. It should be just one or the other');
+      'My response will not mix Markdown and LaTex formats. It should be just one or the other');
   partsList.add(p6);
   var p7 = Parts(
       text:
-          'Where appropriate, I will use headings, paragraphs and sections to enhance readability when displayed.');
+      'Where appropriate, I will use headings, paragraphs and sections to enhance readability when displayed.');
   partsList.add(p7);
 
 
@@ -1083,12 +1084,12 @@ myPrint(element) {
 
 showSnackBar(
     {required String message,
-    required BuildContext context,
-    Color? backgroundColor,
-    TextStyle? textStyle,
-    Duration? duration,
-    double? padding,
-    double? elevation}) {
+      required BuildContext context,
+      Color? backgroundColor,
+      TextStyle? textStyle,
+      Duration? duration,
+      double? padding,
+      double? elevation}) {
   ScaffoldMessenger.of(context).showSnackBar(SnackBar(
     duration: duration ?? const Duration(seconds: 5),
     backgroundColor: backgroundColor ?? Theme.of(context).primaryColor,
@@ -1106,10 +1107,10 @@ showSnackBar(
 
 showErrorSnackBar(
     {required String message,
-    required BuildContext context,
-    Duration? duration,
-    double? padding,
-    double? elevation}) {
+      required BuildContext context,
+      Duration? duration,
+      double? padding,
+      double? elevation}) {
   ScaffoldMessenger.of(context).showSnackBar(SnackBar(
     duration: duration ?? const Duration(seconds: 5),
     backgroundColor: Colors.red,
@@ -1127,9 +1128,9 @@ showErrorSnackBar(
 
 Future<BitmapDescriptor> getTaxiMapIcon(
     {required double iconSize,
-    required String text,
-    required TextStyle style,
-    required String path}) async {
+      required String text,
+      required TextStyle style,
+      required String path}) async {
   final ByteData byteData = await rootBundle.load(path);
   final imageData = byteData.buffer.asUint8List();
 
@@ -1166,10 +1167,10 @@ Future<BitmapDescriptor> getTaxiMapIcon(
 
 Future<BitmapDescriptor> getVehicleMarkerBitmap(int size,
     {String? text,
-    required String color,
-    required Color borderColor,
-    required double fontSize,
-    required FontWeight fontWeight}) async {
+      required String color,
+      required Color borderColor,
+      required double fontSize,
+      required FontWeight fontWeight}) async {
   if (kIsWeb) size = (size / 2).floor();
   var textColor = Colors.white;
   switch (color) {
@@ -1221,10 +1222,10 @@ Future<BitmapDescriptor> getVehicleMarkerBitmap(int size,
 
 Future<BitmapDescriptor> getMarkerBitmap(int size,
     {String? text,
-    required String color,
-    Color? borderColor,
-    required double fontSize,
-    required FontWeight fontWeight}) async {
+      required String color,
+      Color? borderColor,
+      required double fontSize,
+      required FontWeight fontWeight}) async {
   if (kIsWeb) size = (size / 2).floor();
   if (borderColor == null) {
     borderColor = Colors.black;
@@ -1285,13 +1286,13 @@ Future<BitmapDescriptor> getMarkerBitmap(int size,
 
 Future<BitmapDescriptor> getRectangularMarkerIcon(
     {String? text,
-    required String color,
-    required Color borderColor,
-    required Color textColor,
-    required double width,
-    required double height,
-    required double fontSize,
-    required FontWeight fontWeight}) async {
+      required String color,
+      required Color borderColor,
+      required Color textColor,
+      required double width,
+      required double height,
+      required double fontSize,
+      required FontWeight fontWeight}) async {
   Size size = Size(width, height);
 
   final recorder = ui.PictureRecorder();
@@ -1304,7 +1305,7 @@ Future<BitmapDescriptor> getRectangularMarkerIcon(
 
   final Rect rect = Rect.fromLTWH(0, 0, size.width, size.height);
   final RRect roundedRect =
-      RRect.fromRectAndRadius(rect, const Radius.circular(10));
+  RRect.fromRectAndRadius(rect, const Radius.circular(10));
   canvas.drawRRect(roundedRect, borderPaint);
 
   final Paint fillPaint = Paint()..color = Colors.black;
@@ -1398,12 +1399,12 @@ const gapH32 = SizedBox(height: 32.0);
 
 showToast(
     {required String message,
-    required BuildContext context,
-    Color? backgroundColor,
-    TextStyle? textStyle,
-    Duration? duration,
-    double? padding,
-    ToastGravity? toastGravity}) {
+      required BuildContext context,
+      Color? backgroundColor,
+      TextStyle? textStyle,
+      Duration? duration,
+      double? padding,
+      ToastGravity? toastGravity}) {
   FToast fToast = FToast();
   const mm = 'FunctionsAndShit: 💀 💀 💀 💀 💀 : ';
   try {
@@ -1448,12 +1449,12 @@ showToast(
 
 showOKToast(
     {required String message,
-    required BuildContext context,
-    Color? backgroundColor,
-    TextStyle? textStyle,
-    Duration? duration,
-    double? padding,
-    ToastGravity? toastGravity}) {
+      required BuildContext context,
+      Color? backgroundColor,
+      TextStyle? textStyle,
+      Duration? duration,
+      double? padding,
+      ToastGravity? toastGravity}) {
   FToast fToast = FToast();
   const mm = 'FunctionsAndShit: 💀 💀 💀 💀 💀 : ';
   try {
@@ -1498,7 +1499,6 @@ showOKToast(
 Future<String> getStringFromAssets(String path) async {
   final mPath = 'assets/l10n/$path.json';
 
-  pp('${E.blueDot}${E.blueDot}${E.blueDot} getStringFromAssets: locale: $mPath');
   final stringData = await rootBundle.loadString(mPath);
   // pp('${E.blueDot}${E.blueDot}${E.blueDot} getStringFromAssets: stringData: $stringData');
 

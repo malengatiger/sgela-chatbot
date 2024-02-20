@@ -1,16 +1,16 @@
 import 'dart:io';
 
-import 'package:edu_chatbot/services/firestore_service.dart';
 import 'package:edu_chatbot/ui/chat/ai_rating_widget.dart';
-import 'package:edu_chatbot/util/functions.dart';
-import 'package:edu_chatbot/util/image_file_util.dart';
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
+import 'package:sgela_services/data/exam_link.dart';
+import 'package:sgela_services/data/exam_page_content.dart';
+import 'package:sgela_services/services/firestore_service.dart';
+import 'package:sgela_services/sgela_util/functions.dart';
+import 'package:sgela_services/sgela_util/image_file_util.dart';
 import 'package:share_plus/share_plus.dart';
 
-import '../../data/exam_link.dart';
-import '../../data/exam_page_content.dart';
-import '../../data/gemini_response_rating.dart';
+import '../../local_util/functions.dart';
 import 'sgela_markdown_widget.dart' as md;
 
 class GeminiResponseViewer extends StatefulWidget {

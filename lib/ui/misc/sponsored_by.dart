@@ -1,12 +1,14 @@
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:edu_chatbot/data/organization.dart';
-import 'package:edu_chatbot/repositories/repository.dart';
-import 'package:edu_chatbot/util/functions.dart';
-import 'package:edu_chatbot/util/prefs.dart';
+import 'package:sgela_services/data/branding.dart';
+import 'package:sgela_services/data/organization.dart';
+import 'package:sgela_services/repositories/repository.dart';
+import 'package:sgela_services/sgela_util/functions.dart';
+import 'package:sgela_services/sgela_util/prefs.dart';
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
 
-import '../../data/branding.dart';
+import '../../local_util/functions.dart';
+
 
 class SponsoredBy extends StatefulWidget {
   const SponsoredBy({

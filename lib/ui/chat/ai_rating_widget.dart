@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
+import 'package:sgela_services/sgela_util/functions.dart';
 
-import '../../util/functions.dart';
+import '../../local_util/functions.dart';
+
 
 class AIRatingWidget extends StatelessWidget {
   const AIRatingWidget(

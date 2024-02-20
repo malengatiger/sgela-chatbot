@@ -1,11 +1,13 @@
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:edu_chatbot/data/branding.dart';
 import 'package:edu_chatbot/ui/organization/org_logo_widget.dart';
 import 'package:edu_chatbot/ui/organization/website_view.dart';
-import 'package:edu_chatbot/util/functions.dart';
-import 'package:edu_chatbot/util/navigation_util.dart';
 import 'package:flutter/material.dart';
 import 'package:responsive_builder/responsive_builder.dart';
+import 'package:sgela_services/data/branding.dart';
+import 'package:sgela_services/sgela_util/functions.dart';
+import 'package:sgela_services/sgela_util/navigation_util.dart';
+
+import '../../local_util/functions.dart';
 
 class OrganizationSplash extends StatefulWidget {
   const OrganizationSplash(

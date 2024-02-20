@@ -1,9 +1,9 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:sgela_services/data/branding.dart';
+import 'package:sgela_services/sgela_util/environment.dart';
 
-import '../../data/branding.dart';
-import '../../util/environment.dart';
-import '../../util/functions.dart';
+import '../../local_util/functions.dart';
 
 class OrgLogoWidget extends StatelessWidget {
   const OrgLogoWidget({super.key, this.branding, this.height, this.name, this.width, this.logoUrl});

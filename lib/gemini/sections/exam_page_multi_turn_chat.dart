@@ -1,22 +1,22 @@
 import 'dart:io';
 
-import 'package:edu_chatbot/data/branding.dart';
-import 'package:edu_chatbot/data/exam_link.dart';
-import 'package:edu_chatbot/data/exam_page_content.dart';
+import 'package:sgela_services/data/branding.dart';
+import 'package:sgela_services/data/exam_link.dart';
+import 'package:sgela_services/data/exam_page_content.dart';
 import 'package:edu_chatbot/gemini/widgets/chat_input_box.dart';
-import 'package:edu_chatbot/repositories/repository.dart';
-import 'package:edu_chatbot/services/firestore_service.dart';
-import 'package:edu_chatbot/services/local_data_service.dart';
+import 'package:sgela_services/services/firestore_service.dart';
+import 'package:sgela_services/services/local_data_service.dart';
 import 'package:edu_chatbot/ui/chat/latex_math_viewer.dart';
 import 'package:edu_chatbot/ui/misc/busy_indicator.dart';
 import 'package:edu_chatbot/ui/misc/sponsored_by.dart';
-import 'package:edu_chatbot/util/prefs.dart';
+import 'package:sgela_services/sgela_util/functions.dart';
+import 'package:sgela_services/sgela_util/prefs.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gemini/flutter_gemini.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:get_it/get_it.dart';
 
-import '../../util/functions.dart';
+import '../../local_util/functions.dart';
 
 class ExamPageMultiTurnChat extends StatefulWidget {
   const ExamPageMultiTurnChat(
@@ -56,24 +56,6 @@ class ExamPageMultiTurnChatState extends State<ExamPageMultiTurnChat> {
   ExamPageContent? examPageContent;
   int imageCount = 0;
 
-  _showModels() async {
-    pp('$mm ... show all the AI models available');
-    await gemini
-        .listModels()
-        .then((models) => () {
-              for (var value in models) {
-                pp('$mm AI model ....... ${value.toJson()}');
-              }
-            })
-        .catchError((e) => pp('$mm listModels ERROR: $e'));
-
-    pp('$mm ... show the AI model in use now');
-
-    await gemini
-        .info(model: 'gemini-pro')
-        .then((info) => pp('$mm gemini.info: ${info.toJson()}'))
-        .catchError((e) => pp('$mm gemini.info: $e'));
-  }
 
   _handleImages() {
     for (var value in widget.examPageContents) {

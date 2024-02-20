@@ -2,24 +2,25 @@ import 'dart:collection';
 
 import 'package:badges/badges.dart' as bd;
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:edu_chatbot/data/branding.dart';
-import 'package:edu_chatbot/data/city.dart';
-import 'package:edu_chatbot/data/country.dart';
-import 'package:edu_chatbot/data/organization.dart';
-import 'package:edu_chatbot/data/sponsoree.dart';
-import 'package:edu_chatbot/repositories/repository.dart';
-import 'package:edu_chatbot/services/firestore_service.dart';
+import 'package:sgela_services/data/branding.dart';
+import 'package:sgela_services/data/city.dart';
+import 'package:sgela_services/data/country.dart';
+import 'package:sgela_services/data/organization.dart';
+import 'package:sgela_services/data/sgela_user.dart';
+import 'package:sgela_services/data/sponsoree.dart';
+import 'package:sgela_services/repositories/repository.dart';
+import 'package:sgela_services/services/firestore_service.dart';
 import 'package:edu_chatbot/ui/auth/user_registration.dart';
 import 'package:edu_chatbot/ui/misc/busy_indicator.dart';
 import 'package:edu_chatbot/ui/organization/organization_splash.dart';
-import 'package:edu_chatbot/util/navigation_util.dart';
-import 'package:edu_chatbot/util/prefs.dart';
+import 'package:sgela_services/sgela_util/functions.dart';
+import 'package:sgela_services/sgela_util/navigation_util.dart';
+import 'package:sgela_services/sgela_util/prefs.dart';
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
 import 'package:responsive_builder/responsive_builder.dart';
 
-import '../../data/sgela_user.dart';
-import '../../util/functions.dart';
+import '../../local_util/functions.dart';
 
 class OrganizationSelector extends StatefulWidget {
   const OrganizationSelector({super.key});

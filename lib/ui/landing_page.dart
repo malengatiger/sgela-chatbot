@@ -1,20 +1,20 @@
 import 'package:carousel_slider/carousel_slider.dart';
-import 'package:edu_chatbot/data/country.dart';
-import 'package:edu_chatbot/data/sponsoree.dart';
-import 'package:edu_chatbot/data/organization.dart';
-import 'package:edu_chatbot/data/sgela_user.dart';
-import 'package:edu_chatbot/services/firestore_service.dart';
-import 'package:edu_chatbot/ui/auth/user_registration.dart';
+import 'package:sgela_services/data/country.dart';
+import 'package:sgela_services/data/sponsoree.dart';
+import 'package:sgela_services/data/organization.dart';
+import 'package:sgela_services/data/sgela_user.dart';
 import 'package:edu_chatbot/ui/auth/user_sign_in.dart';
 import 'package:edu_chatbot/ui/exam/subject_search.dart';
 import 'package:edu_chatbot/ui/organization/organization_selector.dart';
-import 'package:edu_chatbot/util/navigation_util.dart';
-import 'package:edu_chatbot/util/prefs.dart';
+import 'package:sgela_services/sgela_util/functions.dart';
+import 'package:sgela_services/sgela_util/navigation_util.dart';
+import 'package:sgela_services/sgela_util/prefs.dart';
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
 import 'package:responsive_builder/responsive_builder.dart';
 
-import '../util/functions.dart';
+import '../local_util/functions.dart';
+
 
 class LandingPage extends StatefulWidget {
   const LandingPage({super.key,

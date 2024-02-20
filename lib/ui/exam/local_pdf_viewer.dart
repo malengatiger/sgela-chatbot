@@ -2,15 +2,15 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:edu_chatbot/data/branding.dart';
-import 'package:edu_chatbot/data/organization.dart';
-import 'package:edu_chatbot/util/prefs.dart';
+import 'package:sgela_services/data/branding.dart';
+import 'package:sgela_services/data/organization.dart';
+import 'package:sgela_services/data/sponsoree.dart';
+import 'package:sgela_services/sgela_util/prefs.dart';
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
 import 'package:responsive_builder/responsive_builder.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
-import '../../data/sponsoree.dart';
 
 class LocalPDFViewerWidget extends StatefulWidget {
   final File pdfFile;

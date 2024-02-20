@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:sgela_services/data/exam_link.dart';
+import 'package:sgela_services/data/subject.dart';
+import 'package:sgela_services/repositories/repository.dart';
+import 'package:sgela_services/services/gemini_chat_service.dart';
+import 'package:sgela_services/sgela_util/functions.dart';
+import '../../local_util/functions.dart' as fun;
 import 'sgela_markdown_widget.dart' as md;
-import '../../data/exam_link.dart';
-import '../../data/subject.dart';
-import '../../repositories/repository.dart';
-import '../../services/gemini_chat_service.dart';
-import '../../util/functions.dart';
 
 class ChatWidget extends StatefulWidget {
   const ChatWidget(
@@ -64,9 +65,9 @@ class ChatWidgetState extends State<ChatWidget> {
       var resp = await widget.chatService.sendChatPrompt(prompt);
       pp('$mm ....... chat response: \n$resp\n');
       responseText = resp;
-      if (isMarkdownFormat(responseText)) {
+      if (isMarkdownFormats(responseText)) {
         isMarkDown = true;
-        pp('$mm ....... isMarkdownFormat: 🍎$isMarkdownFormat 🍎');
+        pp('$mm ....... isMarkdownFormat: 🍎$isMarkdownFormats 🍎');
       } else {
         isMarkDown = false;
       }
@@ -75,7 +76,7 @@ class ChatWidgetState extends State<ChatWidget> {
     } catch (e) {
       pp(e);
       if (mounted) {
-        showErrorDialog(context, 'Error: $e');
+        fun.showErrorDialog(context, 'Error: $e');
       }
     }
     setState(() {
@@ -170,7 +171,7 @@ class ChatWidgetState extends State<ChatWidget> {
                     )
                     : Text(
                         '${widget.subject.title}',
-                        style: myTextStyle(
+                        style: fun.myTextStyle(
                             context, Colors.black, 18, FontWeight.w900),
                       ),
               ),
@@ -211,7 +212,7 @@ class SearchInput extends StatelessWidget {
               controller: textEditingController,
             ),
           ),
-          gapH16,
+          fun.gapH16,
           ElevatedButton.icon(
             style: const ButtonStyle(
               elevation: MaterialStatePropertyAll(8.0),

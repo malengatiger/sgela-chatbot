@@ -1,12 +1,12 @@
 import 'dart:typed_data';
 
 import 'package:badges/badges.dart' as bd;
-import 'package:edu_chatbot/data/branding.dart';
-import 'package:edu_chatbot/data/exam_link.dart';
+import 'package:sgela_services/data/branding.dart';
+import 'package:sgela_services/data/exam_link.dart';
 import 'package:edu_chatbot/gemini/sections/gemini_multi_turn_chat_stream.dart';
-import 'package:edu_chatbot/services/firestore_service.dart';
-import 'package:edu_chatbot/services/local_data_service.dart';
-import 'package:edu_chatbot/ui/chat/ai_model_selector.dart';
+import 'package:sgela_services/data/exam_page_content.dart';
+import 'package:sgela_services/services/firestore_service.dart';
+import 'package:sgela_services/services/local_data_service.dart';
 import 'package:edu_chatbot/ui/chat/gemini_image_chat_widget.dart';
 import 'package:edu_chatbot/ui/exam/pdf_viewer.dart';
 import 'package:edu_chatbot/ui/misc/busy_indicator.dart';
@@ -14,16 +14,16 @@ import 'package:edu_chatbot/ui/misc/sponsored_by.dart';
 import 'package:edu_chatbot/ui/open_ai/open_ai_image_chat_widget.dart';
 import 'package:edu_chatbot/ui/open_ai/open_ai_text_chat_widget.dart';
 import 'package:edu_chatbot/ui/organization/org_logo_widget.dart';
-import 'package:edu_chatbot/util/dark_light_control.dart';
-import 'package:edu_chatbot/util/navigation_util.dart';
-import 'package:edu_chatbot/util/prefs.dart';
+import 'package:sgela_services/sgela_util/dark_light_control.dart';
+import 'package:sgela_services/sgela_util/functions.dart';
+import 'package:sgela_services/sgela_util/navigation_util.dart';
+import 'package:sgela_services/sgela_util/prefs.dart';
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
 import 'package:responsive_builder/responsive_builder.dart';
 
-import '../../data/exam_page_content.dart';
+import '../../local_util/functions.dart';
 import '../../ui/exam/exam_link_details.dart';
-import '../../util/functions.dart';
 
 class ExamPageContentSelector extends StatefulWidget {
   const ExamPageContentSelector({super.key, required this.examLink});

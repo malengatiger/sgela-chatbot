@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:responsive_builder/responsive_builder.dart';
+import 'package:sgela_services/sgela_util/functions.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
-import '../../util/functions.dart';
+import '../../local_util/functions.dart';
+
 
 class WebsiteView extends StatefulWidget {
   const WebsiteView({super.key, required this.url, required this.title});

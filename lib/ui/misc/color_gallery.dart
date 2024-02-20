@@ -2,12 +2,12 @@ import 'dart:async';
 
 import 'package:edu_chatbot/ui/misc/sponsored_by.dart';
 import 'package:flutter/material.dart';
-import 'package:get_it/get_it.dart';
+import 'package:sgela_services/sgela_util/dark_light_control.dart';
+import 'package:sgela_services/sgela_util/functions.dart';
+import 'package:sgela_services/sgela_util/prefs.dart';
 
-import '../../repositories/repository.dart';
-import '../../util/dark_light_control.dart';
-import '../../util/functions.dart';
-import '../../util/prefs.dart';
+import '../../local_util/functions.dart';
+
 
 class ColorGallery extends StatefulWidget {
   const ColorGallery(

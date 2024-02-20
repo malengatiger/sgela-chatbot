@@ -1,23 +1,23 @@
 import 'package:badges/badges.dart' as bd;
-import 'package:edu_chatbot/data/exam_document.dart';
+import 'package:sgela_services/data/exam_document.dart';
 import 'package:edu_chatbot/gemini/sections/gemini_multi_turn_chat_stream.dart';
-import 'package:edu_chatbot/repositories/repository.dart';
-import 'package:edu_chatbot/services/firestore_service.dart';
+import 'package:sgela_services/data/subject.dart';
+import 'package:sgela_services/repositories/repository.dart';
+import 'package:sgela_services/services/firestore_service.dart';
 import 'package:edu_chatbot/ui/chat/ai_model_selector.dart';
-import 'package:edu_chatbot/ui/chat/generative_ai.dart';
 import 'package:edu_chatbot/ui/exam/exam_link_list_widget.dart';
 import 'package:edu_chatbot/ui/misc/busy_indicator.dart';
 import 'package:edu_chatbot/ui/misc/sponsored_by.dart';
 import 'package:edu_chatbot/ui/open_ai/open_ai_text_chat_widget.dart';
 import 'package:edu_chatbot/ui/youtube/you_tube_searcher.dart';
-import 'package:edu_chatbot/util/dark_light_control.dart';
-import 'package:edu_chatbot/util/navigation_util.dart';
-import 'package:edu_chatbot/util/prefs.dart';
+import 'package:sgela_services/sgela_util/dark_light_control.dart';
+import 'package:sgela_services/sgela_util/functions.dart';
+import 'package:sgela_services/sgela_util/navigation_util.dart';
+import 'package:sgela_services/sgela_util/prefs.dart';
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
 
-import '../../data/subject.dart';
-import '../../util/functions.dart';
+import '../../local_util/functions.dart';
 import '../misc/color_gallery.dart';
 
 class ExamsDocumentList extends StatefulWidget {

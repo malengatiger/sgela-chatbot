@@ -1,24 +1,28 @@
 import 'dart:io';
 
 import 'package:badges/badges.dart' as bd;
-import 'package:edu_chatbot/data/branding.dart';
-import 'package:edu_chatbot/data/exam_link.dart';
-import 'package:edu_chatbot/data/exam_page_content.dart';
-import 'package:edu_chatbot/data/subject.dart';
+import 'package:sgela_services/data/branding.dart';
+import 'package:sgela_services/data/exam_link.dart';
+import 'package:sgela_services/data/exam_page_content.dart';
+import 'package:sgela_services/data/subject.dart';
 import 'package:edu_chatbot/gemini/widgets/chat_input_box.dart';
-import 'package:edu_chatbot/services/firestore_service.dart';
-import 'package:edu_chatbot/services/local_data_service.dart';
+import 'package:sgela_services/services/local_data_service.dart';
 import 'package:edu_chatbot/ui/chat/latex_math_viewer.dart';
 import 'package:edu_chatbot/ui/misc/busy_indicator.dart';
 import 'package:edu_chatbot/ui/misc/sponsored_by.dart';
-import 'package:edu_chatbot/util/dio_util.dart';
-import 'package:edu_chatbot/util/prefs.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_gemini/flutter_gemini.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:get_it/get_it.dart';
+import 'package:sgela_services/services/firestore_service.dart';
+import 'package:sgela_services/sgela_util/dio_util.dart';
+import 'package:sgela_services/sgela_util/environment.dart';
+import 'package:sgela_services/sgela_util/functions.dart';
+import 'package:sgela_services/sgela_util/prefs.dart';
 
-import '../../util/functions.dart';
+import '../../local_util/functions.dart';
+
 
 class GeminiMultiTurnStreamChat extends StatefulWidget {
   const GeminiMultiTurnStreamChat(
@@ -145,24 +149,27 @@ class GeminiMultiTurnStreamChatState extends State<GeminiMultiTurnStreamChat> {
       sb.write('$element\n');
     }
     sb.write(prompt);
-    var res = await dioUtil.countGeminiTokens(prompt: sb.toString(),
-        files: [], model: 'gemini-pro');
-    pp('$mm token response: $res ... will write TokensUsed');
+
+    var tokens = await
+    gemini.countTokens(sb.toString(),modelName: 'gemini-pro');
+    pp('$mm token response,🍎🍎 tokens: $tokens ... will write TokensUsed');
   }
 
   List<String> systemStrings = [];
 
   void _addTokensUsed() {
-
-    var sb = StringBuffer();
-    for (var content in chats) {
-      if (content.role == 'user') {
-        sb.write(content.parts?.first.text);
-        sb.write('\n');
-      }
-
+    try {
+      var sb = StringBuffer();
+      for (var content in chats) {
+            if (content.role == 'user') {
+              sb.write(content.parts?.first.text);
+              sb.write('\n');
+            }
+          }
+      // _countTokens(prompt: sb.toString(), systemStrings: systemStrings);
+    } catch (e, s) {
+      pp("ERROR counting tokens: $e $s");
     }
-    _countTokens(prompt: sb.toString(), systemStrings: systemStrings);
   }
   Future<void> _startAndListenToChatStream() async {
     pp('$mm _startAndListenToChatStream ...... 🍎🍎🍎🍎🍎🍎🍎🍎🍎 ');
@@ -171,7 +178,12 @@ class GeminiMultiTurnStreamChatState extends State<GeminiMultiTurnStreamChat> {
       setState(() {
         _busy = true;
       });
-      gemini.streamChat(chats).listen((candidates) async {
+
+      gemini.streamChat(
+          chats,
+          generationConfig: GenerationConfig(temperature: 0.0),
+          modelName: ChatbotEnvironment.getGeminiModel())
+          .listen((candidates) async {
         pp("\n\n$mm gemini.streamChat fired!: chats: ${chats.length} turnNumber: $turnNumber"
             " 🍎🍎🍎🍎🍎🍎🍎🍎🍎--------->");
         turnNumber++;
@@ -272,6 +284,8 @@ class GeminiMultiTurnStreamChatState extends State<GeminiMultiTurnStreamChat> {
         child: Scaffold(
       appBar: AppBar(
         leading: IconButton(onPressed: (){
+          // _addTokensUsed();
+          Navigator.of(context).pop();
           _addTokensUsed();
         }, icon: Platform.isAndroid? const Icon(Icons.arrow_back):const Icon(Icons.arrow_back_ios) ,),
         title: Row(
