@@ -1,6 +1,7 @@
 import 'package:badges/badges.dart' as bd;
 import 'package:dart_openai/dart_openai.dart';
 import 'package:dart_openai/src/instance/chat/chat.dart';
+import 'package:edu_chatbot/ui/gemini/widgets/chat_input_box.dart';
 import 'package:sgela_services/data/branding.dart';
 import 'package:sgela_services/data/exam_link.dart';
 import 'package:sgela_services/data/exam_page_content.dart';
@@ -8,10 +9,8 @@ import 'package:sgela_services/data/organization.dart';
 import 'package:sgela_services/data/sponsoree.dart';
 import 'package:sgela_services/data/subject.dart';
 import 'package:sgela_services/data/tokens_used.dart';
-import 'package:edu_chatbot/gemini/widgets/chat_input_box.dart';
 import 'package:sgela_services/services/firestore_service.dart';
 import 'package:sgela_services/services/local_data_service.dart';
-import 'package:edu_chatbot/ui/chat/ai_model_selector.dart';
 import 'package:edu_chatbot/ui/chat/latex_math_viewer.dart';
 import 'package:edu_chatbot/ui/misc/busy_indicator.dart';
 import 'package:edu_chatbot/ui/misc/sponsored_by.dart';
@@ -181,7 +180,6 @@ class OpenAITextChatWidgetState extends State<OpenAITextChatWidget> {
       chats.add(Content(role: 'model', parts: partsContext));
       if (completionModel.choices.first.finishReason == 'stop') {
         pp('$mm ...🥦🥦🥦 💛everything is OK, Boss!!, 💛 OpenAI has responded with answers ...');
-        _showMarkdown = true;
       } else {
         if (mounted) {
           showErrorDialog(context,
@@ -240,7 +238,6 @@ class OpenAITextChatWidgetState extends State<OpenAITextChatWidget> {
     firestoreService.addTokensUsed(tokensUsed);
   }
 
-  bool _showMarkdown = false;
 
   OpenAIChatCompletionChoiceMessageModel _buildFirstTimeOpenAIUserMessage(
       String? text) {

@@ -1,9 +1,11 @@
 import 'dart:typed_data';
 
 import 'package:badges/badges.dart' as bd;
+import 'package:edu_chatbot/local_util/functions.dart';
+import 'package:edu_chatbot/ui/exam/exam_link_details.dart';
+import 'package:edu_chatbot/ui/gemini/sections/gemini_multi_turn_chat_stream.dart';
 import 'package:sgela_services/data/branding.dart';
 import 'package:sgela_services/data/exam_link.dart';
-import 'package:edu_chatbot/gemini/sections/gemini_multi_turn_chat_stream.dart';
 import 'package:sgela_services/data/exam_page_content.dart';
 import 'package:sgela_services/services/firestore_service.dart';
 import 'package:sgela_services/services/local_data_service.dart';
@@ -21,9 +23,6 @@ import 'package:sgela_services/sgela_util/prefs.dart';
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
 import 'package:responsive_builder/responsive_builder.dart';
-
-import '../../local_util/functions.dart';
-import '../../ui/exam/exam_link_details.dart';
 
 class ExamPageContentSelector extends StatefulWidget {
   const ExamPageContentSelector({super.key, required this.examLink});

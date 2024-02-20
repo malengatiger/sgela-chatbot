@@ -1,9 +1,9 @@
 import 'package:badges/badges.dart' as bd;
+import 'package:edu_chatbot/ui/gemini/sections/exam_page_content_selector.dart';
+import 'package:edu_chatbot/ui/gemini/sections/gemini_multi_turn_chat_stream.dart';
 import 'package:sgela_services/data/exam_document.dart';
 import 'package:sgela_services/data/exam_link.dart';
 import 'package:sgela_services/data/subject.dart';
-import 'package:edu_chatbot/gemini/sections/exam_page_content_selector.dart';
-import 'package:edu_chatbot/gemini/sections/gemini_multi_turn_chat_stream.dart';
 import 'package:sgela_services/repositories/repository.dart';
 import 'package:sgela_services/services/firestore_service.dart';
 import 'package:sgela_services/services/gemini_chat_service.dart';

@@ -1,6 +1,8 @@
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:edu_chatbot/local_util/functions.dart';
+import 'package:edu_chatbot/ui/gemini/widgets/chat_input_box.dart';
 import 'package:sgela_services/data/exam_link.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gemini/flutter_gemini.dart';
@@ -8,12 +10,10 @@ import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:lottie/lottie.dart';
 
-import 'package:edu_chatbot/gemini/widgets/chat_input_box.dart';
 import 'package:sgela_services/data/exam_page_image.dart';
 import 'package:sgela_services/repositories/repository.dart';
 import 'package:sgela_services/sgela_util/functions.dart';
 
-import '../../local_util/functions.dart';
 
 class ExamPaperTextAndImage extends StatefulWidget {
   const ExamPaperTextAndImage({super.key, required this.examLink, required this.gemini, required this.repository});

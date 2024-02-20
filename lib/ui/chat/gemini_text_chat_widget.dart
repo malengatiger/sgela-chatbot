@@ -1,3 +1,4 @@
+import 'package:edu_chatbot/ui/gemini/widgets/chat_input_box.dart';
 import 'package:edu_chatbot/ui/organization/org_logo_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gemini/flutter_gemini.dart';
@@ -10,7 +11,6 @@ import 'package:sgela_services/data/exam_page_content.dart';
 import 'package:sgela_services/sgela_util/functions.dart';
 import 'package:sgela_services/sgela_util/prefs.dart';
 
-import '../../gemini/widgets/chat_input_box.dart';
 
 class GeminiTextChatWidget extends StatefulWidget {
   const GeminiTextChatWidget({super.key, this.examLink, this.examPageContents});

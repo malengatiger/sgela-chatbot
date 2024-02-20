@@ -18,7 +18,7 @@ import 'package:sgela_services/sgela_util/register_services.dart';
 
 import 'local_util/functions.dart';
 
-const String mx = '🍎 🍎 🍎 main: ';
+const String mx = '🍎🍎🍎 main: ';
 final actionCodeSettings = ActionCodeSettings(
   url: 'https://sgela-ai-33.firebaseapp.com',
   handleCodeInApp: true,

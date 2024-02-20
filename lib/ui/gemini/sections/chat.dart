@@ -1,4 +1,4 @@
-import 'package:edu_chatbot/gemini/widgets/chat_input_box.dart';
+import 'package:edu_chatbot/ui/gemini/widgets/chat_input_box.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gemini/flutter_gemini.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';

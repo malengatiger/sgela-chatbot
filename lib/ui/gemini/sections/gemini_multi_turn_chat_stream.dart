@@ -1,11 +1,12 @@
 import 'dart:io';
 
 import 'package:badges/badges.dart' as bd;
+import 'package:edu_chatbot/local_util/functions.dart';
+import 'package:edu_chatbot/ui/gemini/widgets/chat_input_box.dart';
 import 'package:sgela_services/data/branding.dart';
 import 'package:sgela_services/data/exam_link.dart';
 import 'package:sgela_services/data/exam_page_content.dart';
 import 'package:sgela_services/data/subject.dart';
-import 'package:edu_chatbot/gemini/widgets/chat_input_box.dart';
 import 'package:sgela_services/services/local_data_service.dart';
 import 'package:edu_chatbot/ui/chat/latex_math_viewer.dart';
 import 'package:edu_chatbot/ui/misc/busy_indicator.dart';
@@ -21,7 +22,6 @@ import 'package:sgela_services/sgela_util/environment.dart';
 import 'package:sgela_services/sgela_util/functions.dart';
 import 'package:sgela_services/sgela_util/prefs.dart';
 
-import '../../local_util/functions.dart';
 
 
 class GeminiMultiTurnStreamChat extends StatefulWidget {
