@@ -59,7 +59,7 @@ class UserSignInState extends State<UserSignIn> {
     });
     try {
       FocusScope.of(context).unfocus();
-      var user = await authService.signInUser(email, password);
+      var user = await authService.signInSgelaUser(email, password);
       if (user != null) {
         pp('$mm ... submit: SgelaUser signed in: ${user.toJson()}');
         if (mounted) {

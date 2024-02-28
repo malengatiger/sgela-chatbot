@@ -104,7 +104,7 @@ class GeminiMultiTurnStreamChatState extends State<GeminiMultiTurnStreamChat> {
       if (_chatInputController.text.isNotEmpty) {
         textPrompt = _chatInputController.text;
       } else {
-        textPrompt = '';
+        textPrompt = 'Hello';
       }
     }
     if (textPrompt.isNotEmpty) {
@@ -134,7 +134,7 @@ class GeminiMultiTurnStreamChatState extends State<GeminiMultiTurnStreamChat> {
     }
   }
 
-  late String textPrompt;
+  String textPrompt = 'Hello SgelaAI';
   int chatStartCount = 0;
 
   DioUtil dioUtil = GetIt.instance<DioUtil>();
@@ -181,8 +181,7 @@ class GeminiMultiTurnStreamChatState extends State<GeminiMultiTurnStreamChat> {
 
       gemini.streamChat(
           chats,
-          generationConfig: GenerationConfig(temperature: 0.0),
-          modelName: ChatbotEnvironment.getGeminiModel())
+          generationConfig: GenerationConfig(temperature: 0.0))
           .listen((candidates) async {
         pp("\n\n$mm gemini.streamChat fired!: chats: ${chats.length} turnNumber: $turnNumber"
             " 🍎🍎🍎🍎🍎🍎🍎🍎🍎--------->");

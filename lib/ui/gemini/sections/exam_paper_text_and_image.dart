@@ -11,7 +11,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:lottie/lottie.dart';
 
 import 'package:sgela_services/data/exam_page_image.dart';
-import 'package:sgela_services/repositories/repository.dart';
+import 'package:sgela_services/repositories/basic_repository.dart';
 import 'package:sgela_services/sgela_util/functions.dart';
 
 
@@ -20,7 +20,7 @@ class ExamPaperTextAndImage extends StatefulWidget {
 
   final ExamLink examLink;
   final Gemini gemini;
-  final Repository repository;
+  final BasicRepository repository;
 
   @override
   State<ExamPaperTextAndImage> createState() =>

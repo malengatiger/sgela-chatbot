@@ -8,7 +8,7 @@ import 'package:sgela_services/data/country.dart';
 import 'package:sgela_services/data/organization.dart';
 import 'package:sgela_services/data/sgela_user.dart';
 import 'package:sgela_services/data/sponsoree.dart';
-import 'package:sgela_services/repositories/repository.dart';
+import 'package:sgela_services/repositories/basic_repository.dart';
 import 'package:sgela_services/services/firestore_service.dart';
 import 'package:edu_chatbot/ui/auth/user_registration.dart';
 import 'package:edu_chatbot/ui/misc/busy_indicator.dart';
@@ -41,7 +41,7 @@ class OrganizationSelectorState extends State<OrganizationSelector>
   List<OrganizationBranding> orgBrandings = [];
   Prefs prefs = GetIt.instance<Prefs>();
   FirestoreService firestoreService = GetIt.instance<FirestoreService>();
-  Repository repository = GetIt.instance<Repository>();
+  BasicRepository repository = GetIt.instance<BasicRepository>();
   static const mm = ' 🔵🔵🍎🔵🔵 OrganizationSelector   🍎🍎';
   SgelaUser? user;
 

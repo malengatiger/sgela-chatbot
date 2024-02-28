@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:sgela_services/data/exam_link.dart';
 import 'package:sgela_services/data/subject.dart';
-import 'package:sgela_services/repositories/repository.dart';
+import 'package:sgela_services/repositories/basic_repository.dart';
 import 'package:sgela_services/services/gemini_chat_service.dart';
 import 'package:sgela_services/sgela_util/functions.dart';
 import '../../local_util/functions.dart' as fun;
@@ -16,7 +16,7 @@ class ChatWidget extends StatefulWidget {
       required this.subject});
 
   final ExamLink examLink;
-  final Repository repository;
+  final BasicRepository repository;
   final GeminiChatService chatService;
   final Subject subject;
 

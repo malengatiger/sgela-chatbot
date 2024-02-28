@@ -39,6 +39,7 @@ class OrganizationSplashState extends State<OrganizationSplash>
     }
   }
 
+
   @override
   void dispose() {
     _controller.dispose();

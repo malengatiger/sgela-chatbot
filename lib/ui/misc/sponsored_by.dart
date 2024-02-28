@@ -1,7 +1,7 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:sgela_services/data/branding.dart';
 import 'package:sgela_services/data/organization.dart';
-import 'package:sgela_services/repositories/repository.dart';
+import 'package:sgela_services/repositories/basic_repository.dart';
 import 'package:sgela_services/sgela_util/functions.dart';
 import 'package:sgela_services/sgela_util/prefs.dart';
 import 'package:flutter/material.dart';
@@ -27,7 +27,7 @@ class _SponsoredByState extends State<SponsoredBy> {
   Branding? branding;
   bool busy = false;
   Prefs prefs = GetIt.instance<Prefs>();
-  Repository repository = GetIt.instance<Repository>();
+  BasicRepository repository = GetIt.instance<BasicRepository>();
   @override
   void initState() {
     super.initState();

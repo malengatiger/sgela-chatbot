@@ -4,7 +4,7 @@ import 'package:sgela_services/data/branding.dart';
 import 'package:sgela_services/data/organization.dart';
 import 'package:sgela_services/data/sponsoree.dart';
 import 'package:sgela_services/data/subject.dart';
-import 'package:sgela_services/repositories/repository.dart';
+import 'package:sgela_services/repositories/basic_repository.dart';
 import 'package:sgela_services/services/firestore_service.dart';
 import 'package:edu_chatbot/ui/exam/exam_document_list.dart';
 import 'package:edu_chatbot/ui/landing_page.dart';
@@ -40,7 +40,7 @@ class SubjectSearch extends StatefulWidget {
 }
 
 class SubjectSearchState extends State<SubjectSearch> {
-  final Repository repository = GetIt.instance<Repository>();
+  final BasicRepository repository = GetIt.instance<BasicRepository>();
   final LocalDataService localDataService = GetIt.instance<LocalDataService>();
   final GeminiChatService chatService = GetIt.instance<GeminiChatService>();
   final YouTubeService youTubeService = GetIt.instance<YouTubeService>();
@@ -107,7 +107,12 @@ class SubjectSearchState extends State<SubjectSearch> {
     });
     try {
       sponsorOrganization = prefs.getOrganization();
-      branding = prefs.getBrand();
+      var brandings = await firestoreService.getOrganizationBrandings(
+          sponsorOrganization!.id!, true);
+      if (brandings.isNotEmpty) {
+        branding = brandings.first;
+      }
+
       currentAIModel = prefs.getCurrentModel();
       _selectedButton = {currentAIModel};
     } catch (e) {

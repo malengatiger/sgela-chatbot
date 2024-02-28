@@ -4,7 +4,7 @@ import 'package:edu_chatbot/ui/gemini/sections/gemini_multi_turn_chat_stream.dar
 import 'package:sgela_services/data/exam_document.dart';
 import 'package:sgela_services/data/exam_link.dart';
 import 'package:sgela_services/data/subject.dart';
-import 'package:sgela_services/repositories/repository.dart';
+import 'package:sgela_services/repositories/basic_repository.dart';
 import 'package:sgela_services/services/firestore_service.dart';
 import 'package:sgela_services/services/gemini_chat_service.dart';
 import 'package:sgela_services/services/local_data_service.dart';
@@ -43,7 +43,7 @@ class ExamLinkListWidgetState extends State<ExamLinkListWidget> {
   List<ExamLink> filteredExamLinks = [];
   static const mm = '🍎🍎🍎ExamLinkListWidget 🍎';
   bool busy = false;
-  final Repository repository = GetIt.instance<Repository>();
+  final BasicRepository repository = GetIt.instance<BasicRepository>();
   final LocalDataService localDataService = GetIt.instance<LocalDataService>();
   final GeminiChatService chatService = GetIt.instance<GeminiChatService>();
   final YouTubeService youTubeService = GetIt.instance<YouTubeService>();
