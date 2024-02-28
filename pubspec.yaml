@@ -22,7 +22,7 @@ dependencies:
   flutter_gemini: ^2.0.3
   markdown: ^7.2.1
   google_generative_ai: ^0.2.2
-  dart_mistral_api: ^1.0.1
+  dart_mistral_api: ^1.0.2
 
 dev_dependencies:
   flutter_test:

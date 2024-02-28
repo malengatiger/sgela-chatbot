@@ -285,10 +285,10 @@ packages:
     dependency: "direct main"
     description:
       name: dart_mistral_api
-      sha256: "894b84c0f39179afde6e6dcf5b18198f8b3e94bdb7949957b3c51184564bae6c"
+      sha256: "75f47a9e5c0b869e9e1ad969f927bc4d30bf5042c970d3284a5bf857cde6b5ec"
       url: "https://pub.dev"
     source: hosted
-    version: "1.0.1"
+    version: "1.0.2"
   dart_openai:
     dependency: transitive
     description:
