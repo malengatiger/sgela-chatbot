@@ -15,6 +15,7 @@ import 'package:edu_chatbot/ui/misc/busy_indicator.dart';
 import 'package:edu_chatbot/ui/misc/sponsored_by.dart';
 import 'package:edu_chatbot/ui/organization/org_logo_widget.dart';
 import 'package:sgela_services/sgela_util/dark_light_control.dart';
+import 'package:sgela_services/sgela_util/db_methods.dart';
 import 'package:sgela_services/sgela_util/environment.dart';
 import 'package:sgela_services/sgela_util/functions.dart';
 import 'package:sgela_services/sgela_util/prefs.dart';
@@ -272,17 +273,7 @@ class OpenAIImageChatWidgetState extends State<OpenAIImageChatWidget>
     completionTokens = chatCompletion.usage.completionTokens;
     totalTokens = chatCompletion.usage.totalTokens;
 
-    var tokensUsed = TokensUsed(
-        organization!.id!,
-        sponsoree!.id!,
-        DateTime.now().toUtc().toIso8601String(),
-        sponsoree!.sgelaUserName!,
-        organization!.name,
-        promptTokens,
-        completionTokens,
-        modelOpenAI, totalTokens);
-
-    firestoreService.addTokensUsed(tokensUsed);
+    DBMethods.addTokensUsed(totalTokens!, sponsoree!, modelOpenAI);
   }
 
   String aiModel = 'OpenAI';
@@ -336,29 +327,8 @@ class OpenAIImageChatWidgetState extends State<OpenAIImageChatWidget>
       });
 
       _setVariables();
-      var mr = AIResponseRating(
-          aiModel: aiModel,
-          organizationId: organization?.id,
-          sponsoreeId: sponsoree?.id,
-          sponsoreeName: sponsoree?.sgelaUserName,
-          sponsoreeEmail: sponsoree?.sgelaEmail,
-          sponsoreeCellphone: sponsoree?.sgelaCellphone,
-          subjectId: subjectId,
-          subject: subject,
-          id: DateTime
-              .now()
-              .millisecondsSinceEpoch,
-          rating: rating.toInt(),
-          userId: sponsoree?.sgelaUserId,
-          examTitle: examTitle,
-          date: DateTime.now().toUtc().toIso8601String(),
-          numberOfPagesInQuery: widget.examPageContents.length,
-          tokensUsed: totalTokens,
-          examLinkId: examLinkId);
-
-      pp('$mm ....... add AIResponseRating to database ... ');
-      myPrettyJsonPrint(mr.toJson());
-      await firestoreService.addRating(mr);
+      DBMethods.addRating(rating, sponsoree!, aiModel, widget.examLink,
+          widget.examPageContents.length);
       if (mounted) {
         Navigator.of(context).pop();
       }
@@ -409,29 +379,8 @@ class OpenAIImageChatWidgetState extends State<OpenAIImageChatWidget>
     });
     try {
       _setVariables();
-      var act = SponsoreeActivity(
-          organizationId: organization?.id,
-          id: DateTime
-              .now()
-              .millisecondsSinceEpoch,
-          date: DateTime.now().toUtc().toIso8601String(),
-          organizationName: organization?.name,
-          examLinkId: examLinkId,
-          totalTokens: totalTokens,
-          aiModel: model,
-          elapsedTimeInSeconds: elapsedTimeInSeconds,
-          sponsoreeCellphone: sponsoree?.sgelaCellphone,
-          sponsoreeEmail: sponsoree?.sgelaEmail,
-          sponsoreeName: sponsoree?.sgelaUserName,
-          subjectId: subjectId,
-          examTitle: examTitle,
-          subject: subject,
-          userId: sponsoree?.sgelaUserId,
-          sponsoreeId: sponsoree?.id!);
-
-      pp('$mm ... add SponsoreeActivity to database ... ');
-      myPrettyJsonPrint(act.toJson());
-      await firestoreService.addSponsoreeActivity(act);
+      DBMethods.addSponsoreeActivity(model, sponsoree!,
+          totalTokens!, widget.examLink, elapsedTimeInSeconds);
     } catch (e, s) {
       pp(e);
       pp(s);

@@ -14,6 +14,7 @@ import 'package:sgela_services/services/local_data_service.dart';
 import 'package:edu_chatbot/ui/chat/latex_math_viewer.dart';
 import 'package:edu_chatbot/ui/misc/busy_indicator.dart';
 import 'package:edu_chatbot/ui/misc/sponsored_by.dart';
+import 'package:sgela_services/sgela_util/db_methods.dart';
 import 'package:sgela_services/sgela_util/dio_util.dart';
 import 'package:sgela_services/sgela_util/environment.dart';
 import 'package:sgela_services/sgela_util/functions.dart';
@@ -231,11 +232,7 @@ class OpenAITextChatWidgetState extends State<OpenAITextChatWidget> {
     promptTokens = completionModel.usage.promptTokens;
     completionTokens = completionModel.usage.completionTokens;
     totalTokens = completionModel.usage.totalTokens;
-
-    var tokensUsed = TokensUsed(organization!.id!, sponsoree!.id!, DateTime.now().toUtc().toIso8601String(), sponsoree!.sgelaUserName!,
-        organization!.name, promptTokens, completionTokens, modelOpenAI, totalTokens);
-
-    firestoreService.addTokensUsed(tokensUsed);
+    DBMethods.addTokensUsed(totalTokens!, sponsoree!, modelOpenAI);
   }
 
 

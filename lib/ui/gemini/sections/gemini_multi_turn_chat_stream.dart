@@ -15,6 +15,7 @@ import 'package:sgela_services/data/exam_link.dart';
 import 'package:sgela_services/data/exam_page_content.dart';
 import 'package:sgela_services/data/organization.dart';
 import 'package:sgela_services/data/sponsoree.dart';
+import 'package:sgela_services/data/subject.dart';
 import 'package:sgela_services/data/tokens_used.dart';
 import 'package:sgela_services/services/firestore_service.dart';
 import 'package:sgela_services/services/local_data_service.dart';
@@ -26,11 +27,11 @@ import 'package:sgela_services/sgela_util/prefs.dart';
 
 class GeminiMultiTurnStreamChat extends StatefulWidget {
   const GeminiMultiTurnStreamChat(
-      {super.key, this.examLink, this.examPageContents});
+      {super.key, this.examLink, this.examPageContents, this.subject});
 
   final ExamLink? examLink;
   final List<ExamPageContent>? examPageContents;
-
+  final Subject? subject;
   @override
   State<GeminiMultiTurnStreamChat> createState() =>
       GeminiMultiTurnStreamChatState();
@@ -93,6 +94,9 @@ class GeminiMultiTurnStreamChatState extends State<GeminiMultiTurnStreamChat> {
       });
     }
     _examPageText = sb.toString();
+    if (widget.subject != null) {
+      _examPageText = 'Help me with ${widget.subject?.title}';
+    }
     _handleInputText(true);
     setState(() {});
   }

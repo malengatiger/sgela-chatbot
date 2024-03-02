@@ -25,6 +25,7 @@ import 'package:sgela_services/data/sponsoree_activity.dart';
 import 'package:sgela_services/services/conversion_service.dart';
 import 'package:sgela_services/services/firestore_service.dart';
 import 'package:sgela_services/sgela_util/dark_light_control.dart';
+import 'package:sgela_services/sgela_util/db_methods.dart';
 import 'package:sgela_services/sgela_util/environment.dart';
 import 'package:sgela_services/sgela_util/functions.dart';
 import 'package:sgela_services/sgela_util/navigation_util.dart';
@@ -101,19 +102,21 @@ class GeminiImageChatWidgetState extends State<GeminiImageChatWidget>
 
   void _scrollDown() {
     WidgetsBinding.instance.addPostFrameCallback(
-      (_) => _scrollController.animateTo(
-        _scrollController.position.maxScrollExtent,
-        duration: const Duration(
-          milliseconds: 750,
-        ),
-        curve: Curves.easeOutCirc,
-      ),
+          (_) =>
+          _scrollController.animateTo(
+            _scrollController.position.maxScrollExtent,
+            duration: const Duration(
+              milliseconds: 750,
+            ),
+            curve: Curves.easeOutCirc,
+          ),
     );
   }
 
   _startGeminiImageTextChat() async {
     const mx = '😎😎😎 ';
-    pp('\n\n$mm ...$mx  _startGeminiImageTextChat .... 🍎 with ${widget.examPageContents.length} pages');
+    pp('\n\n$mm ...$mx  _startGeminiImageTextChat .... 🍎 with ${widget
+        .examPageContents.length} pages');
     setState(() {
       aiResponseText = null;
     });
@@ -169,11 +172,12 @@ class GeminiImageChatWidgetState extends State<GeminiImageChatWidget>
       contents.add(gai.Content('user', userTextParts));
 
       gai.CountTokensResponse countTokensResponse =
-          await model.countTokens(contents);
-      pp('$mm CountTokensResponse:  🌍🌍🌍🌍tokens: ${countTokensResponse.totalTokens}  🌍🌍🌍🌍');
+      await model.countTokens(contents);
+      pp('$mm CountTokensResponse:  🌍🌍🌍🌍tokens: ${countTokensResponse
+          .totalTokens}  🌍🌍🌍🌍');
 
       final gai.GenerateContentResponse response =
-          await model.generateContent(contents);
+      await model.generateContent(contents);
       if (response.candidates.first.finishMessage == 'stop' ||
           response.candidates.first.finishMessage == 'STOP') {
         aiResponseText = response.text;
@@ -197,52 +201,66 @@ class GeminiImageChatWidgetState extends State<GeminiImageChatWidget>
       }
     }
     var end = DateTime.now();
-    elapsedTimeInSeconds = end.difference(start).inSeconds;
+    elapsedTimeInSeconds = end
+        .difference(start)
+        .inSeconds;
     _writeSponsoreeActivity('Gemini Pro Vision');
     // setState(() {});
   }
 
   List<gai.TextPart> _buildUserMathPromptContext() {
-
     List<gai.TextPart> textParts = [];
-    textParts.add(gai.TextPart('The image is of a page from a Mathematics examination paper'));
-    textParts.add(gai.TextPart('Help me prepare for this examination. I am in high school or freshman college.'));
-    textParts.add(gai.TextPart('Answer all the questions or solve all the problems that you find in the image.'));
+    textParts.add(gai.TextPart(
+        'The image is of a page from a Mathematics examination paper'));
+    textParts.add(gai.TextPart(
+        'Help me prepare for this examination. I am in high school or freshman college.'));
+    textParts.add(gai.TextPart(
+        'Answer all the questions or solve all the problems that you find in the image.'));
     textParts.add(gai.TextPart('Think step by step.'));
     textParts.add(gai.TextPart('Be concise.'));
-    textParts.add(gai.TextPart('Explain your answers and solutions like I am between 8 and 20 years old.'));
+    textParts.add(gai.TextPart(
+        'Explain your answers and solutions like I am between 8 and 20 years old.'));
     textParts.add(gai.TextPart('Show proof of your solution.'));
-    textParts.add(gai.TextPart('Separate the question responses using spacing, paragraphs or headings.'));
+    textParts.add(gai.TextPart(
+        'Separate the question responses using spacing, paragraphs or headings.'));
     textParts.add(gai.TextPart('Return response in LaTex format.'));
 
     return textParts;
   }
-  List<gai.TextPart> _buildModelMathPromptContext() {
 
+  List<gai.TextPart> _buildModelMathPromptContext() {
     List<gai.TextPart> textParts = [];
-    textParts.add(gai.TextPart('I am a super Mathematics tutor and personal AI assistant'));
+    textParts.add(gai.TextPart(
+        'I am a super Mathematics tutor and personal AI assistant'));
     textParts.add(gai.TextPart('I do my best to give accurate responses'));
     return textParts;
   }
-  List<gai.TextPart> _buildUserPromptContext() {
 
+  List<gai.TextPart> _buildUserPromptContext() {
     List<gai.TextPart> textParts = [];
-    textParts.add(gai.TextPart('The image is of a page from a ${widget.examLink.subject?.title} examination paper'));
-    textParts.add(gai.TextPart('Help me prepare for this examination. I am in high school or freshman college.'));
-    textParts.add(gai.TextPart('Answer all the questions or solve all the problems that you find in the image.'));
+    textParts.add(gai.TextPart(
+        'The image is of a page from a ${widget.examLink.subject
+            ?.title} examination paper'));
+    textParts.add(gai.TextPart(
+        'Help me prepare for this examination. I am in high school or freshman college.'));
+    textParts.add(gai.TextPart(
+        'Answer all the questions or solve all the problems that you find in the image.'));
     textParts.add(gai.TextPart('Think step by step.'));
     textParts.add(gai.TextPart('Be concise.'));
-    textParts.add(gai.TextPart('Explain your answers and solutions like I am between 8 and 20 years old.'));
+    textParts.add(gai.TextPart(
+        'Explain your answers and solutions like I am between 8 and 20 years old.'));
     textParts.add(gai.TextPart('Show proof of your solution.'));
-    textParts.add(gai.TextPart('Separate the question responses using spacing, paragraphs or headings.'));
+    textParts.add(gai.TextPart(
+        'Separate the question responses using spacing, paragraphs or headings.'));
     textParts.add(gai.TextPart('Return response in Markdown format.'));
 
     return textParts;
   }
-  List<gai.TextPart> _buildModelPromptContext() {
 
+  List<gai.TextPart> _buildModelPromptContext() {
     List<gai.TextPart> textParts = [];
-    textParts.add(gai.TextPart('I am a super ${widget.examLink..subject?.title} tutor and personal AI assistant'));
+    textParts.add(gai.TextPart('I am a super ${widget.examLink
+      ..subject?.title} tutor and personal AI assistant'));
     textParts.add(gai.TextPart('I do my best to give accurate responses'));
     return textParts;
   }
@@ -285,30 +303,8 @@ class GeminiImageChatWidgetState extends State<GeminiImageChatWidget>
       setState(() {
         ratingHasBeenDone = false;
       });
-      var mr = AIResponseRating(
-          aiModel: aiModel,
-          organizationId: organization?.id,
-          sponsoreeId: sponsoree?.id,
-          sponsoreeName: sponsoree?.sgelaUserName,
-          sponsoreeEmail: sponsoree?.sgelaEmail,
-          sponsoreeCellphone: sponsoree?.sgelaCellphone,
-          subjectId: widget.examLink.subject?.id,
-          subject: widget.examLink.subject?.title,
-          id: DateTime.now().millisecondsSinceEpoch,
-          rating: rating.toInt(),
-          userId: sponsoree?.sgelaUserId,
-          examTitle:
-              '${widget.examLink.documentTitle} - ${widget.examLink.title}',
-          date: DateTime.now().toUtc().toIso8601String(),
-          numberOfPagesInQuery: widget.examPageContents.length,
-          tokensUsed: totalTokens,
-          examLinkId: widget.examLink.id);
-
-      pp('$mm ....... add AIResponseRating to database ... ');
-      myPrettyJsonPrint(mr.toJson());
-      await firestoreService.addRating(mr);
-      pp('$mm ... AIResponseRating added to database ... ');
-
+      DBMethods.addRating(rating, sponsoree!, aiModel, widget.examLink,
+          widget.examPageContents.length);
       if (mounted) {
         Navigator.of(context).pop();
       }
@@ -340,7 +336,8 @@ class GeminiImageChatWidgetState extends State<GeminiImageChatWidget>
     int cnt = 0;
     for (var value in widget.examPageContents) {
       if (value.pageImageUrl != null) {
-        pp('$mm ... contentBag: image in the page, index: 🍎🍎${value.pageIndex} 🍎🍎');
+        pp('$mm ... contentBag: image in the page, index: 🍎🍎${value
+            .pageIndex} 🍎🍎');
         cnt++;
       }
     }
@@ -358,7 +355,9 @@ class GeminiImageChatWidgetState extends State<GeminiImageChatWidget>
     try {
       var act = SponsoreeActivity(
           organizationId: organization?.id,
-          id: DateTime.now().millisecondsSinceEpoch,
+          id: DateTime
+              .now()
+              .millisecondsSinceEpoch,
           date: DateTime.now().toUtc().toIso8601String(),
           organizationName: organization?.name,
           examLinkId: widget.examLink.id!,
@@ -370,7 +369,7 @@ class GeminiImageChatWidgetState extends State<GeminiImageChatWidget>
           sponsoreeName: sponsoree?.sgelaUserName,
           subjectId: widget.examLink.subject?.id!,
           examTitle:
-              '${widget.examLink.documentTitle} - ${widget.examLink.title}',
+          '${widget.examLink.documentTitle} - ${widget.examLink.title}',
           subject: widget.examLink.subject?.title,
           userId: sponsoree?.sgelaUserId,
           sponsoreeId: sponsoree?.id!);
@@ -420,9 +419,9 @@ class GeminiImageChatWidgetState extends State<GeminiImageChatWidget>
               title: branding == null
                   ? const Text('Gemini Image Text Driver')
                   : OrgLogoWidget(
-                      branding: branding,
-                      height: 28,
-                    ),
+                branding: branding,
+                height: 28,
+              ),
               actions: [
                 IconButton(
                     onPressed: () {
@@ -431,21 +430,25 @@ class GeminiImageChatWidgetState extends State<GeminiImageChatWidget>
                     icon: Icon(
                       Icons.refresh,
                       color: mode == DARK
-                          ? Theme.of(context).primaryColor
+                          ? Theme
+                          .of(context)
+                          .primaryColor
                           : Colors.black,
                     )),
                 aiResponseText == null
                     ? gapW4
                     : IconButton(
-                        onPressed: () {
-                          _navigateToSharing();
-                        },
-                        icon: Icon(
-                          Icons.share,
-                          color: mode == DARK
-                              ? Theme.of(context).primaryColor
-                              : Colors.black,
-                        )),
+                    onPressed: () {
+                      _navigateToSharing();
+                    },
+                    icon: Icon(
+                      Icons.share,
+                      color: mode == DARK
+                          ? Theme
+                          .of(context)
+                          .primaryColor
+                          : Colors.black,
+                    )),
               ],
             ),
             body: ScreenTypeLayout.builder(
@@ -459,56 +462,57 @@ class GeminiImageChatWidgetState extends State<GeminiImageChatWidget>
                           ExamLinkDetails(
                             examLink: widget.examLink,
                             pageNumber:
-                                widget.examPageContents.first.pageIndex! + 1,
+                            widget.examPageContents.first.pageIndex! + 1,
                           ),
                           gapH16,
                           aiResponseText == null
                               ? gapW4
                               : Row(
-                                  crossAxisAlignment: CrossAxisAlignment.center,
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Text(
-                                      'SgelaAI Response',
-                                      style: myTextStyleMediumLargeWithSize(
-                                          context, 16),
-                                    ),
-                                    aiResponseText == null
-                                        ? gapW4
-                                        : Row(
-                                            children: [
-                                              gapW32,
-                                              IconButton(
-                                                  onPressed: () {
-                                                    _openRatingDialog();
-                                                  },
-                                                  icon: Icon(
-                                                    Icons.star_rate,
-                                                    color: mode == DARK
-                                                        ? Theme.of(context)
-                                                            .primaryColor
-                                                        : Colors.black,
-                                                  ))
-                                            ],
-                                          )
-                                  ],
-                                ),
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                'SgelaAI Response',
+                                style: myTextStyleMediumLargeWithSize(
+                                    context, 16),
+                              ),
+                              aiResponseText == null
+                                  ? gapW4
+                                  : Row(
+                                children: [
+                                  gapW32,
+                                  IconButton(
+                                      onPressed: () {
+                                        _openRatingDialog();
+                                      },
+                                      icon: Icon(
+                                        Icons.star_rate,
+                                        color: mode == DARK
+                                            ? Theme
+                                            .of(context)
+                                            .primaryColor
+                                            : Colors.black,
+                                      ))
+                                ],
+                              )
+                            ],
+                          ),
                           gapH16,
                           aiResponseText == null
                               ? const BusyIndicator(
-                                  caption: 'Talking to SgelaAI ...',
-                                  showClock: true,
-                                )
+                            caption: 'Talking to SgelaAI ...',
+                            showClock: true,
+                          )
                               : Expanded(
-                                  child: _showMarkdown
-                                      ? SgelaMarkdownWidget(
-                                          text: aiResponseText!)
-                                      : SgelaLaTexViewer(
-                                          text: aiResponseText!,
-                                          examPageContents:
-                                              widget.examPageContents,
-                                          tokensUsed: tokensUsed,
-                                          examLink: widget.examLink)),
+                              child: _showMarkdown
+                                  ? SgelaMarkdownWidget(
+                                  text: aiResponseText!)
+                                  : SgelaLaTexViewer(
+                                  text: aiResponseText!,
+                                  examPageContents:
+                                  widget.examPageContents,
+                                  tokensUsed: tokensUsed,
+                                  examLink: widget.examLink)),
                           const SponsoredBy(),
                         ],
                       ),
