@@ -2,6 +2,12 @@ import 'dart:collection';
 
 import 'package:badges/badges.dart' as bd;
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:edu_chatbot/ui/auth/user_registration.dart';
+import 'package:edu_chatbot/ui/misc/busy_indicator.dart';
+import 'package:edu_chatbot/ui/organization/organization_splash.dart';
+import 'package:flutter/material.dart';
+import 'package:get_it/get_it.dart';
+import 'package:responsive_builder/responsive_builder.dart';
 import 'package:sgela_services/data/branding.dart';
 import 'package:sgela_services/data/city.dart';
 import 'package:sgela_services/data/country.dart';
@@ -10,15 +16,9 @@ import 'package:sgela_services/data/sgela_user.dart';
 import 'package:sgela_services/data/sponsoree.dart';
 import 'package:sgela_services/repositories/basic_repository.dart';
 import 'package:sgela_services/services/firestore_service.dart';
-import 'package:edu_chatbot/ui/auth/user_registration.dart';
-import 'package:edu_chatbot/ui/misc/busy_indicator.dart';
-import 'package:edu_chatbot/ui/organization/organization_splash.dart';
 import 'package:sgela_services/sgela_util/functions.dart';
 import 'package:sgela_services/sgela_util/navigation_util.dart';
 import 'package:sgela_services/sgela_util/prefs.dart';
-import 'package:flutter/material.dart';
-import 'package:get_it/get_it.dart';
-import 'package:responsive_builder/responsive_builder.dart';
 
 import '../../local_util/functions.dart';
 
@@ -167,8 +167,7 @@ class OrganizationSelectorState extends State<OrganizationSelector>
 
     if (mounted) {
       await NavigationUtils.navigateToPage(
-          context: context,
-          widget: OrganizationSplash(branding: orgBrand!.branding!));
+          context: context, widget: const OrganizationSplash());
 
       if (mounted) {
         Navigator.of(context).pop(true);
@@ -217,7 +216,7 @@ class OrganizationSelectorState extends State<OrganizationSelector>
                                         });
                                         _processChosenBrand();
                                       },
-                                      isGrid: false),
+                                      isGrid: true),
                                 )),
                         ],
                       )
@@ -288,7 +287,7 @@ class OrgBrandCard extends StatelessWidget {
     late Widget mWidget;
     if (isGrid) {
       mWidget = SizedBox(
-        height: 20,
+        height: 48,
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.center,
@@ -296,16 +295,24 @@ class OrgBrandCard extends StatelessWidget {
             organizationBranding.branding == null
                 ? gapW8
                 : organizationBranding.branding!.logoUrl == null
-                    ? Text('${organizationBranding.organization!.name}')
+                    ? Text(
+                        '${organizationBranding.organization!.name}',
+                        style: myTextStyle(context, Theme.of(context).primaryColor, 20,
+                            FontWeight.bold),
+                      )
                     : SizedBox(
-                        height: 64,
+                        height: 36,
                         child: CachedNetworkImage(
                           imageUrl: organizationBranding.branding!.logoUrl!,
-                          fit: BoxFit.cover,
+                          fit: BoxFit.fitHeight,
                         ),
                       ),
-            // gapH4,
-            Text('${organizationBranding.organization!.name}'),
+            gapH32,
+            Text(
+              '${organizationBranding.organization!.name}',
+              style: myTextStyle(context, Theme.of(context).primaryColor, 14,
+                  FontWeight.normal),
+            ),
           ],
         ),
       );
@@ -317,7 +324,7 @@ class OrgBrandCard extends StatelessWidget {
               : organizationBranding.branding!.logoUrl == null
                   ? Text('${organizationBranding.organization!.name}')
                   : SizedBox(
-                      height: 48,
+                      height: 32,
                       child: CachedNetworkImage(
                         imageUrl: organizationBranding.branding!.logoUrl!,
                         fit: BoxFit.cover,

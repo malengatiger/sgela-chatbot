@@ -1,7 +1,20 @@
-import 'dart:developer';
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:edu_chatbot/ui/chat/ai_rating_widget.dart';
+import 'package:edu_chatbot/ui/chat/gemini_text_chat_widget.dart';
+import 'package:edu_chatbot/ui/chat/latex_math_viewer.dart';
+import 'package:edu_chatbot/ui/chat/sgela_markdown_widget.dart';
+import 'package:edu_chatbot/ui/chat/sharing_widget.dart';
+import 'package:edu_chatbot/ui/misc/busy_indicator.dart';
+import 'package:edu_chatbot/ui/misc/sponsored_by.dart';
+import 'package:edu_chatbot/ui/organization/org_logo_widget.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_gemini/flutter_gemini.dart';
+import 'package:get_it/get_it.dart';
+import 'package:google_generative_ai/google_generative_ai.dart' as gai;
+import 'package:path_provider/path_provider.dart';
+import 'package:responsive_builder/responsive_builder.dart';
 import 'package:sgela_services/data/branding.dart';
 import 'package:sgela_services/data/exam_link.dart';
 import 'package:sgela_services/data/exam_page_content.dart';
@@ -11,20 +24,6 @@ import 'package:sgela_services/data/sponsoree.dart';
 import 'package:sgela_services/data/sponsoree_activity.dart';
 import 'package:sgela_services/services/conversion_service.dart';
 import 'package:sgela_services/services/firestore_service.dart';
-import 'package:edu_chatbot/ui/chat/ai_rating_widget.dart';
-import 'package:edu_chatbot/ui/chat/gemini_text_chat_widget.dart';
-import 'package:edu_chatbot/ui/chat/sgela_markdown_widget.dart';
-import 'package:edu_chatbot/ui/chat/sharing_widget.dart';
-import 'package:edu_chatbot/ui/misc/busy_indicator.dart';
-import 'package:edu_chatbot/ui/misc/sponsored_by.dart';
-import 'package:edu_chatbot/ui/organization/org_logo_widget.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_gemini/flutter_gemini.dart';
-import 'package:flutter_tex/flutter_tex.dart';
-import 'package:get_it/get_it.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:responsive_builder/responsive_builder.dart';
-import 'package:screenshot/screenshot.dart';
 import 'package:sgela_services/sgela_util/dark_light_control.dart';
 import 'package:sgela_services/sgela_util/environment.dart';
 import 'package:sgela_services/sgela_util/functions.dart';
@@ -60,6 +59,7 @@ class GeminiImageChatWidgetState extends State<GeminiImageChatWidget>
   int imageCount = 0;
   bool _showMarkdown = true;
   int elapsedTimeInSeconds = 0;
+  final ScrollController _scrollController = ScrollController();
 
   @override
   void initState() {
@@ -99,6 +99,18 @@ class GeminiImageChatWidgetState extends State<GeminiImageChatWidget>
     });
   }
 
+  void _scrollDown() {
+    WidgetsBinding.instance.addPostFrameCallback(
+      (_) => _scrollController.animateTo(
+        _scrollController.position.maxScrollExtent,
+        duration: const Duration(
+          milliseconds: 750,
+        ),
+        curve: Curves.easeOutCirc,
+      ),
+    );
+  }
+
   _startGeminiImageTextChat() async {
     const mx = '😎😎😎 ';
     pp('\n\n$mm ...$mx  _startGeminiImageTextChat .... 🍎 with ${widget.examPageContents.length} pages');
@@ -113,8 +125,19 @@ class GeminiImageChatWidgetState extends State<GeminiImageChatWidget>
     String totalText = '';
     totalTokens = 0;
     aiModel = 'Gemini Pro Vision';
+    List<gai.TextPart> userTextParts = [];
+    List<gai.TextPart> modelTextParts = [];
+
     try {
-      StringBuffer sb = _buildPromptContext();
+      if (widget.examLink.subject!.title != null) {
+        if (widget.examLink.subject!.title!.contains('MATH')) {
+          userTextParts = _buildUserMathPromptContext();
+          modelTextParts = _buildModelMathPromptContext();
+        }
+      } else {
+        userTextParts = _buildUserPromptContext();
+        modelTextParts = _buildModelPromptContext();
+      }
       for (var page in widget.examPageContents) {
         if (page.pageImageUrl != null) {
           try {
@@ -126,49 +149,49 @@ class GeminiImageChatWidgetState extends State<GeminiImageChatWidget>
             pp(s);
           }
         } else {
-          sb.write(page.text);
-          sb.write('\n');
+          userTextParts.add(gai.TextPart('${page.text}'));
         }
       }
       //
-      String text = sb.toString();
-      totalText = '$totalText$text';
 
-      pp('$mm ... $mx  ... sending prompt with image(s) for Gemini: \n $text '
-          '$mx totalText length in prompt: ${totalText.length} ');
-      pp('$mm ... $mx  ... prompt with image for Gemini: $mx totalTokens : $totalTokens ');
+      pp('$mm ... $mx  ... sending prompt with image(s) for Gemini: \n ');
 
-      var response = await gemini
-          .textAndImage(
-              text: text,
-              images: images,
-              modelName: ChatbotEnvironment.getGeminiVisionModel(),
-              generationConfig:
-                  GenerationConfig(temperature: 0.0, maxOutputTokens: 5000))
-          .catchError((e) => pp('$mm ERROR Gemini AI - $e'));
+      final model = gai.GenerativeModel(
+          model: 'gemini-pro', apiKey: ChatbotEnvironment.getGeminiAPIKey());
+      List<gai.Content> contents = [];
+      List<gai.DataPart> dataParts = [];
+      for (var img in images) {
+        dataParts.add(gai.DataPart('image/png', img));
+      }
 
-      if (response!.finishReason == 'stop' || response.finishReason == 'STOP') {
-        pp('$mm ... $mx  ... Gemini AI has responded!');
-        var sb = StringBuffer();
-        response.content?.parts?.forEach((parts) {
-          sb.write(parts.text);
-          sb.write("\n");
-        });
-        aiResponseText = sb.toString();
+      contents.add(gai.Content('model', modelTextParts));
+      contents.add(gai.Content('user', dataParts));
+      contents.add(gai.Content('user', userTextParts));
+
+      gai.CountTokensResponse countTokensResponse =
+          await model.countTokens(contents);
+      pp('$mm CountTokensResponse:  🌍🌍🌍🌍tokens: ${countTokensResponse.totalTokens}  🌍🌍🌍🌍');
+
+      final gai.GenerateContentResponse response =
+          await model.generateContent(contents);
+      if (response.candidates.first.finishMessage == 'stop' ||
+          response.candidates.first.finishMessage == 'STOP') {
+        aiResponseText = response.text;
         if (isValidLaTeXString(aiResponseText!)) {
           // aiResponseText = addNewLinesToLaTeXHeadings(aiResponseText!);
           _showMarkdown = false;
         }
       } else {
-        pp('$mm ERROR: Finish reason is: ${response.finishReason}');
+        pp('$mm BAD FINISH REASON: ${response.candidates.first.finishMessage}'
+            ' ${response.candidates.first.finishReason.toString()}');
         if (mounted) {
-          showErrorDialog(context, 'SgelaAI could not help you at this time');
+          showErrorDialog(context,
+              'SgelaAI could not help you at this time. Try again later.');
         }
       }
       pp('$mm $mx ...... Gemini says: $aiResponseText');
     } catch (e, s) {
-      pp(e);
-      pp(s);
+      pp('$mm ERROR: $e $s');
       if (mounted) {
         showErrorDialog(context, '$e');
       }
@@ -179,22 +202,49 @@ class GeminiImageChatWidgetState extends State<GeminiImageChatWidget>
     // setState(() {});
   }
 
-  StringBuffer _buildPromptContext() {
-    var sb = StringBuffer();
-    sb.write(
-        'These are questions and problems from an ${widget.examLink.subject?.title!} examination paper.\n');
-    sb.write('Answer all the questions or solve all the problems.\n');
-    sb.write('Think step by step.\n');
-    sb.write('Explain your answers and solutions.\n');
-    sb.write(
-        'Separate the question responses using spacing, paragraphs or headings.\n');
-    sb.write(
-        'Return your response in Markdown or LaTex format where appropriate.\n');
-    sb.write(
-        'If mathematical or other science equations are in your response, return the response in LaText format only.\n\n');
-    sb.write(
-        'Return response in either Markdown or LaTex. Do not mix the 2 formats in one response');
-    return sb;
+  List<gai.TextPart> _buildUserMathPromptContext() {
+
+    List<gai.TextPart> textParts = [];
+    textParts.add(gai.TextPart('The image is of a page from a Mathematics examination paper'));
+    textParts.add(gai.TextPart('Help me prepare for this examination. I am in high school or freshman college.'));
+    textParts.add(gai.TextPart('Answer all the questions or solve all the problems that you find in the image.'));
+    textParts.add(gai.TextPart('Think step by step.'));
+    textParts.add(gai.TextPart('Be concise.'));
+    textParts.add(gai.TextPart('Explain your answers and solutions like I am between 8 and 20 years old.'));
+    textParts.add(gai.TextPart('Show proof of your solution.'));
+    textParts.add(gai.TextPart('Separate the question responses using spacing, paragraphs or headings.'));
+    textParts.add(gai.TextPart('Return response in LaTex format.'));
+
+    return textParts;
+  }
+  List<gai.TextPart> _buildModelMathPromptContext() {
+
+    List<gai.TextPart> textParts = [];
+    textParts.add(gai.TextPart('I am a super Mathematics tutor and personal AI assistant'));
+    textParts.add(gai.TextPart('I do my best to give accurate responses'));
+    return textParts;
+  }
+  List<gai.TextPart> _buildUserPromptContext() {
+
+    List<gai.TextPart> textParts = [];
+    textParts.add(gai.TextPart('The image is of a page from a ${widget.examLink.subject?.title} examination paper'));
+    textParts.add(gai.TextPart('Help me prepare for this examination. I am in high school or freshman college.'));
+    textParts.add(gai.TextPart('Answer all the questions or solve all the problems that you find in the image.'));
+    textParts.add(gai.TextPart('Think step by step.'));
+    textParts.add(gai.TextPart('Be concise.'));
+    textParts.add(gai.TextPart('Explain your answers and solutions like I am between 8 and 20 years old.'));
+    textParts.add(gai.TextPart('Show proof of your solution.'));
+    textParts.add(gai.TextPart('Separate the question responses using spacing, paragraphs or headings.'));
+    textParts.add(gai.TextPart('Return response in Markdown format.'));
+
+    return textParts;
+  }
+  List<gai.TextPart> _buildModelPromptContext() {
+
+    List<gai.TextPart> textParts = [];
+    textParts.add(gai.TextPart('I am a super ${widget.examLink..subject?.title} tutor and personal AI assistant'));
+    textParts.add(gai.TextPart('I do my best to give accurate responses'));
+    return textParts;
   }
 
   _navigateToGeminiTextChatWidget() async {
@@ -202,20 +252,18 @@ class GeminiImageChatWidgetState extends State<GeminiImageChatWidget>
         '🍎 with ${widget.examPageContents.length} pages');
     await Future.delayed(const Duration(milliseconds: 100));
     if (mounted) {
-      NavigationUtils.navigateToPage(context: context, widget: GeminiTextChatWidget(
-             examLink: widget.examLink, examPageContents: widget.examPageContents));
+      NavigationUtils.navigateToPage(
+          context: context,
+          widget: GeminiTextChatWidget(
+              examLink: widget.examLink,
+              examPageContents: widget.examPageContents));
     }
   }
 
 
-  void _resetCounters() {
-    promptTokens = 0;
-    completionTokens = 0;
-    totalTokens = 0;
-  }
-
   String aiModel = 'Gemini Pro';
   bool ratingHasBeenDone = false;
+  int tokensUsed = 0;
 
   _openRatingDialog() {
     showDialog(
@@ -357,42 +405,6 @@ class GeminiImageChatWidgetState extends State<GeminiImageChatWidget>
             examLink: widget.examLink));
   }
 
-  ScreenshotController screenshotController = ScreenshotController();
-
-  Future<File?> _captureWidget() async {
-    Uint8List? image =
-        await screenshotController.captureFromWidget(_showMarkdown
-            ? SgelaMarkdownWidget(text: aiResponseText!)
-            : Card(
-                elevation: 8,
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: TeXView(
-                    onRenderFinished: (f) {
-                      pp('$mm onRenderFinished');
-                    },
-                    style: TeXViewStyle(
-                      contentColor: Colors.white,
-                      backgroundColor: Colors.blue[700]!,
-                      padding: const TeXViewPadding.all(4),
-                    ),
-                    renderingEngine: const TeXViewRenderingEngine.katex(),
-                    child: TeXViewColumn(
-                      children: [
-                        TeXViewDocument(aiResponseText!),
-                      ],
-                    ),
-                  ),
-                ),
-              ));
-    File file = File(
-        '${Directory.systemTemp.path}/${DateTime.now().millisecondsSinceEpoch}.png');
-    file.writeAsBytesSync(image);
-    pp('$mm ... captured ... file: ${await file.length()} bytes');
-
-    return file;
-  }
-
   @override
   void dispose() {
     _controller.dispose();
@@ -406,7 +418,7 @@ class GeminiImageChatWidgetState extends State<GeminiImageChatWidget>
         child: Scaffold(
             appBar: AppBar(
               title: branding == null
-                  ? const Text('OpenAI Driver')
+                  ? const Text('Gemini Image Text Driver')
                   : OrgLogoWidget(
                       branding: branding,
                       height: 28,
@@ -422,16 +434,18 @@ class GeminiImageChatWidgetState extends State<GeminiImageChatWidget>
                           ? Theme.of(context).primaryColor
                           : Colors.black,
                     )),
-                aiResponseText == null? gapW4: IconButton(
-                    onPressed: () {
-                      _navigateToSharing();
-                    },
-                    icon: Icon(
-                      Icons.share,
-                      color: mode == DARK
-                          ? Theme.of(context).primaryColor
-                          : Colors.black,
-                    )),
+                aiResponseText == null
+                    ? gapW4
+                    : IconButton(
+                        onPressed: () {
+                          _navigateToSharing();
+                        },
+                        icon: Icon(
+                          Icons.share,
+                          color: mode == DARK
+                              ? Theme.of(context).primaryColor
+                              : Colors.black,
+                        )),
               ],
             ),
             body: ScreenTypeLayout.builder(
@@ -457,7 +471,7 @@ class GeminiImageChatWidgetState extends State<GeminiImageChatWidget>
                                     Text(
                                       'SgelaAI Response',
                                       style: myTextStyleMediumLargeWithSize(
-                                          context, 18),
+                                          context, 16),
                                     ),
                                     aiResponseText == null
                                         ? gapW4
@@ -489,34 +503,12 @@ class GeminiImageChatWidgetState extends State<GeminiImageChatWidget>
                                   child: _showMarkdown
                                       ? SgelaMarkdownWidget(
                                           text: aiResponseText!)
-                                      : Card(
-                                          elevation: 8,
-                                          child: Padding(
-                                            padding: const EdgeInsets.all(16.0),
-                                            child: TeXView(
-                                              onRenderFinished: (f) {
-                                                pp('$mm onRenderFinished');
-                                              },
-                                              style: TeXViewStyle(
-                                                contentColor: Colors.white,
-                                                backgroundColor:
-                                                    Colors.blue[700]!,
-                                                padding:
-                                                    const TeXViewPadding.all(4),
-                                              ),
-                                              renderingEngine:
-                                                  const TeXViewRenderingEngine
-                                                      .katex(),
-                                              child: TeXViewColumn(
-                                                children: [
-                                                  TeXViewDocument(
-                                                      aiResponseText!),
-                                                ],
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                ),
+                                      : SgelaLaTexViewer(
+                                          text: aiResponseText!,
+                                          examPageContents:
+                                              widget.examPageContents,
+                                          tokensUsed: tokensUsed,
+                                          examLink: widget.examLink)),
                           const SponsoredBy(),
                         ],
                       ),

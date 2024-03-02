@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:edu_chatbot/ui/landing_page.dart';
+import 'package:edu_chatbot/ui/organization/organization_splash.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_ui_auth/firebase_ui_auth.dart';
@@ -88,9 +89,7 @@ class MyApp extends StatelessWidget {
               debugShowCheckedModeBanner: false,
               theme: _getTheme(context),
               // home: const GenerativeChatScreen('Gemini',),
-              home:  const LandingPage(
-                hideButtons: false,
-              ),
+              home:  const OrganizationSplash( ),
             );
           }),
     );

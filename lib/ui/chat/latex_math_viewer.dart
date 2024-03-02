@@ -14,8 +14,8 @@ import 'package:sgela_services/sgela_util/functions.dart';
 import '../../local_util/functions.dart';
 import '../exam/exam_link_details.dart';
 
-class LaTexMathViewer extends StatefulWidget {
-  const LaTexMathViewer(
+class SgelaLaTexViewer extends StatefulWidget {
+  const SgelaLaTexViewer(
       {super.key,
       required this.text,
       required this.examPageContents, required this.tokensUsed, required this.examLink,
@@ -30,10 +30,10 @@ class LaTexMathViewer extends StatefulWidget {
 
 
   @override
-  State<LaTexMathViewer> createState() => _LaTexMathViewerState();
+  State<SgelaLaTexViewer> createState() => _SgelaLaTexViewerState();
 }
 
-class _LaTexMathViewerState extends State<LaTexMathViewer> {
+class _SgelaLaTexViewerState extends State<SgelaLaTexViewer> {
   final GlobalKey _repaintBoundaryKey = GlobalKey();
 
   bool _showRatingBar = false;
@@ -82,6 +82,7 @@ class _LaTexMathViewerState extends State<LaTexMathViewer> {
   bool isRated = false;
   int rating = 0;
   String responseText = '';
+  static const mm = '🔵🔵🔵🔵 SgelaLaTexViewer  🔵🔵';
 
   _sendRating(int mRating) async {
     // try {
@@ -136,7 +137,7 @@ class _LaTexMathViewerState extends State<LaTexMathViewer> {
             actions: [
               IconButton(
                   onPressed: () {
-                    pp('${LaTexMathViewer.mm} ... share required ... images: ${list.length}');
+                    pp('${SgelaLaTexViewer.mm} ... share required ... images: ${list.length}');
                   },
                   icon:
                       Icon(Icons.share, color: Theme.of(context).primaryColor)),
@@ -158,7 +159,7 @@ class _LaTexMathViewerState extends State<LaTexMathViewer> {
                   width: double.infinity,
                   // height: h,
                   padding: const EdgeInsets.all(8.0),
-                  child: LaTexViewer(text: responseText),
+                  child: LaTexCard(text: responseText),
                 ),
               ),
             ),
@@ -191,8 +192,9 @@ class _LaTexMathViewerState extends State<LaTexMathViewer> {
   }
 }
 
-class LaTexViewer extends StatelessWidget {
-  const LaTexViewer({super.key, required this.text, this.showHeader = true});
+class LaTexCard extends StatelessWidget {
+  const LaTexCard({super.key, required this.text, this.showHeader = true});
+  static const mm = '🔵🔵🔵🔵 LaTexCard  🔵🔵';
 
   final String text;
   final bool? showHeader;
@@ -224,18 +226,30 @@ class LaTexViewer extends StatelessWidget {
               child: SingleChildScrollView(
                 child: Padding(
                   padding: const EdgeInsets.all(8.0),
-                  child: SizedBox(height: 600,
-                    child: TeXView(
-                      style: const TeXViewStyle(
-                        contentColor: Colors.white,
-                        backgroundColor: Colors.transparent,
-                        padding: TeXViewPadding.all(8),
-                      ),
-                      renderingEngine: const TeXViewRenderingEngine.katex(),
-                      child: TeXViewColumn(
-                        children: [
-                          TeXViewDocument(text),
-                        ],
+                  child: Card(
+                    elevation: 8,
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: TeXView(
+                        onRenderFinished: (f) {
+                          pp('$mm onRenderFinished');
+                        },
+                        style: TeXViewStyle(
+                          contentColor: Colors.white,
+                          backgroundColor:
+                          Colors.blue[700]!,
+                          padding:
+                          const TeXViewPadding.all(4),
+                        ),
+                        renderingEngine:
+                        const TeXViewRenderingEngine
+                            .katex(),
+                        child: TeXViewColumn(
+                          children: [
+                            TeXViewDocument(
+                                text),
+                          ],
+                        ),
                       ),
                     ),
                   ),

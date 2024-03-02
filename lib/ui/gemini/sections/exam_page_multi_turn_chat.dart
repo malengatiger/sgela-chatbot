@@ -211,7 +211,7 @@ class ExamPageMultiTurnChatState extends State<ExamPageMultiTurnChat> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(role),
-              LaTexViewer(
+              LaTexCard(
                 text: text,
                 showHeader: false,
               ),

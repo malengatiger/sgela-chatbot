@@ -355,7 +355,7 @@ class OpenAITextChatWidgetState extends State<OpenAITextChatWidget> {
                     ? myTextStyleMediumLarge(context, 20)
                     : myTextStyleMediumLarge(context, 14),
               ),
-              LaTexViewer(
+              LaTexCard(
                 text: text,
                 showHeader: false,
               ),

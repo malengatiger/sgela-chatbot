@@ -2,34 +2,33 @@ import 'dart:io';
 
 import 'package:badges/badges.dart' as bd;
 import 'package:edu_chatbot/local_util/functions.dart';
+import 'package:edu_chatbot/ui/chat/latex_math_viewer.dart';
 import 'package:edu_chatbot/ui/gemini/widgets/chat_input_box.dart';
+import 'package:edu_chatbot/ui/misc/busy_indicator.dart';
+import 'package:edu_chatbot/ui/misc/sponsored_by.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_markdown/flutter_markdown.dart';
+import 'package:get_it/get_it.dart';
+import 'package:google_generative_ai/google_generative_ai.dart' as gai;
 import 'package:sgela_services/data/branding.dart';
 import 'package:sgela_services/data/exam_link.dart';
 import 'package:sgela_services/data/exam_page_content.dart';
-import 'package:sgela_services/data/subject.dart';
-import 'package:sgela_services/services/local_data_service.dart';
-import 'package:edu_chatbot/ui/chat/latex_math_viewer.dart';
-import 'package:edu_chatbot/ui/misc/busy_indicator.dart';
-import 'package:edu_chatbot/ui/misc/sponsored_by.dart';
-
-import 'package:flutter/material.dart';
-import 'package:flutter_gemini/flutter_gemini.dart';
-import 'package:flutter_markdown/flutter_markdown.dart';
-import 'package:get_it/get_it.dart';
+import 'package:sgela_services/data/organization.dart';
+import 'package:sgela_services/data/sponsoree.dart';
+import 'package:sgela_services/data/tokens_used.dart';
 import 'package:sgela_services/services/firestore_service.dart';
+import 'package:sgela_services/services/local_data_service.dart';
+import 'package:sgela_services/sgela_util/db_methods.dart';
 import 'package:sgela_services/sgela_util/dio_util.dart';
 import 'package:sgela_services/sgela_util/environment.dart';
 import 'package:sgela_services/sgela_util/functions.dart';
 import 'package:sgela_services/sgela_util/prefs.dart';
 
-
-
 class GeminiMultiTurnStreamChat extends StatefulWidget {
   const GeminiMultiTurnStreamChat(
-      {super.key, this.examLink, this.subject, this.examPageContents});
+      {super.key, this.examLink, this.examPageContents});
 
   final ExamLink? examLink;
-  final Subject? subject;
   final List<ExamPageContent>? examPageContents;
 
   @override
@@ -41,59 +40,62 @@ class GeminiMultiTurnStreamChatState extends State<GeminiMultiTurnStreamChat> {
   static const mm = '🍐🍐🍐🍐 GeminiMultiTurnStreamChat 🍐';
 
   bool _busy = false;
-  Gemini gemini = GetIt.instance<Gemini>();
 
   bool get loading => _busy;
   int turnNumber = 0;
 
   set loading(bool set) => setState(() => _busy = set);
-  final List<Content> chats = [];
 
   Prefs prefs = GetIt.instance<Prefs>();
   LocalDataService localDataService = GetIt.instance<LocalDataService>();
   FirestoreService firestoreService = GetIt.instance<FirestoreService>();
   Branding? branding;
-  var _chatInputController = TextEditingController();
+  final _chatInputController = TextEditingController();
+  ExamPageContent? examPageContent;
+  String? _examPageText;
+  String textPrompt = 'Hello SgelaAI';
+  int chatStartCount = 0;
+
+  DioUtil dioUtil = GetIt.instance<DioUtil>();
+
+  int totalTokens = 0;
+  int insertIndex = 10;
+
+  List<gai.Content> contents = [];
+  List<gai.TextPart> systemPartsContext = [];
+  gai.ChatSession? chatSession;
+  String? aiResponseText;
+  late gai.GenerativeModel generativeModel;
+  Organization? organization;
+  Sponsoree? sponsoree;
 
   @override
   void initState() {
     super.initState();
+    generativeModel = gai.GenerativeModel(
+        model: 'gemini-pro', apiKey: ChatbotEnvironment.getGeminiAPIKey());
+    _getOrganizationAndSponsoree();
     _getPageContents();
   }
 
-  ExamPageContent? examPageContent;
-  String? _examPageText;
+  _getOrganizationAndSponsoree() {
+    organization = prefs.getOrganization();
+    sponsoree = prefs.getSponsoree();
+  }
 
   _getPageContents() async {
     var sb = StringBuffer();
-    if (widget.subject != null) {
-      _chatInputController = TextEditingController(
-          text: 'I need help with this subject: ${widget.subject?.title}');
-    }
-    if (widget.examLink != null) {
-      _chatInputController = TextEditingController(
-          text:
-              'I need help with this subject: ${widget.examLink!.subject?.title}');
-    }
     if (widget.examPageContents != null) {
       widget.examPageContents?.forEach((page) {
         if (page.text != null) {
-          sb.write('${page.text!}\n\n');
+          sb.write('${page.text!}\n');
         }
       });
     }
     _examPageText = sb.toString();
-    if (_examPageText != null && _examPageText!.isNotEmpty) {
-      _examPageText =
-          'Find the questions or problems in the text below and respond with the solutions in markdown format.\n'
-          'Show solution steps where necessary.\n The text: $_examPageText';
-      pp('$mm ... length of examText: ${_examPageText!.length}  bytes');
-    }
     _handleInputText(true);
     setState(() {});
   }
-
-  int insertIndex = 10;
 
   void _handleInputText(bool isFirstTime) {
     if (isFirstTime) {
@@ -109,24 +111,17 @@ class GeminiMultiTurnStreamChatState extends State<GeminiMultiTurnStreamChat> {
     }
     if (textPrompt.isNotEmpty) {
       textPrompt = _replaceKeywordsWithBlanks(textPrompt);
-      List<Parts> systemPartsContext = [];
-      List<Parts> userPartsContext = [];
-      if (isFirstTime) {
-        systemPartsContext = getMultiTurnContext();
-      }
-      userPartsContext.add(Parts(text: textPrompt));
 
-      if (chats.length > insertIndex) {
-        systemPartsContext = getMultiTurnContext();
-        int rem = chats.length % 7;
+      if (contents.length > insertIndex) {
+        int rem = contents.length % 10;
         if (rem == 0) {
-          chats.add(Content(role: 'model', parts: systemPartsContext));
-          pp('$mm ... System Context inserted  -- chats: ${chats.length}');
+          contents.add(gai.Content('model', systemPartsContext));
+          pp('$mm ... System Context inserted  -- contents: ${contents
+              .length}');
         }
       }
-      chats.add(Content(role: 'user', parts: userPartsContext));
       _chatInputController.clear();
-      _startAndListenToChatStream();
+      _sendChatMessage();
     } else {
       showToast(
           message: 'Say something, I did not quite hear you 🍎🍎🍎',
@@ -134,89 +129,99 @@ class GeminiMultiTurnStreamChatState extends State<GeminiMultiTurnStreamChat> {
     }
   }
 
-  String textPrompt = 'Hello SgelaAI';
-  int chatStartCount = 0;
-
-  DioUtil dioUtil = GetIt.instance<DioUtil>();
-
-  int totalTokens = 0;
-  Future _countTokens(
-      {required String prompt,
-      required List<String> systemStrings}) async {
-
-    var sb = StringBuffer();
-    for (var element in systemStrings) {
-      sb.write('$element\n');
-    }
-    sb.write(prompt);
-
-    var tokens = await
-    gemini.countTokens(sb.toString(),modelName: 'gemini-pro');
-    pp('$mm token response,🍎🍎 tokens: $tokens ... will write TokensUsed');
-  }
-
-  List<String> systemStrings = [];
-
-  void _addTokensUsed() {
+  Future<void> _addTokensUsed() async {
     try {
-      var sb = StringBuffer();
-      for (var content in chats) {
-            if (content.role == 'user') {
-              sb.write(content.parts?.first.text);
-              sb.write('\n');
-            }
-          }
-      // _countTokens(prompt: sb.toString(), systemStrings: systemStrings);
+      pp('$mm count tokens used in session ... ');
+      var ctr = await generativeModel.countTokens(contents);
+      totalTokens = ctr.totalTokens;
+      if (sponsoree != null) {
+        DBMethods.addTokensUsed(totalTokens, sponsoree!, 'gemini-pro');
+      }
     } catch (e, s) {
       pp("ERROR counting tokens: $e $s");
     }
+    setState(() {});
   }
-  Future<void> _startAndListenToChatStream() async {
-    pp('$mm _startAndListenToChatStream ...... 🍎🍎🍎🍎🍎🍎🍎🍎🍎 ');
 
+  Future<void> _sendChatMessage() async {
+    pp(
+        '$mm _startAndListenToChatStream ...... 🍎🍎🍎🍎\nprompt: 🍎$textPrompt🍎🍎🍎🍎 ');
     try {
       setState(() {
         _busy = true;
       });
 
-      gemini.streamChat(
-          chats,
-          generationConfig: GenerationConfig(temperature: 0.0))
-          .listen((candidates) async {
-        pp("\n\n$mm gemini.streamChat fired!: chats: ${chats.length} turnNumber: $turnNumber"
-            " 🍎🍎🍎🍎🍎🍎🍎🍎🍎--------->");
-        turnNumber++;
-        loading = false;
-        if (chats.isNotEmpty && chats.last.role == candidates.content?.role) {
-          chats.last.parts!.last.text =
-              '${chats.last.parts!.last.text}${candidates.output}';
+      if (chatSession == null) {
+        List<gai.TextPart> modelTextParts = _buildModelPromptContext();
+        List<gai.TextPart> userTextParts = _buildUserPromptContext();
+        contents.add(gai.Content('model', modelTextParts));
+        contents.add(gai.Content('user', userTextParts));
+        chatSession = generativeModel.startChat(
+            history: contents,
+            generationConfig: gai.GenerationConfig(temperature: 0.2));
+      }
+
+      gai.GenerateContentResponse response = await chatSession!
+          .sendMessage(gai.Content('user', [gai.TextPart(textPrompt)]));
+
+      if (response.candidates.first.finishReason != null) {
+        pp('$mm ... finish reason: ${response.candidates.first.finishReason
+            ?.name} '
+            '🔆 ${response.candidates.first.finishReason?.toString()}');
+        var reason = response.candidates.first.finishReason!.name;
+        if (reason == 'stop' || reason == 'STOP') {
+          aiResponseText = response.text;
+          contents.add(gai.Content('model', [gai.TextPart(response.text!)]));
         } else {
-          chats.add(
-              Content(role: 'model', parts: [Parts(text: candidates.output)]));
+          aiResponseText =
+          'Sorry! SgelaAI was unable to help with your request. Please try again 🔆';
         }
-        setState(() {
-          _busy = false;
-        });
-        pp('$mm ... added to chats, now we have ${chats.length} chats. '
-            '💜💜 ');
-      });
+      }
     } catch (e, s) {
       pp('$mm ERROR: $e - $s');
     }
+    setState(() {
+      _busy = false;
+    });
+  }
+
+  List<gai.TextPart> _buildUserPromptContext() {
+    List<gai.TextPart> textParts = [];
+    textParts.add(gai.TextPart(
+        'I need your help with ${widget.examLink?.subject
+            ?.title} examination paper'));
+    textParts.add(gai.TextPart(
+        'Help me prepare for this examination. I am in high school or college.'));
+    textParts.add(gai.TextPart(
+        'Answer all the questions or solve all the problems that you find in the image.'));
+    textParts.add(gai.TextPart('Think step by step.'));
+    textParts.add(gai.TextPart('Be concise.'));
+    textParts.add(gai.TextPart(
+        'Explain your answers and solutions like I am between 8 and 22 years old.'));
+    textParts.add(gai.TextPart('Show proof of your solution.'));
+    textParts.add(gai.TextPart(
+        'Separate the question responses using spacing, paragraphs or headings.'));
+    textParts.add(gai.TextPart('Return response in Markdown format.'));
+
+    return textParts;
+  }
+
+  List<gai.TextPart> _buildModelPromptContext() {
+    List<gai.TextPart> textParts = [];
+    textParts.add(gai.TextPart(
+        'I am a super ${widget.examLink?.subject
+            ?.title} tutor and personal AI assistant'));
+    textParts.add(gai.TextPart('I do my best to give accurate responses'));
+    return textParts;
   }
 
   Widget chatItem(BuildContext context, int index) {
-    final Content content = chats[index];
-    var text = content.parts?.lastOrNull?.text ??
-        'Sgela cannot help with your request. Try changing it ...';
-    text = modifyString(text);
-    bool isLatex = false;
-    isLatex = isValidLaTeXString(text);
     String role = 'You';
-    if (content.role == 'model') {
+    if (contents.isNotEmpty && contents.last.role == 'model') {
       role = 'SgelaAI';
     }
-
+    bool isLatex =
+    isValidLaTeXString(aiResponseText == null ? '' : aiResponseText!);
     if (isLatex) {
       return Card(
         elevation: 0,
@@ -229,8 +234,10 @@ class GeminiMultiTurnStreamChatState extends State<GeminiMultiTurnStreamChat> {
               Text(role),
               Card(
                 elevation: 8,
-                child: LaTexViewer(
-                  text: text,
+                child: aiResponseText == null
+                    ? gapH8
+                    : LaTexCard(
+                  text: aiResponseText!,
                   showHeader: false,
                 ),
               ),
@@ -241,8 +248,11 @@ class GeminiMultiTurnStreamChatState extends State<GeminiMultiTurnStreamChat> {
     }
     return Card(
       elevation: 0,
-      color:
-          content.role == 'model' ? Colors.blue.shade800 : Colors.transparent,
+      color: contents.isEmpty
+          ? Colors.transparent
+          : contents.last.role == 'model'
+          ? Colors.blue.shade800
+          : Colors.transparent,
       child: Padding(
         padding: const EdgeInsets.all(8.0),
         child: Column(
@@ -251,25 +261,23 @@ class GeminiMultiTurnStreamChatState extends State<GeminiMultiTurnStreamChat> {
             Text(role),
             Card(
               elevation: 8,
-              color: content.role == 'model'
+              color: contents.isEmpty
+                  ? Colors.transparent
+                  : contents.last.role == 'model'
                   ? Colors.blue.shade800
                   : Colors.transparent,
-              child: Markdown(
+              child: aiResponseText == null
+                  ? gapH8
+                  : Markdown(
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
-                  data: content.parts?.lastOrNull?.text ??
-                      'Sgela cannot help with your request. Try changing it ...'),
+                  data: aiResponseText!),
             ),
           ],
         ),
       ),
     );
   }
-
-  String modifyString(String input) {
-    return input.replaceAll('**', '\n');
-  }
-
   String _replaceKeywordsWithBlanks(String text) {
     String modifiedText = text
         .replaceAll("Copyright reserved", "")
@@ -281,104 +289,114 @@ class GeminiMultiTurnStreamChatState extends State<GeminiMultiTurnStreamChat> {
   Widget build(BuildContext context) {
     return SafeArea(
         child: Scaffold(
-      appBar: AppBar(
-        leading: IconButton(onPressed: (){
-          // _addTokensUsed();
-          Navigator.of(context).pop();
-          _addTokensUsed();
-        }, icon: Platform.isAndroid? const Icon(Icons.arrow_back):const Icon(Icons.arrow_back_ios) ,),
-        title: Row(
-          children: [
-            loading
-                ? gapW4
-                : Text(
-                    'Chat with ',
-                    style: myTextStyleSmall(context),
-                  ),
-            gapW8,
-            loading
-                ? gapW4
-                : Text(
-                    'SgelaAI',
-                    style: myTextStyle(context, Theme.of(context).primaryColor,
-                        24, FontWeight.w900),
-                  ),
-            gapW16,
-            Text(
-              '(Gemini AI)',
-              style: myTextStyleTiny(context),
-            )
-          ],
-        ),
-        actions: [
-          if (loading)
-            const BusyIndicator(
-              showTimerOnly: true,
-            ),
-          IconButton(
+          appBar: AppBar(
+            leading: IconButton(
               onPressed: () {
-                pp('$mm ... do the Share thing ...');
+                Navigator.of(context).pop();
+                _addTokensUsed();
               },
-              icon: Icon(Icons.share, color: Theme.of(context).primaryColor)),
-        ],
-      ),
-      body: SizedBox(
-        height: double.infinity,
-        child: Stack(
-          children: [
-            Column(
+              icon: Platform.isAndroid
+                  ? const Icon(Icons.arrow_back)
+                  : const Icon(Icons.arrow_back_ios),
+            ),
+            title: Row(
               children: [
-                Expanded(
-                    child: chats.isNotEmpty
-                        ? Align(
-                            alignment: Alignment.bottomCenter,
-                            child: bd.Badge(
-                              badgeContent: Text('${chats.length}'),
-                              position:
-                                  bd.BadgePosition.topEnd(top: -16, end: -8),
-                              badgeStyle: const bd.BadgeStyle(
-                                padding: EdgeInsets.all(12.0),
-                              ),
-                              onTap: () {
-                                pp('$mm badge tapped, scroll up or down');
-                              },
-                              child: SingleChildScrollView(
-                                reverse: true,
-                                child: Padding(
-                                  padding: const EdgeInsets.all(8.0),
-                                  child: ListView.builder(
-                                    itemBuilder: chatItem,
-                                    shrinkWrap: true,
-                                    physics:
-                                        const NeverScrollableScrollPhysics(),
-                                    itemCount: chats.length,
-                                    reverse: false,
-                                  ),
+                loading
+                    ? gapW4
+                    : Text(
+                  'Chat with ',
+                  style: myTextStyleSmall(context),
+                ),
+                gapW8,
+                loading
+                    ? gapW4
+                    : Text(
+                  'SgelaAI',
+                  style: myTextStyle(context, Theme
+                      .of(context)
+                      .primaryColor,
+                      24, FontWeight.w900),
+                ),
+                gapW16,
+                Text(
+                  '(Gemini AI)',
+                  style: myTextStyleTiny(context),
+                )
+              ],
+            ),
+            actions: [
+              if (loading)
+                const BusyIndicator(
+                  showTimerOnly: true,
+                ),
+              IconButton(
+                  onPressed: () {
+                    pp('$mm ... do the Share thing ...');
+                  },
+                  icon: Icon(Icons.share, color: Theme
+                      .of(context)
+                      .primaryColor)),
+            ],
+          ),
+          body: SizedBox(
+            height: double.infinity,
+            child: Stack(
+              children: [
+                Column(
+                  children: [
+                    Expanded(
+                        child: contents.isNotEmpty
+                            ? Align(
+                          alignment: Alignment.bottomCenter,
+                          child: bd.Badge(
+                            badgeContent: Text('${contents.length}'),
+                            position:
+                            bd.BadgePosition.topEnd(top: -16, end: -8),
+                            badgeStyle: const bd.BadgeStyle(
+                              padding: EdgeInsets.all(12.0),
+                            ),
+                            onTap: () {
+                              pp('$mm badge tapped, scroll up or down');
+                              _scrollDown();
+                            },
+                            child: SingleChildScrollView(
+                              reverse: true,
+                              child: Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: ListView.builder(
+                                  controller: _scrollController,
+                                  itemBuilder: chatItem,
+                                  shrinkWrap: true,
+                                  physics:
+                                  const NeverScrollableScrollPhysics(),
+                                  itemCount: contents.length,
+                                  reverse: false,
                                 ),
                               ),
                             ),
-                          )
-                        : const Center(
+                          ),
+                        )
+                            : const Center(
                             child: Text('Say something to SgelaAI'))),
-                Card(
-                  elevation: 8,
-                  child: Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: ChatInputBox(
-                      controller: _chatInputController,
-                      onSend: () {
-                        _handleInputText(false);
-                      },
+                    Card(
+                      elevation: 8,
+                      child: Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: ChatInputBox(
+                          controller: _chatInputController,
+                          onSend: () {
+                            _handleInputText(false);
+                          },
+                        ),
+                      ),
                     ),
-                  ),
+                    const SponsoredBy(
+                      height: 32,
+                    ),
+                  ],
                 ),
-                const SponsoredBy(
-                  height: 32,
-                ),
-              ],
-            ),
-            loading
-                ? const Positioned(
+                loading
+                    ? const Positioned(
                     bottom: 24,
                     left: 24,
                     child: SizedBox(
@@ -386,12 +404,27 @@ class GeminiMultiTurnStreamChatState extends State<GeminiMultiTurnStreamChat> {
                         height: 100,
                         child: Center(
                             child: BusyIndicator(
-                          showTimerOnly: true,
-                        ))))
-                : gapW4,
-          ],
-        ),
-      ),
-    ));
+                              showTimerOnly: true,
+                            ))))
+                    : gapW4,
+              ],
+            ),
+          ),
+        ));
+  }
+
+  final ScrollController _scrollController = ScrollController();
+
+  void _scrollDown() {
+    WidgetsBinding.instance.addPostFrameCallback(
+          (_) =>
+          _scrollController.animateTo(
+            _scrollController.position.maxScrollExtent,
+            duration: const Duration(
+              milliseconds: 750,
+            ),
+            curve: Curves.easeOutCirc,
+          ),
+    );
   }
 }

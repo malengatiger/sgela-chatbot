@@ -17,12 +17,14 @@ dependencies:
   sgela_shared_widgets:
       path: ../sgela_shared_widgets
 
-
+  flutter_bloc: ^8.1.4
+  equatable: ^2.0.5
   flutter_markdown: ^0.6.20+1
   flutter_gemini: ^2.0.3
   markdown: ^7.2.1
   google_generative_ai: ^0.2.2
-  dart_mistral_api: ^1.0.2
+  mistral_sgela_ai: ^1.0.11
+
 
 dev_dependencies:
   flutter_test:

@@ -1,12 +1,6 @@
 import 'package:badges/badges.dart' as bd;
-import 'package:edu_chatbot/ui/gemini/sections/gemini_multi_turn_chat_stream.dart';
-import 'package:sgela_services/data/branding.dart';
-import 'package:sgela_services/data/organization.dart';
-import 'package:sgela_services/data/sponsoree.dart';
-import 'package:sgela_services/data/subject.dart';
-import 'package:sgela_services/repositories/basic_repository.dart';
-import 'package:sgela_services/services/firestore_service.dart';
 import 'package:edu_chatbot/ui/exam/exam_document_list.dart';
+import 'package:edu_chatbot/ui/gemini/sections/gemini_multi_turn_chat_stream.dart';
 import 'package:edu_chatbot/ui/landing_page.dart';
 import 'package:edu_chatbot/ui/misc/busy_indicator.dart';
 import 'package:edu_chatbot/ui/misc/color_gallery.dart';
@@ -14,15 +8,22 @@ import 'package:edu_chatbot/ui/misc/sponsored_by.dart';
 import 'package:edu_chatbot/ui/open_ai/open_ai_text_chat_widget.dart';
 import 'package:edu_chatbot/ui/organization/org_logo_widget.dart';
 import 'package:edu_chatbot/ui/organization/organization_splash.dart';
-import 'package:sgela_services/services/gemini_chat_service.dart';
-import 'package:sgela_services/services/local_data_service.dart';
-import 'package:sgela_services/services/you_tube_service.dart';
-import 'package:sgela_services/sgela_util/dark_light_control.dart';
-import 'package:sgela_services/sgela_util/functions.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gemini/flutter_gemini.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:get_it/get_it.dart';
+import 'package:sgela_services/data/branding.dart';
+import 'package:sgela_services/data/organization.dart';
+import 'package:sgela_services/data/sponsoree.dart';
+import 'package:sgela_services/data/subject.dart';
+import 'package:sgela_services/repositories/basic_repository.dart';
+import 'package:sgela_services/services/firestore_service.dart';
+import 'package:sgela_services/services/gemini_chat_service.dart';
+import 'package:sgela_services/services/local_data_service.dart';
+import 'package:sgela_services/services/mistral_client_service.dart';
+import 'package:sgela_services/services/you_tube_service.dart';
+import 'package:sgela_services/sgela_util/dark_light_control.dart';
+import 'package:sgela_services/sgela_util/functions.dart';
 import 'package:sgela_services/sgela_util/navigation_util.dart';
 import 'package:sgela_services/sgela_util/prefs.dart';
 
@@ -49,6 +50,9 @@ class SubjectSearchState extends State<SubjectSearch> {
   final ColorWatcher colorWatcher = GetIt.instance<ColorWatcher>();
   final DarkLightControl darkLightControl = GetIt.instance<DarkLightControl>();
   final Gemini gemini = GetIt.instance<Gemini>();
+
+  final MistralServiceClient mistralServiceClient =
+      GetIt.instance<MistralServiceClient>();
   final TextEditingController _searchController = TextEditingController();
   List<Subject> _subjects = [];
   List<Subject> _filteredSubjects = [];
@@ -62,10 +66,21 @@ class SubjectSearchState extends State<SubjectSearch> {
   void initState() {
     super.initState();
     _checkIfSponsored();
+    _testMistral();
   }
 
   Organization? sponsorOrganization;
   Sponsoree? sponsoree;
+
+  _testMistral() async {
+    pp('$mm ... sending hello to Mistral ....');
+    try {
+      //todo - remove after test
+      var req = mistralServiceClient.sendHello();
+    } catch (e, s) {
+      pp('$mm ERROR $e $s');
+    }
+  }
 
   _checkIfSponsored() async {
     pp('$mm ... checking if sponsored .....');
@@ -87,16 +102,16 @@ class SubjectSearchState extends State<SubjectSearch> {
       _getSubjects();
       await _getOrganization();
       if (mounted) {
-        if (branding != null) {
-          NavigationUtils.navigateToPage(
-              context: context,
-              widget: OrganizationSplash(
-                branding: branding!,
-                timeToDisappear: branding!.splashTimeInSeconds == null
-                    ? 5
-                    : branding!.splashTimeInSeconds!,
-              ));
-        }
+        // if (branding != null) {
+        //   NavigationUtils.navigateToPage(
+        //       context: context,
+        //       widget: OrganizationSplash(
+        //         branding: branding!,
+        //         timeToDisappear: branding!.splashTimeInSeconds == null
+        //             ? 5
+        //             : branding!.splashTimeInSeconds!,
+        //       ));
+        // }
       }
     }
   }
@@ -194,12 +209,21 @@ class SubjectSearchState extends State<SubjectSearch> {
             title: Text('Information'),
           ),
         ),
+        const PopupMenuItem<String>(
+          value: 'org',
+          child: ListTile(
+            leading: Icon(Icons.currency_exchange),
+            title: Text('Sponsor Page'),
+          ),
+        ),
       ],
       onSelected: (String value) {
         if (value == 'info') {
           _navigateToInfo();
         } else if (value == 'colorGallery') {
           _navigateToColorGallery();
+        } else {
+          _navigateToOrgSplash();
         }
       },
     );
@@ -273,6 +297,11 @@ class SubjectSearchState extends State<SubjectSearch> {
         widget: const LandingPage(
           hideButtons: true,
         ));
+  }
+
+  void _navigateToOrgSplash() {
+    NavigationUtils.navigateToPage(
+        context: context, widget: const OrganizationSplash(doNotExpire: true,));
   }
 
   void _navigateToColorGallery() {
@@ -528,8 +557,7 @@ class SubjectSearchState extends State<SubjectSearch> {
                   onTap: () {
                     if (branding != null) {
                       NavigationUtils.navigateToPage(
-                          context: context,
-                          widget: OrganizationSplash(branding: branding!));
+                          context: context, widget: const OrganizationSplash());
                     }
                   },
                   child: const Card(
@@ -547,4 +575,3 @@ class SubjectSearchState extends State<SubjectSearch> {
     );
   }
 }
-

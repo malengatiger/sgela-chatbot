@@ -59,15 +59,15 @@ class LandingPageState extends State<LandingPage>
       country = prefs.getCountry();
       sgelaUser = prefs.getUser();
       orgSponsoree = prefs.getSponsoree();
-      //
-      if (orgSponsoree != null) {
-        pp('$mm ... YEBO!!! returning Sponsoree. have to navigate to SubjectSearch: ${orgSponsoree!.toJson()} ...');
-        //await widget.firestoreService.getOrganizationBrandings(orgSponsoree!.organizationId!, true);
-        Future.delayed(const Duration(milliseconds: 200), (){
-          NavigationUtils.navigateToPage(
-              context: context, widget: const SubjectSearch());
-        });
-      }
+      // //
+      // if (orgSponsoree != null) {
+      //   pp('$mm ... YEBO!!! returning Sponsoree. have to navigate to SubjectSearch: ${orgSponsoree!.toJson()} ...');
+      //   //await widget.firestoreService.getOrganizationBrandings(orgSponsoree!.organizationId!, true);
+      //   Future.delayed(const Duration(milliseconds: 200), (){
+      //     NavigationUtils.navigateToPage(
+      //         context: context, widget: const SubjectSearch());
+      //   });
+      // }
     } catch (e) {
       pp(e);
       if (mounted) {
