@@ -5,7 +5,7 @@ import 'package:sgela_services/data/branding.dart';
 import 'package:sgela_services/data/country.dart';
 import 'package:sgela_services/data/exam_link.dart';
 import 'package:sgela_services/data/organization.dart';
-import 'package:edu_chatbot/ui/organization/org_logo_widget.dart';
+import 'package:sgela_shared_widgets/widgets/org_logo_widget.dart';
 import 'package:sgela_services/sgela_util/functions.dart';
 import 'package:sgela_services/sgela_util/prefs.dart';
 import 'package:flutter/material.dart';

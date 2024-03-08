@@ -1,5 +1,4 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:edu_chatbot/ui/landing_page.dart';
 import 'package:edu_chatbot/ui/organization/organization_splash.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -45,7 +44,7 @@ Future<void> main() async {
     var auth = FirebaseAuth.instanceFor(app: app);
     var gem = await AiInitializationUtil.initGemini();
     await AiInitializationUtil.initOpenAI();
-    await registerServices(fbf, auth,gem);
+    await registerServices(gemini: gem, firebaseFirestore: fbf, firebaseAuth: auth);
     //
   } catch (e,s) {
     pp(e);

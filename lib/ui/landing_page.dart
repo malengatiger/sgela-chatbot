@@ -1,4 +1,5 @@
 import 'package:carousel_slider/carousel_slider.dart';
+import 'package:edu_chatbot/ui/auth/sgela_user_registration.dart';
 import 'package:sgela_services/data/country.dart';
 import 'package:sgela_services/data/sponsoree.dart';
 import 'package:sgela_services/data/organization.dart';
@@ -59,15 +60,6 @@ class LandingPageState extends State<LandingPage>
       country = prefs.getCountry();
       sgelaUser = prefs.getUser();
       orgSponsoree = prefs.getSponsoree();
-      // //
-      // if (orgSponsoree != null) {
-      //   pp('$mm ... YEBO!!! returning Sponsoree. have to navigate to SubjectSearch: ${orgSponsoree!.toJson()} ...');
-      //   //await widget.firestoreService.getOrganizationBrandings(orgSponsoree!.organizationId!, true);
-      //   Future.delayed(const Duration(milliseconds: 200), (){
-      //     NavigationUtils.navigateToPage(
-      //         context: context, widget: const SubjectSearch());
-      //   });
-      // }
     } catch (e) {
       pp(e);
       if (mounted) {
@@ -87,15 +79,9 @@ class LandingPageState extends State<LandingPage>
 
   _navigateToRegistration() async {
     pp('$mm _navigateToRegistration ...');
-    var ok = await NavigationUtils.navigateToPage(
-        context: context, widget: const OrganizationSelector());
-    if (ok) {
-      if (mounted) {
-        Navigator.of(context).pop();
-        NavigationUtils.navigateToPage(
-            context: context, widget: const SubjectSearch());
-      }
-    }
+    await NavigationUtils.navigateToPage(context: context,
+        widget: const SgelaUserRegistration());
+
   }
 
   _navigateToSignIn() async {

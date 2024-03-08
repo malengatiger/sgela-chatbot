@@ -1,6 +1,6 @@
 
 import 'package:edu_chatbot/main.dart';
-import 'package:edu_chatbot/ui/organization/org_logo_widget.dart';
+import 'package:sgela_shared_widgets/widgets/org_logo_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:get_it/get_it.dart';

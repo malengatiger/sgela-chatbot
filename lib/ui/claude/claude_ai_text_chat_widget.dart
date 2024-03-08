@@ -25,8 +25,8 @@ import 'package:sgela_shared_widgets/widgets/sponsored_by.dart';
 
 import '../../local_util/functions.dart';
 
-class OpenAITextChatWidget extends StatefulWidget {
-  const OpenAITextChatWidget(
+class ClaudeAITextChatWidget extends StatefulWidget {
+  const ClaudeAITextChatWidget(
       {super.key, this.examLink, this.examPageContents, this.subject});
 
   final ExamLink? examLink;
@@ -34,11 +34,11 @@ class OpenAITextChatWidget extends StatefulWidget {
   final Subject? subject;
 
   @override
-  State<OpenAITextChatWidget> createState() => OpenAITextChatWidgetState();
+  State<ClaudeAITextChatWidget> createState() => ClaudeAITextChatWidgetState();
 }
 
-class OpenAITextChatWidgetState extends State<OpenAITextChatWidget> {
-  static const mm = '🍐🍐🍐🍐 OpenApiMultiTurnStreamChat 🍐';
+class ClaudeAITextChatWidgetState extends State<ClaudeAITextChatWidget> {
+  static const mm = '🍐🍐🍐🍐 ClaudeAITextChatWidget 🍐';
 
   TextEditingController textEditController = TextEditingController();
   bool _busy = false;

@@ -2,12 +2,14 @@ import 'dart:async';
 
 import 'package:badges/badges.dart' as bd;
 import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_tex/flutter_tex.dart';
 import 'package:sgela_services/data/exam_link.dart';
 import 'package:sgela_services/data/subject.dart';
 import 'package:sgela_services/repositories/basic_repository.dart';
 import 'package:sgela_services/services/gemini_chat_service.dart';
 import 'package:sgela_services/sgela_util/functions.dart';
+import 'package:sgela_shared_widgets/widgets/sponsored_by.dart';
 
 import '../../local_util/functions.dart';
 import 'sgela_markdown_widget.dart';
@@ -121,65 +123,73 @@ class TextChatState extends State<TextChat>
   @override
   Widget build(BuildContext context) {
     return SafeArea(
-        child: Scaffold(
-            appBar: AppBar(
-              title: Row(
-                children: [
-                  Text('Chat with ', style: myTextStyleSmall(context)),
-                  gapW8,
-                  Text('SgelaAI',
-                      style: myTextStyle(context,
-                          Theme.of(context).primaryColor, 28, FontWeight.w900)),
-                ],
+      child: Scaffold(
+        appBar: AppBar(
+          title: Row(
+            children: [
+              Text('Chat with ', style: myTextStyleSmall(context)),
+              gapW8,
+              Text('SgelaAI',
+                  style: myTextStyle(context, Theme.of(context).primaryColor,
+                      28, FontWeight.w900)),
+            ],
+          ),
+          actions: [
+            IconButton(
+                onPressed: () {
+                  pp('$mm ... share the response ... 🍎');
+                },
+                icon: Icon(Icons.share, color: Theme.of(context).primaryColor))
+          ],
+        ),
+        body: Column(
+          children: [
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: responseText == null || responseText!.isEmpty
+                    ? Carrier(
+                        textEditingController: textEditingController,
+                        isMarkDown: isMarkDown,
+                        responseText: '',
+                        elapsed: elapsed,
+                        busy: busy,
+                        responseHistoryLength: responseHistory.length,
+                        onSendChatPrompt: () {
+                          _sendChatPrompt();
+                        })
+                    : bd.Badge(
+                        position: bd.BadgePosition.topEnd(end: 8, top: -8),
+                        badgeStyle: bd.BadgeStyle(
+                          elevation: 16,
+                          badgeColor: Theme.of(context).primaryColor,
+                          padding: const EdgeInsets.all(12.0),
+                        ),
+                        badgeContent: Text(
+                          responseText == null || responseText!.isEmpty
+                              ? ''
+                              : '${(responseText!.length / 1024).toStringAsFixed(0)}${responseText!.isEmpty ? '' : 'K'}',
+                          style: myTextStyle(
+                              context, Colors.white, 16, FontWeight.normal),
+                        ),
+                        child: Carrier(
+                            textEditingController: textEditingController,
+                            isMarkDown: isMarkDown,
+                            responseText: responseText!,
+                            elapsed: elapsed,
+                            busy: busy,
+                            responseHistoryLength: responseHistory.length,
+                            onSendChatPrompt: () {
+                              _sendChatPrompt();
+                            }),
+                      ),
               ),
-              actions: [
-                IconButton(
-                    onPressed: () {
-                      pp('$mm ... share the response ... 🍎');
-                    },
-                    icon: Icon(Icons.share,
-                        color: Theme.of(context).primaryColor))
-              ],
             ),
-            body: Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: responseText == null || responseText!.isEmpty
-                  ? Carrier(
-                      textEditingController: textEditingController,
-                      isMarkDown: isMarkDown,
-                      responseText: '',
-                      elapsed: elapsed,
-                      busy: busy,
-                      responseHistoryLength: responseHistory.length,
-                      onSendChatPrompt: () {
-                        _sendChatPrompt();
-                      })
-                  : bd.Badge(
-                      position: bd.BadgePosition.topEnd(end: 8, top: -8),
-                      badgeStyle: bd.BadgeStyle(
-                        elevation: 16,
-                        badgeColor: Theme.of(context).primaryColor,
-                        padding: const EdgeInsets.all(12.0),
-                      ),
-                      badgeContent: Text(
-                        responseText == null || responseText!.isEmpty
-                            ? ''
-                            : '${(responseText!.length / 1024).toStringAsFixed(0)}${responseText!.isEmpty ? '' : 'K'}',
-                        style: myTextStyle(
-                            context, Colors.white, 16, FontWeight.normal),
-                      ),
-                      child: Carrier(
-                          textEditingController: textEditingController,
-                          isMarkDown: isMarkDown,
-                          responseText: responseText!,
-                          elapsed: elapsed,
-                          busy: busy,
-                          responseHistoryLength: responseHistory.length,
-                          onSendChatPrompt: () {
-                            _sendChatPrompt();
-                          }),
-                    ),
-            )));
+            const SponsoredBy(),
+          ],
+        ),
+      ),
+    );
   }
 }
 

@@ -5,8 +5,11 @@ import 'package:sgela_services/data/subject.dart';
 import 'package:sgela_services/repositories/basic_repository.dart';
 import 'package:sgela_services/services/firestore_service.dart';
 import 'package:edu_chatbot/ui/exam/exam_link_list_widget.dart';
-import 'package:edu_chatbot/ui/misc/busy_indicator.dart';
-import 'package:edu_chatbot/ui/misc/sponsored_by.dart';
+import 'package:sgela_shared_widgets/util/widget_prefs.dart';
+import 'package:sgela_shared_widgets/widgets/busy_indicator.dart';
+import 'package:sgela_shared_widgets/widgets/sponsored_by.dart';
+import 'package:sgela_shared_widgets/widgets/color_gallery.dart';
+
 import 'package:edu_chatbot/ui/open_ai/open_ai_text_chat_widget.dart';
 import 'package:edu_chatbot/ui/youtube/you_tube_searcher.dart';
 import 'package:sgela_services/sgela_util/dark_light_control.dart';
@@ -17,7 +20,6 @@ import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
 
 import '../../local_util/functions.dart';
-import '../misc/color_gallery.dart';
 
 class ExamsDocumentList extends StatefulWidget {
   const ExamsDocumentList({
@@ -89,7 +91,7 @@ class ExamsDocumentListState extends State<ExamsDocumentList> {
   void _navigateToColorGallery() {
     NavigationUtils.navigateToPage(
         context: context,
-        widget: ColorGallery(prefs: prefs, colorWatcher: colorWatcher));
+        widget: ColorGallery(colorWatcher: colorWatcher));
   }
 
   void _navigateToGeminiOrOpenAIChat() {

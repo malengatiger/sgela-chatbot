@@ -31,15 +31,19 @@ class _GenericImageResponseViewerState
     return SafeArea(
         child: Scaffold(
       appBar: AppBar(
-        title:  Text('Result from Image', style: myTextStyleSmall(context)),
+        title: Text('Result from Image', style: myTextStyleSmall(context)),
         actions: [
-          showThumbnail? gapW8: IconButton(onPressed: (){
-            if (mounted) {
-              setState(() {
-                showThumbnail = !showThumbnail;
-              });
-            }
-          }, icon: const Icon(Icons.camera_alt))
+          showThumbnail
+              ? gapW8
+              : IconButton(
+                  onPressed: () {
+                    if (mounted) {
+                      setState(() {
+                        showThumbnail = !showThumbnail;
+                      });
+                    }
+                  },
+                  icon: const Icon(Icons.camera_alt))
         ],
       ),
       body: Stack(
@@ -50,30 +54,29 @@ class _GenericImageResponseViewerState
                 child: Padding(
               padding: const EdgeInsets.all(8.0),
               child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   gapH16,
                   Text(
                     'SgelaAI Image Response',
                     style: myTextStyle(context, Theme.of(context).primaryColor,
-                        24, FontWeight.w900),
+                        18, FontWeight.w900),
                   ),
+                  gapH32,
                   widget.isLaTex
-                      ? Expanded(
-                          child: SingleChildScrollView(
-                            child: TeXView(
-                              renderingEngine:
-                                  const TeXViewRenderingEngine.katex(),
-                              child: TeXViewColumn(
-                                children: [
-                                  TeXViewDocument(widget.text),
-                                ],
-                              ),
-                            ),
+                      ? SingleChildScrollView(
+                        child: TeXView(
+                          renderingEngine:
+                              const TeXViewRenderingEngine.katex(),
+                          child: TeXViewColumn(
+                            children: [
+                              TeXViewDocument(widget.text),
+                            ],
                           ),
-                        )
-                      : Expanded(
-                          child: SgelaMarkdownWidget(text: widget.text),
                         ),
+                      )
+                      : SgelaMarkdownWidget(text: widget.text),
                 ],
               ),
             )),
@@ -83,7 +86,7 @@ class _GenericImageResponseViewerState
                   bottom: 24,
                   left: 28,
                   child: GestureDetector(
-                    onTap: (){
+                    onTap: () {
                       if (mounted) {
                         setState(() {
                           showThumbnail = false;

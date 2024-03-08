@@ -24,8 +24,8 @@ import 'package:responsive_builder/responsive_builder.dart';
 import '../../local_util/functions.dart';
 import '../exam/exam_link_details.dart';
 
-class OpenAIImageChatWidget extends StatefulWidget {
-  const OpenAIImageChatWidget({
+class ClaudeAIImageChatWidget extends StatefulWidget {
+  const ClaudeAIImageChatWidget({
     super.key,
     required this.examLink,
     required this.examPageContents,
@@ -35,10 +35,10 @@ class OpenAIImageChatWidget extends StatefulWidget {
   final List<ExamPageContent> examPageContents;
 
   @override
-  OpenAIImageChatWidgetState createState() => OpenAIImageChatWidgetState();
+  ClaudeAIImageChatWidgetState createState() => ClaudeAIImageChatWidgetState();
 }
 
-class OpenAIImageChatWidgetState extends State<OpenAIImageChatWidget>
+class ClaudeAIImageChatWidgetState extends State<ClaudeAIImageChatWidget>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
 
@@ -46,7 +46,7 @@ class OpenAIImageChatWidgetState extends State<OpenAIImageChatWidget>
   Organization? organization;
   Prefs prefs = GetIt.instance<Prefs>();
   Sponsoree? sponsoree;
-  static const mm = '🔵🔵🔵🔵 OpenAIImageChatWidget  🔵🔵';
+  static const mm = '🔵🔵🔵🔵 ClaudeAIImageChatWidget  🔵🔵';
   String? aiResponseText, fingerPrint;
   int? totalTokens, promptTokens, completionTokens;
   int imageCount = 0;

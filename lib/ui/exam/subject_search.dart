@@ -1,12 +1,9 @@
 import 'package:badges/badges.dart' as bd;
 import 'package:edu_chatbot/ui/exam/exam_document_list.dart';
 import 'package:edu_chatbot/ui/gemini/sections/gemini_multi_turn_chat_stream.dart';
+import 'package:edu_chatbot/ui/image/image_picker_widget.dart';
 import 'package:edu_chatbot/ui/landing_page.dart';
-import 'package:edu_chatbot/ui/misc/busy_indicator.dart';
-import 'package:edu_chatbot/ui/misc/color_gallery.dart';
-import 'package:edu_chatbot/ui/misc/sponsored_by.dart';
 import 'package:edu_chatbot/ui/open_ai/open_ai_text_chat_widget.dart';
-import 'package:edu_chatbot/ui/organization/org_logo_widget.dart';
 import 'package:edu_chatbot/ui/organization/organization_splash.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gemini/flutter_gemini.dart';
@@ -26,9 +23,12 @@ import 'package:sgela_services/sgela_util/dark_light_control.dart';
 import 'package:sgela_services/sgela_util/functions.dart';
 import 'package:sgela_services/sgela_util/navigation_util.dart';
 import 'package:sgela_services/sgela_util/prefs.dart';
+import 'package:sgela_shared_widgets/widgets/busy_indicator.dart';
+import 'package:sgela_shared_widgets/widgets/color_gallery.dart';
+import 'package:sgela_shared_widgets/widgets/org_logo_widget.dart';
+import 'package:sgela_shared_widgets/widgets/sponsored_by.dart';
 
 import '../../local_util/functions.dart';
-import '../image/image_picker_widget.dart';
 import '../organization/organization_selector.dart';
 
 class SubjectSearch extends StatefulWidget {
@@ -66,19 +66,20 @@ class SubjectSearchState extends State<SubjectSearch> {
   void initState() {
     super.initState();
     _checkIfSponsored();
-    _testMistral();
+    // _testMistral();
   }
 
   Organization? sponsorOrganization;
   Sponsoree? sponsoree;
 
   _testMistral() async {
-    pp('$mm ... sending hello to Mistral ....');
+    pp('\n\n\n$mm ... sending hello to Mistral ....');
     try {
       //todo - remove after test
-      var req = mistralServiceClient.sendHello();
+      var req = await mistralServiceClient.sendHello();
+      pp('$mm response from Mistral: ${req?.toJson()}');
     } catch (e, s) {
-      pp('$mm ERROR $e $s');
+      pp('$mm Mistral ERROR $e $s');
     }
   }
 
@@ -91,88 +92,67 @@ class SubjectSearchState extends State<SubjectSearch> {
         var ok = await NavigationUtils.navigateToPage(
             context: context, widget: const OrganizationSelector());
         if (ok) {
-          _getSubjects();
-          _getOrganization();
+          _getData();
         } else {
           _checkIfSponsored();
         }
       });
     } else {
       pp('$mm ... this user is SPONSORED! navigateTo OrganizationSplash for 5 seconds .....');
-      _getSubjects();
-      await _getOrganization();
-      if (mounted) {
-        // if (branding != null) {
-        //   NavigationUtils.navigateToPage(
-        //       context: context,
-        //       widget: OrganizationSplash(
-        //         branding: branding!,
-        //         timeToDisappear: branding!.splashTimeInSeconds == null
-        //             ? 5
-        //             : branding!.splashTimeInSeconds!,
-        //       ));
-        // }
-      }
+      _getData();
     }
   }
 
-  Future<void> _getOrganization() async {
+  void _getData() async {
     setState(() {
       busy = true;
     });
     try {
-      sponsorOrganization = prefs.getOrganization();
+      await _getOrganization();
+      await _getSubjects();
+    } catch (e, s) {
+      pp('$mm ERROR: $e - $s');
+      if (mounted) {
+        showErrorDialog(context, '$e');
+      }
+    }
+    setState(() {
+      busy = false;
+    });
+  }
+
+  Future _getOrganization() async {
+    sponsorOrganization = prefs.getOrganization();
+    if (sponsorOrganization != null) {
       var brandings = await firestoreService.getOrganizationBrandings(
           sponsorOrganization!.id!, true);
       if (brandings.isNotEmpty) {
         branding = brandings.first;
+        pp('$mm BRANDING, should show up at logo: ${branding!.toJson()}');
       }
-
-      currentAIModel = prefs.getCurrentModel();
-      _selectedButton = {currentAIModel};
-    } catch (e) {
-      pp(e);
     }
-    setState(() {
-      busy = false;
-    });
+    currentAIModel = prefs.getCurrentModel();
+    _selectedButton = {currentAIModel};
   }
 
-  void _getSubjects() async {
-    setState(() {
-      busy = true;
-    });
-    try {
-      _subjects = await firestoreService.getSubjects();
-      _subjects.sort((a, b) => a.title!.compareTo(b.title!));
-      _buildButtons();
-      _arrangeSubjects();
-      _showHelpToast();
-    } catch (e) {
-      // Handle error
-      pp('Error fetching _subjects: $e');
-    }
-    setState(() {
-      busy = false;
-    });
+  Future _getSubjects() async {
+    _subjects = await firestoreService.getSubjects();
+    _subjects.sort((a, b) => a.title!.compareTo(b.title!));
+    _buildButtons();
+    _arrangeSubjects();
+    _showHelpToast(10);
   }
 
   void _filterSubjects(String query) {
-    setState(() {
-      _filteredSubjects = _subjects
-          .where((subject) =>
-              subject.title!.toLowerCase().contains(query.toLowerCase()))
-          .toList();
-    });
+    _filteredSubjects = _subjects
+        .where((subject) =>
+            subject.title!.toLowerCase().contains(query.toLowerCase()))
+        .toList();
   }
 
-  _navigateToAI(BuildContext context) {
+  _navigateToOrganizations() {
     NavigationUtils.navigateToPage(
-        context: context,
-        widget: ImagePickerWidget(
-          chatService: chatService,
-          examLink: null,
-        ));
+        context: context, widget: const OrganizationSelector());
   }
 
   _navigateToExamsDocumentList(BuildContext context, Subject subject) {
@@ -216,14 +196,28 @@ class SubjectSearchState extends State<SubjectSearch> {
             title: Text('Sponsor Page'),
           ),
         ),
+        const PopupMenuItem<String>(
+          value: 'orgs',
+          child: ListTile(
+            leading: Icon(Icons.front_hand),
+            title: Text('Sponsor Selection'),
+          ),
+        ),
       ],
       onSelected: (String value) {
-        if (value == 'info') {
-          _navigateToInfo();
-        } else if (value == 'colorGallery') {
-          _navigateToColorGallery();
-        } else {
-          _navigateToOrgSplash();
+        switch (value) {
+          case 'info':
+            _navigateToInfo();
+            break;
+          case 'colorGallery':
+            _navigateToColorGallery();
+            break;
+          case 'org':
+            _navigateToOrgSplash();
+            break;
+          case 'orgs':
+            _navigateToOrganizations();
+            break;
         }
       },
     );
@@ -235,15 +229,16 @@ class SubjectSearchState extends State<SubjectSearch> {
   List<Subject> favouriteSubjects = [];
   final ScrollController _scrollController = ScrollController();
 
-  _showHelpToast() async {
+  _showHelpToast(int delayInSeconds) async {
     if (mounted) {
-      Future.delayed(const Duration(seconds: 6), () {
+      Future.delayed( Duration(seconds: delayInSeconds), () {
         showToast(
             backgroundColor: Colors.black,
             padding: 24,
             textStyle: const TextStyle(color: Colors.white),
             message: 'Double tap to move a Subject near the top of the list',
             toastGravity: ToastGravity.BOTTOM,
+            duration: const Duration(milliseconds: 3000),
             context: context);
       });
     }
@@ -301,13 +296,15 @@ class SubjectSearchState extends State<SubjectSearch> {
 
   void _navigateToOrgSplash() {
     NavigationUtils.navigateToPage(
-        context: context, widget: const OrganizationSplash(doNotExpire: true,));
+        context: context,
+        widget: const OrganizationSplash(
+          doNotExpire: true,
+        ));
   }
 
   void _navigateToColorGallery() {
     NavigationUtils.navigateToPage(
-        context: context,
-        widget: ColorGallery(prefs: prefs, colorWatcher: colorWatcher));
+        context: context, widget: ColorGallery(colorWatcher: colorWatcher));
   }
 
   void _navigateToGeminiMultiTurnChat() {
@@ -324,6 +321,16 @@ class SubjectSearchState extends State<SubjectSearch> {
         context: context, widget: const OpenAITextChatWidget());
   }
 
+  void _navigateToClaudeMultiTurnChat() {
+    prefs.saveCurrentModel(modelOpenAI);
+    currentAIModel = modelOpenAI;
+    NavigationUtils.navigateToPage(
+        context: context, widget: const OpenAITextChatWidget());
+  }
+
+  _navigateToImagePicker() {
+    NavigationUtils.navigateToPage(context: context, widget: ImagePickerWidget(chatService: chatService));
+  }
   String currentAIModel = modelGeminiAI;
   List<ButtonSegment<String>> buttons = [];
 
@@ -337,6 +344,10 @@ class SubjectSearchState extends State<SubjectSearch> {
     buttons.add(ButtonSegment(
         value: modelOpenAI,
         label: Text(modelOpenAI, style: myTextStyleTiny(context))));
+    buttons.add(ButtonSegment(
+        value: modelAnthropic,
+        label: Text(modelAnthropic, style: myTextStyleTiny(context))));
+
     buttons.add(ButtonSegment(
         value: modelMistral,
         label: Text(modelMistral, style: myTextStyleTiny(context))));
@@ -354,7 +365,7 @@ class SubjectSearchState extends State<SubjectSearch> {
   Widget build(BuildContext context) {
     final TextStyle titleStyle =
         Theme.of(context).textTheme.bodySmall!.copyWith(
-              fontWeight: FontWeight.w900,
+              fontWeight: FontWeight.normal,
             );
     var isDark = isDarkMode(prefs, MediaQuery.of(context).platformBrightness);
     return GestureDetector(
@@ -366,23 +377,13 @@ class SubjectSearchState extends State<SubjectSearch> {
           appBar: AppBar(
             title: OrgLogoWidget(
               branding: branding,
-              height: 24,
+              height: 28,
             ),
             leading: gapW4,
             actions: [
               IconButton(
                   onPressed: () {
-                    switch (currentAIModel) {
-                      case modelGeminiAI:
-                        _navigateToGeminiMultiTurnChat();
-                        break;
-                      case modelOpenAI:
-                        _navigateToOpenAIMultiTurnChat();
-                        break;
-                      default:
-                        _navigateToGeminiMultiTurnChat();
-                        break;
-                    }
+                   _navigateToImagePicker();
                   },
                   icon: Icon(Icons.camera_alt,
                       color: isDark
@@ -396,6 +397,9 @@ class SubjectSearchState extends State<SubjectSearch> {
                       break;
                     case modelOpenAI:
                       _navigateToOpenAIMultiTurnChat();
+                      break;
+                    case modelAnthropic:
+                      _navigateToClaudeMultiTurnChat();
                       break;
                     default:
                       _navigateToGeminiMultiTurnChat();
@@ -436,6 +440,13 @@ class SubjectSearchState extends State<SubjectSearch> {
                               case modelMistral:
                                 showToast(
                                     message: 'Mistral model not available yet',
+                                    context: context);
+                                currentAIModel = modelGeminiAI;
+                                prefs.saveCurrentModel(modelGeminiAI);
+                                break;
+                              case modelAnthropic:
+                                showToast(
+                                    message: 'Claude model not available yet',
                                     context: context);
                                 currentAIModel = modelGeminiAI;
                                 prefs.saveCurrentModel(modelGeminiAI);
@@ -482,9 +493,10 @@ class SubjectSearchState extends State<SubjectSearch> {
                           Theme.of(context).primaryColor, 16, FontWeight.w900),
                     ),
                     gapW32,
+                    gapW32,
                     IconButton(
                         onPressed: () {
-                          _showHelpToast();
+                          _showHelpToast(0);
                         },
                         icon: const Icon(Icons.question_mark))
                   ],
@@ -504,52 +516,55 @@ class SubjectSearchState extends State<SubjectSearch> {
                     child: busy
                         ? const BusyIndicator(
                             caption: 'Loading subjects ... just a second ...')
-                        : ListView.builder(
-                            itemCount: _filteredSubjects.length,
-                            controller: _scrollController,
-                            itemBuilder: (context, index) {
-                              Subject subject = _filteredSubjects[index];
-                              return GestureDetector(
-                                onTap: () {
-                                  _navigateToExamsDocumentList(
-                                      context, subject);
-                                },
-                                onDoubleTap: () {
-                                  _saveFavouriteSubject(subject);
-                                  scrollToTop();
-                                },
-                                child: Card(
-                                  elevation: 8,
-                                  shape: getDefaultRoundedBorder(),
-                                  child: ListTile(
-                                    leading: Icon(Icons.ac_unit,
-                                        color: Theme.of(context).primaryColor),
-                                    title: Row(
-                                      children: [
-                                        SizedBox(
-                                          width: 32,
-                                          child: Text(
-                                            '${index + 1}',
-                                            style: myTextStyle(
-                                                context,
-                                                Theme.of(context).primaryColor,
-                                                16,
-                                                FontWeight.bold),
+                        : Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: ListView.builder(
+                              itemCount: _filteredSubjects.length,
+                              controller: _scrollController,
+                              itemBuilder: (context, index) {
+                                Subject subject = _filteredSubjects[index];
+                                return GestureDetector(
+                                  onTap: () {
+                                    _navigateToExamsDocumentList(
+                                        context, subject);
+                                  },
+                                  onDoubleTap: () {
+                                    _saveFavouriteSubject(subject);
+                                    scrollToTop();
+                                  },
+                                  child: Card(
+                                    elevation: 8,
+                                    shape: getDefaultRoundedBorder(),
+                                    child: ListTile(
+                                      leading: Icon(Icons.ac_unit,
+                                          color: Theme.of(context).primaryColor),
+                                      title: Row(
+                                        children: [
+                                          SizedBox(
+                                            width: 32,
+                                            child: Text(
+                                              '${index + 1}',
+                                              style: myTextStyle(
+                                                  context,
+                                                  Theme.of(context).primaryColor,
+                                                  16,
+                                                  FontWeight.bold),
+                                            ),
                                           ),
-                                        ),
-                                        Flexible(
-                                          child: Text(
-                                            subject.title ?? '',
-                                            style: titleStyle,
+                                          Flexible(
+                                            child: Text(
+                                              subject.title ?? '',
+                                              style: titleStyle,
+                                            ),
                                           ),
-                                        ),
-                                      ],
+                                        ],
+                                      ),
                                     ),
                                   ),
-                                ),
-                              );
-                            },
-                          ),
+                                );
+                              },
+                            ),
+                        ),
                   ),
                 ),
                 gapH8,
@@ -563,7 +578,7 @@ class SubjectSearchState extends State<SubjectSearch> {
                   child: const Card(
                     elevation: 8,
                     child: SponsoredBy(
-                      logoHeight: 20,
+                      logoHeight: 28,
                     ),
                   ),
                 ),

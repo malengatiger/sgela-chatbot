@@ -2,9 +2,9 @@ import 'package:badges/badges.dart' as bd;
 import 'package:sgela_services/data/subject.dart';
 import 'package:sgela_services/data/youtube_data.dart';
 import 'package:sgela_services/services/you_tube_service.dart';
-import 'package:edu_chatbot/ui/misc/busy_indicator.dart';
-import 'package:edu_chatbot/ui/misc/color_gallery.dart';
-import 'package:edu_chatbot/ui/misc/sponsored_by.dart';
+import 'package:sgela_shared_widgets/widgets/busy_indicator.dart';
+import 'package:sgela_shared_widgets/widgets/color_gallery.dart';
+import 'package:sgela_shared_widgets/widgets/sponsored_by.dart';
 import 'package:edu_chatbot/ui/youtube/you_tube_gallery.dart';
 import 'package:edu_chatbot/ui/youtube/you_tube_viewer.dart';
 import 'package:sgela_services/sgela_util/dark_light_control.dart';
@@ -111,8 +111,7 @@ class YouTubeSearcherState extends State<YouTubeSearcher> {
   void _navigateToColorGallery() {
     NavigationUtils.navigateToPage(
         context: context,
-        widget: ColorGallery(
-            prefs: prefs, colorWatcher: colorWatcher));
+        widget: ColorGallery(colorWatcher: colorWatcher));
   }
 
   @override

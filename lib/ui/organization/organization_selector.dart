@@ -2,9 +2,8 @@ import 'dart:collection';
 
 import 'package:badges/badges.dart' as bd;
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:edu_chatbot/ui/auth/user_registration.dart';
-import 'package:edu_chatbot/ui/misc/busy_indicator.dart';
-import 'package:edu_chatbot/ui/organization/organization_splash.dart';
+import 'package:edu_chatbot/ui/auth/sponsoree_registration.dart';
+import 'package:sgela_shared_widgets/widgets/busy_indicator.dart';import 'package:edu_chatbot/ui/organization/organization_splash.dart';
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
 import 'package:responsive_builder/responsive_builder.dart';
@@ -34,7 +33,7 @@ class OrganizationSelectorState extends State<OrganizationSelector>
   late AnimationController _controller;
 
   Country? country;
-  Organization? organization, sgelaOrganization;
+  Organization? organization;
   List<Organization> organizations = [];
 
   List<Branding> brandings = [], filteredBrandings = [];
@@ -75,11 +74,9 @@ class OrganizationSelectorState extends State<OrganizationSelector>
       _busy = true;
     });
     try {
-      // country = await firestoreService.getLocalCountry();
       organization = prefs.getOrganization();
       user = prefs.getUser();
       organizations = await firestoreService.getOrganizations();
-      sgelaOrganization = await repository.getSgelaOrganization();
       brandings = await firestoreService.getAllBrandings();
       brandings.sort((a, b) => b.date!.compareTo(a.date!));
       _manageBrandings();
@@ -108,14 +105,17 @@ class OrganizationSelectorState extends State<OrganizationSelector>
     filteredBrandings
         .sort((a, b) => a.organizationName!.compareTo(b.organizationName!));
     for (var value1 in filteredBrandings) {
-      pp('$mm filtered branding:  🍎 ${value1.organizationName!}');
+      pp('$mm filtered branding:  🍎 ${value1.organizationName!} \t🔵logoUrl: ${value1.logoUrl == null}');
     }
     for (var org in organizations) {
       Branding? branding;
       for (var b in filteredBrandings) {
-        if (b.organizationId == org.id!) {
+        if (b.organizationName == org.name!) {
           branding = b;
         }
+      }
+      if (branding == null) {
+        pp('$mm branding is null for 🔵🔵 ${org.name}');
       }
       var ob = OrganizationBranding(org, branding);
       orgBrandings.add(ob);
@@ -128,51 +128,25 @@ class OrganizationSelectorState extends State<OrganizationSelector>
     super.dispose();
   }
 
-  OrganizationBranding? orgBrand;
+  OrganizationBranding? selectedOrgBrand;
 
   _processChosenBrand() async {
-    pp('$mm ... Brand chosen, create sgelaUser and OrgSponsoree: ${orgBrand!.organization!.name}');
-    prefs.saveOrganization(orgBrand!.organization!);
-    prefs.saveBrand(orgBrand!.branding!);
+    pp('$mm ... Brand chosen, create sgelaUser '
+        'and OrgSponsoree: ${selectedOrgBrand!.organization!.name} '
+        'url: ${selectedOrgBrand!.branding!.organizationUrl}');
 
-    pp('$mm ... Organization and Branding saved to cache!');
-
-    var mUser = await NavigationUtils.navigateToPage(
+    await NavigationUtils.navigateToPage(
         context: context,
-        widget: UserRegistration(
-          branding: orgBrand!.branding!,
+        widget: SponsoreeRegistration(
+          branding: selectedOrgBrand!.branding!,
+          organization: selectedOrgBrand!.organization!,
         ));
 
-    if (mUser != null && mUser is SgelaUser) {
-      var sponsoree = Sponsoree(
-          organizationId: orgBrand!.organization!.id!,
-          id: DateTime.now().millisecondsSinceEpoch,
-          date: DateTime.now().toIso8601String(),
-          organizationName: orgBrand!.organization!.name,
-          activeFlag: true,
-          sgelaCellphone: mUser.cellphone,
-          sgelaEmail: mUser.email,
-          sgelaFirebaseId: mUser.firebaseUserId,
-          sgelaUserId: mUser.id,
-          sgelaUserName: '${mUser.firstName} ${mUser.lastName}');
-
-      await firestoreService.addOrgSponsoree(sponsoree);
-      pp('$mm ... Sponsoree saved to database! ${sponsoree.toJson()}');
-    } else {
-      if (mounted) {
-        showToast(message: 'User registration failed', context: context);
-        return;
-      }
-    }
-
-    if (mounted) {
-      await NavigationUtils.navigateToPage(
-          context: context, widget: const OrganizationSplash());
-
-      if (mounted) {
-        Navigator.of(context).pop(true);
-      }
-    }
+    // if (mounted) {
+    //   await NavigationUtils.navigateToPage(
+    //       context: context, widget: const OrganizationSplash());
+    //
+    // }
   }
 
   @override
@@ -212,7 +186,7 @@ class OrganizationSelectorState extends State<OrganizationSelector>
                                       organizationBrandings: orgBrandings,
                                       onBrandSelected: (ob) {
                                         setState(() {
-                                          orgBrand = ob;
+                                          selectedOrgBrand = ob;
                                         });
                                         _processChosenBrand();
                                       },

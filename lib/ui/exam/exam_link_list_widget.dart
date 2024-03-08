@@ -9,8 +9,9 @@ import 'package:sgela_services/services/firestore_service.dart';
 import 'package:sgela_services/services/gemini_chat_service.dart';
 import 'package:sgela_services/services/local_data_service.dart';
 import 'package:sgela_services/services/you_tube_service.dart';
-import 'package:edu_chatbot/ui/misc/busy_indicator.dart';
-import 'package:edu_chatbot/ui/misc/sponsored_by.dart';
+import 'package:sgela_shared_widgets/widgets/busy_indicator.dart';
+import 'package:sgela_shared_widgets/widgets/color_gallery.dart';
+import 'package:sgela_shared_widgets/widgets/sponsored_by.dart';
 import 'package:edu_chatbot/ui/open_ai/open_ai_text_chat_widget.dart';
 import 'package:edu_chatbot/ui/youtube/you_tube_searcher.dart';
 import 'package:sgela_services/sgela_util/dark_light_control.dart';
@@ -22,7 +23,6 @@ import 'package:sgela_services/sgela_util/navigation_util.dart';
 import 'package:sgela_services/sgela_util/prefs.dart';
 
 import '../../local_util/functions.dart';
-import '../misc/color_gallery.dart';
 
 class ExamLinkListWidget extends StatefulWidget {
   final Subject subject;
@@ -89,7 +89,7 @@ class ExamLinkListWidgetState extends State<ExamLinkListWidget> {
   void _navigateToColorGallery() {
     NavigationUtils.navigateToPage(
         context: context,
-        widget: ColorGallery(prefs: prefs, colorWatcher: colorWatcher));
+        widget: ColorGallery(colorWatcher: colorWatcher));
   }
 
   @override
@@ -233,7 +233,7 @@ class ExamLinkListWidgetState extends State<ExamLinkListWidget> {
                     gapH32,
                     filteredExamLinks.length < 4 ? gapH32 : gapH4,
                     gapH32,
-                    const SponsoredBy(height: 40,),
+                    const SponsoredBy(),
                   ],
                 ),
               ),

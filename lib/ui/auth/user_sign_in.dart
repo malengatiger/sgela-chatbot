@@ -1,5 +1,6 @@
 
-import 'package:edu_chatbot/ui/misc/busy_indicator.dart';
+import 'package:edu_chatbot/ui/exam/subject_search.dart';
+import 'package:sgela_shared_widgets/widgets/busy_indicator.dart';import 'package:edu_chatbot/ui/organization/organization_selector.dart';
 
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
@@ -7,9 +8,11 @@ import 'package:reactive_forms/reactive_forms.dart';
 import 'package:sgela_services/data/city.dart';
 import 'package:sgela_services/data/country.dart';
 import 'package:sgela_services/data/sgela_user.dart';
+import 'package:sgela_services/data/sponsoree.dart';
 import 'package:sgela_services/services/auth_service.dart';
 import 'package:sgela_services/services/firestore_service.dart';
 import 'package:sgela_services/sgela_util/functions.dart';
+import 'package:sgela_services/sgela_util/navigation_util.dart';
 
 import '../../local_util/functions.dart';
 
@@ -44,7 +47,7 @@ class UserSignInState extends State<UserSignIn> {
   }
 
   bool _busy = false;
-
+  Sponsoree? sponsoree;
   Future _submit(FormGroup form) async {
     pp('$mm ... submit SgelaUser .....');
 
@@ -62,9 +65,21 @@ class UserSignInState extends State<UserSignIn> {
       var user = await authService.signInSgelaUser(email, password);
       if (user != null) {
         pp('$mm ... submit: SgelaUser signed in: ${user.toJson()}');
+        sponsoree = await firestoreService.getSponsoree(user.firebaseUserId!);
         if (mounted) {
-          Navigator.of(context).pop(user);
-          return;
+          if (sponsoree != null) {
+            pp('$mm ... submit: Sponsoree is good : ${sponsoree!.toJson()}');
+            await firestoreService.getOrganizationBrandings(sponsoree!.organizationId!, true);
+            if (mounted) {
+              NavigationUtils.navigateToPage(context: context, widget: const SubjectSearch());
+            }
+          }  else {
+            NavigationUtils.navigateToPage(context: context, widget: const OrganizationSelector());
+          }
+        }
+      } else {
+        if (mounted) {
+          showErrorDialog(context, 'User is not registered. Please hit the register button');
         }
       }
     } catch (e, s) {
@@ -169,6 +184,7 @@ class UserSignInState extends State<UserSignIn> {
                                                 },
                                                 textInputAction:
                                                     TextInputAction.next,
+                                                keyboardType: TextInputType.emailAddress,
                                                 decoration:
                                                     const InputDecoration(
                                                   labelText: 'Email',

@@ -2,27 +2,27 @@ import 'dart:typed_data';
 
 import 'package:badges/badges.dart' as bd;
 import 'package:edu_chatbot/local_util/functions.dart';
+import 'package:edu_chatbot/ui/chat/gemini_image_chat_widget.dart';
 import 'package:edu_chatbot/ui/exam/exam_link_details.dart';
+import 'package:edu_chatbot/ui/exam/pdf_viewer.dart';
 import 'package:edu_chatbot/ui/gemini/sections/gemini_multi_turn_chat_stream.dart';
+import 'package:edu_chatbot/ui/open_ai/open_ai_image_chat_widget.dart';
+import 'package:edu_chatbot/ui/open_ai/open_ai_text_chat_widget.dart';
+import 'package:flutter/material.dart';
+import 'package:get_it/get_it.dart';
+import 'package:responsive_builder/responsive_builder.dart';
 import 'package:sgela_services/data/branding.dart';
 import 'package:sgela_services/data/exam_link.dart';
 import 'package:sgela_services/data/exam_page_content.dart';
 import 'package:sgela_services/services/firestore_service.dart';
 import 'package:sgela_services/services/local_data_service.dart';
-import 'package:edu_chatbot/ui/chat/gemini_image_chat_widget.dart';
-import 'package:edu_chatbot/ui/exam/pdf_viewer.dart';
-import 'package:edu_chatbot/ui/misc/busy_indicator.dart';
-import 'package:edu_chatbot/ui/misc/sponsored_by.dart';
-import 'package:edu_chatbot/ui/open_ai/open_ai_image_chat_widget.dart';
-import 'package:edu_chatbot/ui/open_ai/open_ai_text_chat_widget.dart';
-import 'package:edu_chatbot/ui/organization/org_logo_widget.dart';
 import 'package:sgela_services/sgela_util/dark_light_control.dart';
 import 'package:sgela_services/sgela_util/functions.dart';
 import 'package:sgela_services/sgela_util/navigation_util.dart';
 import 'package:sgela_services/sgela_util/prefs.dart';
-import 'package:flutter/material.dart';
-import 'package:get_it/get_it.dart';
-import 'package:responsive_builder/responsive_builder.dart';
+import 'package:sgela_shared_widgets/widgets/busy_indicator.dart';
+import 'package:sgela_shared_widgets/widgets/org_logo_widget.dart';
+import 'package:sgela_shared_widgets/widgets/sponsored_by.dart';
 
 class ExamPageContentSelector extends StatefulWidget {
   const ExamPageContentSelector({super.key, required this.examLink});
@@ -182,12 +182,22 @@ class ExamPageContentSelectorState extends State<ExamPageContentSelector> {
       }
       mPages.add(bag.examPageContent);
     }
-    if (aiModelName == modelGeminiAI) {
-      _goToGemini(mPages);
-    } else if (aiModelName == modelOpenAI) {
-      _goToOpenAI(mPages);
-    } else if (aiModelName == modelMistral) {
-      _goToGemini(mPages);
+   //
+    switch (aiModelName) {
+      case modelGeminiAI:
+        _goToGemini(mPages);
+        break;
+      case modelOpenAI:
+        _goToOpenAI(mPages);
+        break;
+      case modelAnthropic:
+        showToast(message: 'Claude not available yet. Stay tuned!', context: context );
+        _goToGemini(mPages);
+        break;
+      case modelMistral:
+        showToast(message: 'Mistral not available yet. Stay tuned!', context: context );
+        _goToGemini(mPages);
+        break;
     }
   }
 
@@ -197,23 +207,21 @@ class ExamPageContentSelectorState extends State<ExamPageContentSelector> {
       _showNoPagesToast();
       return;
     }
-    _clearSelected();
 
-    for (var page in mPages) {
-      if (page.pageImageUrl != null) {
-        pp('$mm ... go to OpenAIImageChatWidget ..... page index: ${page.pageIndex}');
+    _clearSelected();
+    if (widget.examLink.subject!.title != null) {
+      if (widget.examLink.subject!.title!.contains('MATH')) {
+        pp('$mm ... go to OpenAIImageChatWidget ..... pages : ${mPages.length}');
         await NavigationUtils.navigateToPage(
             context: context,
             widget: OpenAIImageChatWidget(
-              examPageContents: [page],
-              examLink: widget.examLink,
-            ));
+                examLink: widget.examLink, examPageContents: mPages));
       } else {
-        pp('$mm ... go to OpenAITextChatWidget ..... page index: ${page.pageIndex}');
-
+        pp('$mm ... go to OpenAITextChatWidget ..... pages : ${mPages.length}');
         await NavigationUtils.navigateToPage(
             context: context,
-            widget: OpenAITextChatWidget(examPageContents: [page]));
+            widget: OpenAITextChatWidget(
+                examLink: widget.examLink, examPageContents: mPages));
       }
     }
   }
@@ -221,9 +229,11 @@ class ExamPageContentSelectorState extends State<ExamPageContentSelector> {
   _showNoPagesToast() {
     showToast(
         duration: const Duration(seconds: 3),
-        message: 'No content to send, this may be the first cover page', context: context);
+        message: 'No content to send, this may be the first cover page',
+        context: context);
     _clearSelected();
   }
+
   Future<void> _goToGemini(List<ExamPageContent> mPages) async {
     pp('$mm ... _goToGemini..... contentPages: ${mPages.length}');
     if (mPages.isEmpty) {
@@ -231,23 +241,22 @@ class ExamPageContentSelectorState extends State<ExamPageContentSelector> {
       return;
     }
     _clearSelected();
-    for (var page in mPages) {
-      if (page.pageImageUrl != null) {
-        pp('$mm ... go to GeminiImageChatWidget ..... page index: ${page.pageIndex}');
-
+    if (widget.examLink.subject!.title != null) {
+      if (widget.examLink.subject!.title!.contains('MATH')) {
+        pp('$mm ... go to GeminiImageChatWidget ..... pages : ${mPages.length}');
         await NavigationUtils.navigateToPage(
             context: context,
             widget: GeminiImageChatWidget(
-                examLink: widget.examLink, examPageContents: [page]));
+                examLink: widget.examLink, examPageContents: mPages));
       } else {
-        pp('$mm ... go to GeminiMultiTurnStreamChat ..... page index: ${page.pageIndex}');
-
+        pp('$mm ... go to GeminiMultiTurnStreamChat ..... pages : ${mPages.length}');
         await NavigationUtils.navigateToPage(
             context: context,
             widget: GeminiMultiTurnStreamChat(
-                examLink: widget.examLink, examPageContents: [page]));
+                examLink: widget.examLink, examPageContents: mPages));
       }
     }
+
   }
 
   void _clearSelected() {
@@ -259,64 +268,73 @@ class ExamPageContentSelectorState extends State<ExamPageContentSelector> {
     });
   }
 
-
   _showModelDialog() {
     showDialog(
         context: context,
         builder: (_) {
           return AlertDialog(
-             title:  Text('AI Model Selection', style: myTextStyleMedium(context),),
-              content: SizedBox(
-            height: 300,
-            child: Card(
-              elevation: 8,
-              child: Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Column(mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    GestureDetector(
-                        onTap: () {
-                          prefs.saveCurrentModel(modelGeminiAI);
-                          Navigator.of(context).pop();
-                          _showResult(modelGeminiAI);
-                          setState(() {
-                            aiModel = modelGeminiAI;
-                          });
-                        },
-                        child: Text(
-                          modelGeminiAI,
-                          style: myTextStyleMediumLargePrimaryColor(context),
-                        )),
-                    gapH32,
-                    GestureDetector(
-                        onTap: () {
-                          prefs.saveCurrentModel(modelOpenAI);
-                          Navigator.of(context).pop();
-                          _showResult(modelOpenAI);
-                          setState(() {
-                            aiModel = modelOpenAI;
-                          });
-                        },
-                        child: Text(modelOpenAI,
-                            style: myTextStyleMediumLargePrimaryColor(context, ))),
-                  ],
-                ),
+              title: Text(
+                'AI Model Selection',
+                style: myTextStyleMedium(context),
               ),
-            ),
-          ));
+              content: SizedBox(
+                height: 300,
+                child: Card(
+                  elevation: 8,
+                  child: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        GestureDetector(
+                            onTap: () {
+                              prefs.saveCurrentModel(modelGeminiAI);
+                              Navigator.of(context).pop();
+                              _showResult(modelGeminiAI);
+                              setState(() {
+                                aiModel = modelGeminiAI;
+                              });
+                            },
+                            child: Text(
+                              modelGeminiAI,
+                              style:
+                                  myTextStyleMediumLargePrimaryColor(context),
+                            )),
+                        gapH32,
+                        GestureDetector(
+                            onTap: () {
+                              prefs.saveCurrentModel(modelOpenAI);
+                              Navigator.of(context).pop();
+                              _showResult(modelOpenAI);
+                              setState(() {
+                                aiModel = modelOpenAI;
+                              });
+                            },
+                            child: Text(modelOpenAI,
+                                style: myTextStyleMediumLargePrimaryColor(
+                                  context,
+                                ))),
+                      ],
+                    ),
+                  ),
+                ),
+              ));
         });
   }
 
   _showResult(String model) {
     showToast(
         duration: const Duration(seconds: 2),
-        message: 'AI Model selected: $model', context: context);
+        message: 'AI Model selected: $model',
+        context: context);
   }
+
   _addToSelected(ContentBag contentBag) {
     bool found = false;
     for (var element in selectedBags) {
-      if (contentBag.examPageContent.pageIndex == element.examPageContent.pageIndex) {
+      if (contentBag.examPageContent.pageIndex ==
+          element.examPageContent.pageIndex) {
         found = true;
       }
     }
@@ -324,6 +342,7 @@ class ExamPageContentSelectorState extends State<ExamPageContentSelector> {
       selectedBags.add(contentBag);
     }
   }
+
   _removeContentBag(ContentBag contentBag) {
     selectedBags.remove(contentBag);
   }
@@ -549,12 +568,7 @@ class ExamPageContentSelectorState extends State<ExamPageContentSelector> {
                 ),
               ),
               const Positioned(
-                  bottom: 8,
-                  left: 48,
-                  right: 48,
-                  child: SponsoredBy(
-                    logoHeight: 24,
-                  )),
+                  bottom: 8, left: 48, right: 48, child: SponsoredBy()),
             ],
           );
         },

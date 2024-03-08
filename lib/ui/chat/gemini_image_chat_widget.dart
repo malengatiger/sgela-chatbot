@@ -6,9 +6,6 @@ import 'package:edu_chatbot/ui/chat/gemini_text_chat_widget.dart';
 import 'package:edu_chatbot/ui/chat/latex_math_viewer.dart';
 import 'package:edu_chatbot/ui/chat/sgela_markdown_widget.dart';
 import 'package:edu_chatbot/ui/chat/sharing_widget.dart';
-import 'package:edu_chatbot/ui/misc/busy_indicator.dart';
-import 'package:edu_chatbot/ui/misc/sponsored_by.dart';
-import 'package:edu_chatbot/ui/organization/org_logo_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gemini/flutter_gemini.dart';
 import 'package:get_it/get_it.dart';
@@ -18,7 +15,6 @@ import 'package:responsive_builder/responsive_builder.dart';
 import 'package:sgela_services/data/branding.dart';
 import 'package:sgela_services/data/exam_link.dart';
 import 'package:sgela_services/data/exam_page_content.dart';
-import 'package:sgela_services/data/gemini_response_rating.dart';
 import 'package:sgela_services/data/organization.dart';
 import 'package:sgela_services/data/sponsoree.dart';
 import 'package:sgela_services/data/sponsoree_activity.dart';
@@ -30,6 +26,9 @@ import 'package:sgela_services/sgela_util/environment.dart';
 import 'package:sgela_services/sgela_util/functions.dart';
 import 'package:sgela_services/sgela_util/navigation_util.dart';
 import 'package:sgela_services/sgela_util/prefs.dart';
+import 'package:sgela_shared_widgets/widgets/busy_indicator.dart';
+import 'package:sgela_shared_widgets/widgets/org_logo_widget.dart';
+import 'package:sgela_shared_widgets/widgets/sponsored_by.dart';
 
 import '../../local_util/functions.dart';
 import '../exam/exam_link_details.dart';
@@ -54,7 +53,7 @@ class GeminiImageChatWidgetState extends State<GeminiImageChatWidget>
   Prefs prefs = GetIt.instance<Prefs>();
   Gemini gemini = GetIt.instance<Gemini>();
   Sponsoree? sponsoree;
-  static const mm = '🔵🔵🔵🔵 GeminiChatWidget  🔵🔵';
+  static const mm = '🔵🔵🔵🔵 GeminiImageChatWidget  🔵🔵';
   String? aiResponseText, fingerPrint;
   int? totalTokens, promptTokens, completionTokens;
   int imageCount = 0;
@@ -102,23 +101,22 @@ class GeminiImageChatWidgetState extends State<GeminiImageChatWidget>
 
   void _scrollDown() {
     WidgetsBinding.instance.addPostFrameCallback(
-          (_) =>
-          _scrollController.animateTo(
-            _scrollController.position.maxScrollExtent,
-            duration: const Duration(
-              milliseconds: 750,
-            ),
-            curve: Curves.easeOutCirc,
-          ),
+      (_) => _scrollController.animateTo(
+        _scrollController.position.maxScrollExtent,
+        duration: const Duration(
+          milliseconds: 750,
+        ),
+        curve: Curves.easeOutCirc,
+      ),
     );
   }
 
   _startGeminiImageTextChat() async {
     const mx = '😎😎😎 ';
-    pp('\n\n$mm ...$mx  _startGeminiImageTextChat .... 🍎 with ${widget
-        .examPageContents.length} pages');
+    pp('\n\n$mm ...$mx  _startGeminiImageTextChat .... 🍎 with ${widget.examPageContents.length} pages');
     setState(() {
       aiResponseText = null;
+      _busy = true;
     });
     var start = DateTime.now();
     widget.examPageContents
@@ -156,44 +154,51 @@ class GeminiImageChatWidgetState extends State<GeminiImageChatWidget>
         }
       }
       //
-
-      pp('$mm ... $mx  ... sending prompt with image(s) for Gemini: \n ');
-
+      pp('$mm ... $mx  ... sending prompt with ${images.length} image(s) text: ${userTextParts.first.toJson()} .... for Gemini: \n ');
       final model = gai.GenerativeModel(
-          model: 'gemini-pro', apiKey: ChatbotEnvironment.getGeminiAPIKey());
+          model: 'gemini-pro-vision',
+          apiKey: ChatbotEnvironment.getGeminiAPIKey());
+
       List<gai.Content> contents = [];
       List<gai.DataPart> dataParts = [];
+      List<gai.Part> parts = [];
       for (var img in images) {
         dataParts.add(gai.DataPart('image/png', img));
       }
 
-      contents.add(gai.Content('model', modelTextParts));
-      contents.add(gai.Content('user', dataParts));
-      contents.add(gai.Content('user', userTextParts));
-
-      gai.CountTokensResponse countTokensResponse =
-      await model.countTokens(contents);
-      pp('$mm CountTokensResponse:  🌍🌍🌍🌍tokens: ${countTokensResponse
-          .totalTokens}  🌍🌍🌍🌍');
+      parts.addAll(dataParts);
+      parts.addAll(userTextParts);
+      // contents.add(gai.Content('model', modelTextParts));
+      contents.add(gai.Content.multi(parts));
+      // contents.add(gai.Content('user', userTextParts));
 
       final gai.GenerateContentResponse response =
-      await model.generateContent(contents);
-      if (response.candidates.first.finishMessage == 'stop' ||
-          response.candidates.first.finishMessage == 'STOP') {
+          await model.generateContent(contents);
+      if (response.candidates.first.finishReason.toString() == 'stop' ||
+          response.candidates.first.finishReason.toString() == 'STOP') {
         aiResponseText = response.text;
+        pp('$mm GOOD FINISH REASON: response text: ${response.text}');
         if (isValidLaTeXString(aiResponseText!)) {
           // aiResponseText = addNewLinesToLaTeXHeadings(aiResponseText!);
           _showMarkdown = false;
         }
       } else {
-        pp('$mm BAD FINISH REASON: ${response.candidates.first.finishMessage}'
-            ' ${response.candidates.first.finishReason.toString()}');
+        pp('$mm BAD FINISH REASON: finishMessage: ${response.candidates.first.finishMessage}'
+            ' finishReason: ${response.candidates.first.finishReason.toString()}');
         if (mounted) {
           showErrorDialog(context,
               'SgelaAI could not help you at this time. Try again later.');
         }
       }
-      pp('$mm $mx ...... Gemini says: $aiResponseText');
+
+      pp('$mm $mx ...... Gemini response text: $aiResponseText');
+      try {
+        gai.CountTokensResponse countTokensResponse =
+            await model.countTokens(contents);
+        pp('$mm CountTokensResponse:  🌍🌍🌍🌍tokens: ${countTokensResponse.totalTokens}  🌍🌍🌍🌍');
+      } catch (e, s) {
+        pp('$mm $e $s');
+      }
     } catch (e, s) {
       pp('$mm ERROR: $e $s');
       if (mounted) {
@@ -201,11 +206,11 @@ class GeminiImageChatWidgetState extends State<GeminiImageChatWidget>
       }
     }
     var end = DateTime.now();
-    elapsedTimeInSeconds = end
-        .difference(start)
-        .inSeconds;
+    elapsedTimeInSeconds = end.difference(start).inSeconds;
     _writeSponsoreeActivity('Gemini Pro Vision');
-    // setState(() {});
+    setState(() {
+      _busy = false;
+    });
   }
 
   List<gai.TextPart> _buildUserMathPromptContext() {
@@ -239,8 +244,7 @@ class GeminiImageChatWidgetState extends State<GeminiImageChatWidget>
   List<gai.TextPart> _buildUserPromptContext() {
     List<gai.TextPart> textParts = [];
     textParts.add(gai.TextPart(
-        'The image is of a page from a ${widget.examLink.subject
-            ?.title} examination paper'));
+        'The image is of a page from a ${widget.examLink.subject?.title} examination paper'));
     textParts.add(gai.TextPart(
         'Help me prepare for this examination. I am in high school or freshman college.'));
     textParts.add(gai.TextPart(
@@ -259,8 +263,8 @@ class GeminiImageChatWidgetState extends State<GeminiImageChatWidget>
 
   List<gai.TextPart> _buildModelPromptContext() {
     List<gai.TextPart> textParts = [];
-    textParts.add(gai.TextPart('I am a super ${widget.examLink
-      ..subject?.title} tutor and personal AI assistant'));
+    textParts.add(gai.TextPart(
+        'I am a super ${widget.examLink..subject?.title} tutor and personal AI assistant'));
     textParts.add(gai.TextPart('I do my best to give accurate responses'));
     return textParts;
   }
@@ -277,7 +281,6 @@ class GeminiImageChatWidgetState extends State<GeminiImageChatWidget>
               examPageContents: widget.examPageContents));
     }
   }
-
 
   String aiModel = 'Gemini Pro';
   bool ratingHasBeenDone = false;
@@ -336,8 +339,7 @@ class GeminiImageChatWidgetState extends State<GeminiImageChatWidget>
     int cnt = 0;
     for (var value in widget.examPageContents) {
       if (value.pageImageUrl != null) {
-        pp('$mm ... contentBag: image in the page, index: 🍎🍎${value
-            .pageIndex} 🍎🍎');
+        pp('$mm ... contentBag: image in the page, index: 🍎🍎${value.pageIndex} 🍎🍎');
         cnt++;
       }
     }
@@ -355,9 +357,7 @@ class GeminiImageChatWidgetState extends State<GeminiImageChatWidget>
     try {
       var act = SponsoreeActivity(
           organizationId: organization?.id,
-          id: DateTime
-              .now()
-              .millisecondsSinceEpoch,
+          id: DateTime.now().millisecondsSinceEpoch,
           date: DateTime.now().toUtc().toIso8601String(),
           organizationName: organization?.name,
           examLinkId: widget.examLink.id!,
@@ -369,7 +369,7 @@ class GeminiImageChatWidgetState extends State<GeminiImageChatWidget>
           sponsoreeName: sponsoree?.sgelaUserName,
           subjectId: widget.examLink.subject?.id!,
           examTitle:
-          '${widget.examLink.documentTitle} - ${widget.examLink.title}',
+              '${widget.examLink.documentTitle} - ${widget.examLink.title}',
           subject: widget.examLink.subject?.title,
           userId: sponsoree?.sgelaUserId,
           sponsoreeId: sponsoree?.id!);
@@ -419,9 +419,9 @@ class GeminiImageChatWidgetState extends State<GeminiImageChatWidget>
               title: branding == null
                   ? const Text('Gemini Image Text Driver')
                   : OrgLogoWidget(
-                branding: branding,
-                height: 28,
-              ),
+                      branding: branding,
+                      height: 28,
+                    ),
               actions: [
                 IconButton(
                     onPressed: () {
@@ -430,25 +430,21 @@ class GeminiImageChatWidgetState extends State<GeminiImageChatWidget>
                     icon: Icon(
                       Icons.refresh,
                       color: mode == DARK
-                          ? Theme
-                          .of(context)
-                          .primaryColor
+                          ? Theme.of(context).primaryColor
                           : Colors.black,
                     )),
                 aiResponseText == null
                     ? gapW4
                     : IconButton(
-                    onPressed: () {
-                      _navigateToSharing();
-                    },
-                    icon: Icon(
-                      Icons.share,
-                      color: mode == DARK
-                          ? Theme
-                          .of(context)
-                          .primaryColor
-                          : Colors.black,
-                    )),
+                        onPressed: () {
+                          _navigateToSharing();
+                        },
+                        icon: Icon(
+                          Icons.share,
+                          color: mode == DARK
+                              ? Theme.of(context).primaryColor
+                              : Colors.black,
+                        )),
               ],
             ),
             body: ScreenTypeLayout.builder(
@@ -462,57 +458,56 @@ class GeminiImageChatWidgetState extends State<GeminiImageChatWidget>
                           ExamLinkDetails(
                             examLink: widget.examLink,
                             pageNumber:
-                            widget.examPageContents.first.pageIndex! + 1,
+                                widget.examPageContents.first.pageIndex! + 1,
                           ),
                           gapH16,
                           aiResponseText == null
                               ? gapW4
                               : Row(
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Text(
-                                'SgelaAI Response',
-                                style: myTextStyleMediumLargeWithSize(
-                                    context, 16),
-                              ),
-                              aiResponseText == null
-                                  ? gapW4
-                                  : Row(
-                                children: [
-                                  gapW32,
-                                  IconButton(
-                                      onPressed: () {
-                                        _openRatingDialog();
-                                      },
-                                      icon: Icon(
-                                        Icons.star_rate,
-                                        color: mode == DARK
-                                            ? Theme
-                                            .of(context)
-                                            .primaryColor
-                                            : Colors.black,
-                                      ))
-                                ],
-                              )
-                            ],
-                          ),
-                          gapH16,
+                                  crossAxisAlignment: CrossAxisAlignment.center,
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Text(
+                                      'SgelaAI Response',
+                                      style: myTextStyleMediumLargeWithSize(
+                                          context, 16),
+                                    ),
+                                    aiResponseText == null
+                                        ? gapW4
+                                        : Row(
+                                            children: [
+                                              gapW32,
+                                              IconButton(
+                                                  onPressed: () {
+                                                    _openRatingDialog();
+                                                  },
+                                                  icon: Icon(
+                                                    Icons.star_rate,
+                                                    color: mode == DARK
+                                                        ? Theme.of(context)
+                                                            .primaryColor
+                                                        : Colors.black,
+                                                  ))
+                                            ],
+                                          )
+                                  ],
+                                ),
+                          // gapH16,
                           aiResponseText == null
                               ? const BusyIndicator(
-                            caption: 'Talking to SgelaAI ...',
-                            showClock: true,
-                          )
+                                  caption: 'Talking to SgelaAI ...',
+                                  showClock: true,
+                                )
                               : Expanded(
-                              child: _showMarkdown
-                                  ? SgelaMarkdownWidget(
-                                  text: aiResponseText!)
-                                  : SgelaLaTexViewer(
-                                  text: aiResponseText!,
-                                  examPageContents:
-                                  widget.examPageContents,
-                                  tokensUsed: tokensUsed,
-                                  examLink: widget.examLink)),
+                                  child: _showMarkdown
+                                      ? SgelaMarkdownWidget(
+                                          text: aiResponseText!)
+                                      : SgelaLaTexViewer(
+                                          text: aiResponseText!,
+                                          examPageContents:
+                                              widget.examPageContents,
+                                          tokensUsed: tokensUsed,
+                                          examLink: widget.examLink)),
                           const SponsoredBy(),
                         ],
                       ),

@@ -929,6 +929,9 @@ PODS:
   - GTMSessionFetcher/Core (3.3.1)
   - image_picker_ios (0.0.1):
     - Flutter
+  - in_app_purchase_storekit (0.0.1):
+    - Flutter
+    - FlutterMacOS
   - leveldb-library (1.22.3)
   - libwebp (1.3.2):
     - libwebp/demux (= 1.3.2)
@@ -962,7 +965,13 @@ PODS:
   - PromisesObjC (2.3.1)
   - PromisesSwift (2.3.1):
     - PromisesObjC (= 2.3.1)
+  - purchases_flutter (6.22.0):
+    - Flutter
+    - PurchasesHybridCommon (= 9.8.0)
+  - PurchasesHybridCommon (9.8.0):
+    - RevenueCat (= 4.37.0)
   - RecaptchaInterop (100.0.0)
+  - RevenueCat (4.37.0)
   - SDWebImage (5.18.11):
     - SDWebImage/Core (= 5.18.11)
   - SDWebImage/Core (5.18.11)
@@ -1013,10 +1022,12 @@ DEPENDENCIES:
   - google_maps_flutter_ios (from `.symlinks/plugins/google_maps_flutter_ios/ios`)
   - google_sign_in_ios (from `.symlinks/plugins/google_sign_in_ios/darwin`)
   - image_picker_ios (from `.symlinks/plugins/image_picker_ios/ios`)
+  - in_app_purchase_storekit (from `.symlinks/plugins/in_app_purchase_storekit/darwin`)
   - path_provider_foundation (from `.symlinks/plugins/path_provider_foundation/darwin`)
   - pay_ios (from `.symlinks/plugins/pay_ios/ios`)
   - permission_handler_apple (from `.symlinks/plugins/permission_handler_apple/ios`)
   - printing (from `.symlinks/plugins/printing/ios`)
+  - purchases_flutter (from `.symlinks/plugins/purchases_flutter/ios`)
   - share_plus (from `.symlinks/plugins/share_plus/ios`)
   - shared_preferences_foundation (from `.symlinks/plugins/shared_preferences_foundation/darwin`)
   - smart_auth (from `.symlinks/plugins/smart_auth/ios`)
@@ -1061,7 +1072,9 @@ SPEC REPOS:
     - nanopb
     - PromisesObjC
     - PromisesSwift
+    - PurchasesHybridCommon
     - RecaptchaInterop
+    - RevenueCat
     - SDWebImage
     - SDWebImageWebPCoder
     - Toast
@@ -1111,6 +1124,8 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/google_sign_in_ios/darwin"
   image_picker_ios:
     :path: ".symlinks/plugins/image_picker_ios/ios"
+  in_app_purchase_storekit:
+    :path: ".symlinks/plugins/in_app_purchase_storekit/darwin"
   path_provider_foundation:
     :path: ".symlinks/plugins/path_provider_foundation/darwin"
   pay_ios:
@@ -1119,6 +1134,8 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/permission_handler_apple/ios"
   printing:
     :path: ".symlinks/plugins/printing/ios"
+  purchases_flutter:
+    :path: ".symlinks/plugins/purchases_flutter/ios"
   share_plus:
     :path: ".symlinks/plugins/share_plus/ios"
   shared_preferences_foundation:
@@ -1186,6 +1203,7 @@ SPEC CHECKSUMS:
   GTMAppAuth: 99fb010047ba3973b7026e45393f51f27ab965ae
   GTMSessionFetcher: 8a1b34ad97ebe6f909fb8b9b77fba99943007556
   image_picker_ios: 99dfe1854b4fa34d0364e74a78448a0151025425
+  in_app_purchase_storekit: 0e4b3c2e43ba1e1281f4f46dd71b0593ce529892
   leveldb-library: e74c27d8fbd22854db7cb467968a0b8aa1db7126
   libwebp: 1786c9f4ff8a279e4dac1e8f385004d5fc253009
   Mantle: c5aa8794a29a022dfbbfc9799af95f477a69b62d
@@ -1196,7 +1214,10 @@ SPEC CHECKSUMS:
   printing: 233e1b73bd1f4a05615548e9b5a324c98588640b
   PromisesObjC: c50d2056b5253dadbd6c2bea79b0674bd5a52fa4
   PromisesSwift: 28dca69a9c40779916ac2d6985a0192a5cb4a265
+  purchases_flutter: 9c9aa146fe1846ae262740930d8f43ee6c0e8889
+  PurchasesHybridCommon: 42fe7946cc2828b1d54b1c80068d6042e4d3d5d1
   RecaptchaInterop: 7d1a4a01a6b2cb1610a47ef3f85f0c411434cb21
+  RevenueCat: b4fb058d7ced6a37327f6bc9636752dbc4a7235b
   SDWebImage: a3ba0b8faac7228c3c8eadd1a55c9c9fe5e16457
   SDWebImageWebPCoder: c94f09adbca681822edad9e532ac752db713eabf
   share_plus: c3fef564749587fc939ef86ffb283ceac0baf9f5

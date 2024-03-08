@@ -10,12 +10,13 @@ class SgelaMarkdownWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    var height = 400.0;
+
     return SingleChildScrollView(
       child: Card(
         elevation: 8,
         color: backgroundColor?? Colors.purple,
-        child: SizedBox(
-          height: 600, width:420,
+        child: SizedBox(height: height,
           child: Markdown(
             data: text,
             selectable: true,

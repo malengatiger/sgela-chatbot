@@ -23,7 +23,6 @@ dependencies:
   flutter_gemini: ^2.0.3
   markdown: ^7.2.1
   google_generative_ai: ^0.2.2
-  mistral_sgela_ai: ^1.0.11
 
 
 dev_dependencies:
