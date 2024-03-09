@@ -1,3 +1,4 @@
+import 'package:animated_splash_screen/animated_splash_screen.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:edu_chatbot/ui/organization/organization_splash.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -5,14 +6,16 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_ui_auth/firebase_ui_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
+import 'package:page_transition/page_transition.dart';
+import 'package:sgela_services/sgela_util/ai_initialization_util.dart';
 import 'package:sgela_services/sgela_util/dark_light_control.dart';
 import 'package:sgela_services/sgela_util/functions.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'firebase_options.dart';
 import 'package:sgela_services/sgela_util/prefs.dart';
-import 'package:sgela_services/sgela_util/ai_initialization_util.dart';
 import 'package:sgela_services/sgela_util/register_services.dart';
+import 'package:sgela_shared_widgets/widgets/splash_widget.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
+import 'firebase_options.dart';
 import 'local_util/functions.dart';
 
 const String mx = '🍎🍎🍎 main: ';
@@ -28,6 +31,7 @@ final emailLinkProviderConfig = EmailLinkAuthProvider(
 );
 
 late Prefs mPrefs;
+
 Future<void> main() async {
   pp('$mx SgelaAI Chatbot starting .... $mx');
   WidgetsFlutterBinding.ensureInitialized();
@@ -44,9 +48,10 @@ Future<void> main() async {
     var auth = FirebaseAuth.instanceFor(app: app);
     var gem = await AiInitializationUtil.initGemini();
     await AiInitializationUtil.initOpenAI();
-    await registerServices(gemini: gem, firebaseFirestore: fbf, firebaseAuth: auth);
+    await registerServices(
+        gemini: gem, firebaseFirestore: fbf, firebaseAuth: auth);
     //
-  } catch (e,s) {
+  } catch (e, s) {
     pp(e);
     pp(s);
   }
@@ -54,6 +59,7 @@ Future<void> main() async {
 }
 
 late ModeAndColor modeAndColor;
+
 void dismissKeyboard(BuildContext context) {
   final currentFocus = FocusScope.of(context);
   if (!currentFocus.hasPrimaryFocus && currentFocus.hasFocus) {
@@ -64,11 +70,9 @@ void dismissKeyboard(BuildContext context) {
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-
     var dlc = GetIt.instance<DarkLightControl>();
     return GestureDetector(
       onTap: () {
@@ -84,18 +88,26 @@ class MyApp extends StatelessWidget {
             }
 
             return MaterialApp(
-              title: 'SgelaAI',
-              debugShowCheckedModeBanner: false,
-              theme: _getTheme(context),
-              // home: const GenerativeChatScreen('Gemini',),
-              home:  const OrganizationSplash( ),
-            );
+                title: 'SgelaAI',
+                debugShowCheckedModeBanner: false,
+                theme: _getTheme(context),
+                // home: const GenerativeChatScreen('Gemini',),
+                // home:  const OrganizationSplash( ),
+                home: AnimatedSplashScreen(
+                  splash: const SplashWidget(),
+                  animationDuration: const Duration(milliseconds: 3000),
+                  curve: Curves.easeInCirc,
+                  splashIconSize: 160.0,
+                  nextScreen: const OrganizationSplash(),
+                  splashTransition: SplashTransition.fadeTransition,
+                  pageTransitionType: PageTransitionType.leftToRight,
+                  backgroundColor: Colors.teal.shade900,
+                ));
           }),
     );
   }
 
-
-  ThemeData _getTheme(BuildContext context )  {
+  ThemeData _getTheme(BuildContext context) {
     var colorIndex = mPrefs.getColorIndex();
     var mode = mPrefs.getMode();
     if (mode == -1) {
@@ -104,12 +116,12 @@ class MyApp extends StatelessWidget {
     if (mode == DARK) {
       return ThemeData.dark().copyWith(
         primaryColor:
-        getColors().elementAt(colorIndex), // Set the primary color
+            getColors().elementAt(colorIndex), // Set the primary color
       );
     } else {
       return ThemeData.light().copyWith(
         primaryColor:
-        getColors().elementAt(colorIndex), // Set the primary color
+            getColors().elementAt(colorIndex), // Set the primary color
       );
     }
   }
