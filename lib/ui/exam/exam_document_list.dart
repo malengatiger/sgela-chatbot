@@ -5,6 +5,7 @@ import 'package:sgela_services/data/subject.dart';
 import 'package:sgela_services/repositories/basic_repository.dart';
 import 'package:sgela_services/services/firestore_service.dart';
 import 'package:edu_chatbot/ui/exam/exam_link_list_widget.dart';
+import 'package:sgela_services/services/openai_assistant_service.dart';
 import 'package:sgela_shared_widgets/util/widget_prefs.dart';
 import 'package:sgela_shared_widgets/widgets/busy_indicator.dart';
 import 'package:sgela_shared_widgets/widgets/sponsored_by.dart';
@@ -109,6 +110,8 @@ class ExamsDocumentListState extends State<ExamsDocumentList> {
     }
 
   }
+
+  OpenAIAssistantService assistantService = GetIt.instance<OpenAIAssistantService>();
 
   @override
   Widget build(BuildContext context) {

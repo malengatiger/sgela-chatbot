@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:animated_splash_screen/animated_splash_screen.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:edu_chatbot/ui/organization/organization_splash.dart';
@@ -14,9 +16,9 @@ import 'package:sgela_services/sgela_util/prefs.dart';
 import 'package:sgela_services/sgela_util/register_services.dart';
 import 'package:sgela_shared_widgets/widgets/splash_widget.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
 import 'firebase_options.dart';
 import 'local_util/functions.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 const String mx = '🍎🍎🍎 main: ';
 final actionCodeSettings = ActionCodeSettings(
@@ -32,29 +34,41 @@ final emailLinkProviderConfig = EmailLinkAuthProvider(
 
 late Prefs mPrefs;
 
+Map<String, String> loadEnvFile() {
+  final envFile = File('.env');
+  final envVars = <String, String>{};
+
+  if (envFile.existsSync()) {
+    final lines = envFile.readAsLinesSync();
+    for (final line in lines) {
+      final parts = line.split('=');
+      if (parts.length == 2) {
+        final key = parts[0].trim();
+        final value = parts[1].trim();
+        envVars[key] = value;
+      }
+    }
+  }
+
+  pp('$mx ENVIRONMENT VARS: 🍎🍎🍎 $envVars 💛💛💛💛');
+  return envVars;
+}
+
+
 Future<void> main() async {
   pp('$mx SgelaAI Chatbot starting .... $mx');
   WidgetsFlutterBinding.ensureInitialized();
-  var app = await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
-  pp('$mx Firebase has been initialized!! $mx name: ${app.name}');
-  pp('${app.options.asMap}');
-  //
   mPrefs = Prefs(await SharedPreferences.getInstance());
 
   try {
-    var fbf = FirebaseFirestore.instanceFor(app: app);
-    var auth = FirebaseAuth.instanceFor(app: app);
-    var gem = await AiInitializationUtil.initGemini();
-    await AiInitializationUtil.initOpenAI();
-    await registerServices(
-        gemini: gem, firebaseFirestore: fbf, firebaseAuth: auth);
-    //
-  } catch (e, s) {
-    pp(e);
-    pp(s);
+    await dotenv.load(fileName: '.env');
+    pp('$mx env loaded ??? PINECONE_ENVIRONMENT:'
+        ' ${dotenv.env['PINECONE_ENVIRONMENT']}');
+  } catch (e,s) {
+    pp('$mx $e $s');
   }
+  // loadEnvFile();
+  await _performSetup();
   runApp(const MyApp());
 }
 
@@ -66,6 +80,27 @@ void dismissKeyboard(BuildContext context) {
     FocusManager.instance.primaryFocus?.unfocus();
   }
 }
+
+Future _performSetup() async {
+  try {
+    var app = await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+    pp('$mx Firebase has been initialized! name: ${app.name}');
+    pp('${app.options.asMap}');
+    var fbf = FirebaseFirestore.instanceFor(app: app);
+    var auth = FirebaseAuth.instanceFor(app: app);
+    var gem = await AiInitializationUtil.initGemini();
+    await AiInitializationUtil.initOpenAI();
+    await registerServices(
+        gemini: gem, firebaseFirestore: fbf, firebaseAuth: auth);
+    //
+  } catch (e, s) {
+    pp(e);
+    pp(s);
+  }
+}
+
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});

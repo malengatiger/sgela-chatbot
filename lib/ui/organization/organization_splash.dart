@@ -41,7 +41,6 @@ class OrganizationSplashState extends State<OrganizationSplash>
   Country? country;
   SgelaUser? sgelaUser;
   Sponsoree? orgSponsoree;
-  bool _busy = false;
   Branding? branding;
   List<Branding> brandings = [];
 
@@ -201,12 +200,15 @@ class OrganizationSplashState extends State<OrganizationSplash>
                       Navigator.of(context).pop();
                     },
                     child: branding == null
-                        ? const Center(
-                            child: BusyIndicator(
-                              showTimerOnly: false,
-                              showClock: true,
+                        ? const Padding(
+                          padding: EdgeInsets.all(24.0),
+                          child: Center(
+                              child: BusyIndicator(
+                                showTimerOnly: false,
+                                showClock: true,
+                              ),
                             ),
-                          )
+                        )
                         : Padding(
                             padding: const EdgeInsets.all(16.0),
                             child: ClipRRect(
@@ -228,8 +230,11 @@ class OrganizationSplashState extends State<OrganizationSplash>
                   ? const Positioned(
                       bottom: 48,
                       right: 28,
-                      child: BusyIndicator(
-                        showTimerOnly: true,
+                      child: Padding(
+                        padding: EdgeInsets.all(4.0),
+                        child: BusyIndicator(
+                          showTimerOnly: true,
+                        ),
                       ),
                     )
                   : gapH8,

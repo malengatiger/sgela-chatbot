@@ -1,0 +1,70 @@
+[
+  {
+    "fileName": "Business Studies P1 May-June 2023 Eng.pdf",
+    "section": "SECTION A",
+    "questions": [
+      {
+        "questionNumber": "1.1",
+        "questionText": "Various options are provided as possible answers to the following questions. Choose the answer and write only the letter (A–D) next to the question numbers (1.1.1 to 1.1.5) in the ANSWER BOOK."
+      },
+      {
+        "questionNumber": "1.2",
+        "questionText": "Complete the following statements by using the word(s) provided in the list below. Write only the word(s) next to the question numbers (1.2.1 to 1.2.5) in the ANSWER BOOK."
+      },
+      {
+        "questionNumber": "1.3",
+        "questionText": "Choose a description from COLUMN B that matches a term in COLUMN A. Write only the letter (A–J) next to the question numbers (1.3.1 to 1.3.5) in the ANSWER BOOK."
+      }
+    ]
+  },
+  {
+    "fileName": "Business Studies P2 Nov 2022 Eng (1).pdf",
+    "section": "SECTION A",
+    "questions": [
+      {
+        "questionNumber": "1.1",
+        "questionText": "Various options are provided as possible answers to the following questions. Choose the answer and write only the letter (A–D) next to the question numbers (1.1.1 to 1.1.5) in the ANSWER BOOK."
+      },
+      {
+        "questionNumber": "1.2",
+        "questionText": "Complete the following statements by using the word(s) provided in the list below. Write only the word(s) next to the question numbers (1.2.1 to 1.2.5) in the ANSWER BOOK."
+      },
+      {
+        "questionNumber": "1.3",
+        "questionText": "Choose a description from COLUMN B that matches a term in COLUMN A. Write only the letter (A–J) next to the question numbers (1.3.1 to 1.3.5) in the ANSWER BOOK."
+      }
+    ]
+  },
+  {
+    "fileName": "Business Studies P2 Nov 2022 Eng (1).pdf",
+    "section": "SECTION B",
+    "questions": [
+      {
+        "questionNumber": "2",
+        "questionText": "Business Ventures. Includes questions on long-term insurance, excess in insurance, visual aids in presentations, liability types, functions of the JSE, calculations on fixed deposits, advantages of insurance, and handling feedback in presentations."
+      },
+      {
+        "questionNumber": "3",
+        "questionText": "Business Roles. Includes questions on human rights in the workplace, roles of health and safety representatives, conflict handling steps, dealing with unemployment, unethical business practices, impact of CSR, and professional business practices."
+      },
+      {
+        "questionNumber": "4",
+        "questionText": "Miscellaneous Topics. Questions cover investment decision factors, compulsory insurance, success and failure of a partnership, laissez-faire leadership, corporate social investment (CSI) focus areas, stages of team development, the nominal group technique, and benefits of diversity in the workplace."
+      }
+    ]
+  },
+  {
+    "fileName": "Business Studies P2 Nov 2022 Eng (1).pdf",
+    "section": "SECTION C",
+    "questions": [
+      {
+        "questionNumber": "5",
+        "questionText": "Essay on management and leadership. Discuss differences between management and leadership, transformational leadership theory, impact of democratic and autocratic styles, and the role of personal attitude in leadership."
+      },
+      {
+        "questionNumber": "6",
+        "questionText": "Essay on creative thinking and problem-solving. Discuss problem-solving vs decision-making, promoting creative thinking, advantages of creative thinking, and applying the Delphi technique and force-field analysis for solving complex problems."
+      }
+    ]
+  }
+]

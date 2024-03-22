@@ -1,6 +1,9 @@
 import 'package:badges/badges.dart' as bd;
 import 'package:edu_chatbot/ui/gemini/sections/exam_page_content_selector.dart';
 import 'package:edu_chatbot/ui/gemini/sections/gemini_multi_turn_chat_stream.dart';
+import 'package:edu_chatbot/ui/langchain/lang_chain_main.dart';
+import 'package:edu_chatbot/ui/open_ai/assistant/assistant_main.dart';
+import 'package:sgela_services/data/assistant_data_openai/assistant.dart';
 import 'package:sgela_services/data/exam_document.dart';
 import 'package:sgela_services/data/exam_link.dart';
 import 'package:sgela_services/data/subject.dart';
@@ -8,6 +11,7 @@ import 'package:sgela_services/repositories/basic_repository.dart';
 import 'package:sgela_services/services/firestore_service.dart';
 import 'package:sgela_services/services/gemini_chat_service.dart';
 import 'package:sgela_services/services/local_data_service.dart';
+import 'package:sgela_services/services/openai_assistant_service.dart';
 import 'package:sgela_services/services/you_tube_service.dart';
 import 'package:sgela_shared_widgets/widgets/busy_indicator.dart';
 import 'package:sgela_shared_widgets/widgets/color_gallery.dart';
@@ -83,9 +87,16 @@ class ExamLinkListWidgetState extends State<ExamLinkListWidget> {
     });
   }
 
-
   ExamLink? selectedExamLink;
+  OpenAIAssistantService assistantService = GetIt.instance<OpenAIAssistantService>();
+  OpenAIAssistant? assistant;
 
+
+  void _navigateToLangChainMain(ExamLink examLink) {
+    NavigationUtils.navigateToPage(
+        context: context,
+        widget: LangChainMain(examLink: examLink));
+  }
   void _navigateToColorGallery() {
     NavigationUtils.navigateToPage(
         context: context,
@@ -216,7 +227,7 @@ class ExamLinkListWidgetState extends State<ExamLinkListWidget> {
                                         return GestureDetector(
                                           onTap: () {
                                             selectedExamLink = examLink;
-                                            _navigateToExamPageContentSelector(
+                                            _navigateToLangChainMain(
                                                 examLink);
                                           },
                                           child: ExamLinkWidget(
@@ -233,7 +244,7 @@ class ExamLinkListWidgetState extends State<ExamLinkListWidget> {
                     gapH32,
                     filteredExamLinks.length < 4 ? gapH32 : gapH4,
                     gapH32,
-                    const SponsoredBy(),
+                    const SponsoredBy(height: 32),
                   ],
                 ),
               ),

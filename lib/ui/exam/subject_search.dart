@@ -140,7 +140,7 @@ class SubjectSearchState extends State<SubjectSearch> {
     _subjects.sort((a, b) => a.title!.compareTo(b.title!));
     _buildButtons();
     _arrangeSubjects();
-    _showHelpToast(10);
+    //_showHelpToast(10);
   }
 
   void _filterSubjects(String query) {
@@ -485,20 +485,13 @@ class SubjectSearchState extends State<SubjectSearch> {
                     : gapH32,
                 const SizedBox(height: 4),
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisAlignment: MainAxisAlignment.end,
                   children: [
-                    Text(
-                      'Subjects Exams on board',
-                      style: myTextStyle(context,
-                          Theme.of(context).primaryColor, 16, FontWeight.w900),
-                    ),
-                    gapW32,
-                    gapW32,
                     IconButton(
                         onPressed: () {
                           _showHelpToast(0);
                         },
-                        icon: const Icon(Icons.question_mark))
+                        icon: const Icon(Icons.question_mark, size: 16))
                   ],
                 ),
                 gapH16,
@@ -514,8 +507,11 @@ class SubjectSearchState extends State<SubjectSearch> {
                         badgeColor: Colors.pink.shade800,
                         elevation: 12),
                     child: busy
-                        ? const BusyIndicator(
-                            caption: 'Loading subjects ... just a second ...')
+                        ? const Padding(
+                          padding: EdgeInsets.all(24.0),
+                          child: BusyIndicator(
+                              caption: 'Loading subjects ... just a second ...'),
+                        )
                         : Padding(
                           padding: const EdgeInsets.all(8.0),
                           child: ListView.builder(

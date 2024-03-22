@@ -17,30 +17,33 @@ dependencies:
   sgela_shared_widgets:
       path: ../sgela_shared_widgets
 
+#  flutter_dotenv: ^5.1.0
+#  dotenv: ^4.2.0
   flutter_bloc: ^8.1.4
   equatable: ^2.0.5
   flutter_markdown: ^0.6.20+1
   flutter_gemini: ^2.0.3
   markdown: ^7.2.1
   google_generative_ai: ^0.2.2
+  json_annotation: ^4.8.1
 
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-
   flutter_lints: ^3.0.1
   build_runner: ^2.4.8
   mockito: ^5.4.4
   json_serializable: ^6.7.1
 
 
-# The following section is specific to Flutter packages.
 flutter:
 
   uses-material-design: true
 
   # To add assets to your application, add an assets section, like this:
   assets:
-     - assets/
+    - assets/
+    - .env
+
 
