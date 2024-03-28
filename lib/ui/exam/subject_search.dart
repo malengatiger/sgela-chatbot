@@ -345,8 +345,8 @@ class SubjectSearchState extends State<SubjectSearch> {
         value: modelOpenAI,
         label: Text(modelOpenAI, style: myTextStyleTiny(context))));
     buttons.add(ButtonSegment(
-        value: modelAnthropic,
-        label: Text(modelAnthropic, style: myTextStyleTiny(context))));
+        value: modelClaude,
+        label: Text(modelClaude, style: myTextStyleTiny(context))));
 
     buttons.add(ButtonSegment(
         value: modelMistral,
@@ -398,7 +398,7 @@ class SubjectSearchState extends State<SubjectSearch> {
                     case modelOpenAI:
                       _navigateToOpenAIMultiTurnChat();
                       break;
-                    case modelAnthropic:
+                    case modelClaude:
                       _navigateToClaudeMultiTurnChat();
                       break;
                     default:
@@ -444,7 +444,7 @@ class SubjectSearchState extends State<SubjectSearch> {
                                 currentAIModel = modelGeminiAI;
                                 prefs.saveCurrentModel(modelGeminiAI);
                                 break;
-                              case modelAnthropic:
+                              case modelClaude:
                                 showToast(
                                     message: 'Claude model not available yet',
                                     context: context);

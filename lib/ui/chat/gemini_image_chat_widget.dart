@@ -19,7 +19,8 @@ import 'package:sgela_services/data/organization.dart';
 import 'package:sgela_services/data/sponsoree.dart';
 import 'package:sgela_services/data/sponsoree_activity.dart';
 import 'package:sgela_services/services/conversion_service.dart';
-import 'package:sgela_services/services/firestore_service.dart';
+import 'package:sgela_services/services/firestore_service.dart' as fs;
+import 'package:sgela_services/services/firestore_service_sponsor.dart';
 import 'package:sgela_services/sgela_util/dark_light_control.dart';
 import 'package:sgela_services/sgela_util/db_methods.dart';
 import 'package:sgela_services/sgela_util/environment.dart';
@@ -52,6 +53,7 @@ class GeminiImageChatWidgetState extends State<GeminiImageChatWidget>
   Organization? organization;
   Prefs prefs = GetIt.instance<Prefs>();
   Gemini gemini = GetIt.instance<Gemini>();
+  SponsorFirestoreService sponsorFirestoreService = GetIt.instance<SponsorFirestoreService>();
   Sponsoree? sponsoree;
   static const mm = '🔵🔵🔵🔵 GeminiImageChatWidget  🔵🔵';
   String? aiResponseText, fingerPrint;
@@ -306,6 +308,7 @@ class GeminiImageChatWidgetState extends State<GeminiImageChatWidget>
       setState(() {
         ratingHasBeenDone = false;
       });
+
       DBMethods.addRating(rating, sponsoree!, aiModel, widget.examLink,
           widget.examPageContents.length);
       if (mounted) {
@@ -348,7 +351,7 @@ class GeminiImageChatWidgetState extends State<GeminiImageChatWidget>
     return imageCount;
   }
 
-  FirestoreService firestoreService = GetIt.instance<FirestoreService>();
+  fs.FirestoreService firestoreService = GetIt.instance<fs.FirestoreService>();
 
   _writeSponsoreeActivity(String model) async {
     setState(() {

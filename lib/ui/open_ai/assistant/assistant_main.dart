@@ -4,6 +4,7 @@ import 'dart:io';
 
 import 'package:edu_chatbot/local_util/functions.dart' as fun;
 import 'package:edu_chatbot/local_util/functions.dart';
+import 'package:edu_chatbot/ui/exam/pdf_viewer.dart';
 import 'package:edu_chatbot/ui/open_ai/assistant/open_ai_assistant_chat.dart';
 import 'package:edu_chatbot/ui/open_ai/assistant/open_ai_assistant_document.dart';
 import 'package:edu_chatbot/ui/open_ai/assistant/open_ai_assistant_questions.dart';
@@ -18,9 +19,11 @@ import 'package:sgela_services/data/assistant_data_openai/thread.dart';
 import 'package:sgela_services/data/country.dart';
 import 'package:sgela_services/data/exam_link.dart';
 import 'package:sgela_services/data/organization.dart';
+import 'package:sgela_services/data/sponsoree.dart';
 import 'package:sgela_services/services/firestore_service.dart';
 import 'package:sgela_services/services/openai_assistant_service.dart';
 import 'package:sgela_services/sgela_util/functions.dart';
+import 'package:sgela_services/sgela_util/navigation_util.dart';
 import 'package:sgela_services/sgela_util/prefs.dart';
 import 'package:sgela_shared_widgets/widgets/busy_indicator.dart';
 import 'package:sgela_shared_widgets/widgets/sponsored_by.dart';
@@ -56,6 +59,7 @@ class AssistantMainState extends State<AssistantMain>
   List<Message> messages = [];
 
   var currentIndexPage = 0;
+  Sponsoree? sponsoree;
 
   @override
   void initState() {
@@ -63,7 +67,6 @@ class AssistantMainState extends State<AssistantMain>
     super.initState();
     _listen();
     _getData();
-    _startAssistant();
   }
 
   @override
@@ -81,20 +84,12 @@ class AssistantMainState extends State<AssistantMain>
       pp('$mm ... Assistant status arrived: $status');
 
       if (status == 'completed') {
-        pp('\n\n\n$mm ... $yy$yy$yy Thread run completed!! $yy$yy\n\n\n');
+        pp('\n\n\n$mm ... $yy$yy$yy Thread run completed!! $yy$yy$yy\n\n\n');
       }
-      // if (mounted) {
-      //   showToast(
-      //       backgroundColor: Colors.blue,
-      //       duration: const Duration(seconds: 5),
-      //       toastGravity: ToastGravity.TOP,
-      //       message: 'SgelaAI status: $status',
-      //       context: context);
-      // }
     });
     messageSubscription =
         assistantService.questionResponseStream.listen((mMessages) {
-      pp('\n\n\n$mm ... Assistant message(s) arrived: ${mMessages.length}');
+      pp('\n\n\n$mm ... Assistant message(s) arrived, messages length: ${mMessages.length}\n');
       _handleMessageArrived(mMessages);
       if (mounted) {
         setState(() {
@@ -107,35 +102,31 @@ class AssistantMainState extends State<AssistantMain>
   static const yy = '💛💛💛', ee = '👿👿👿👿';
 
   Future<void> _handleMessageArrived(List<Message> mMessages) async {
-    pp('\n\n\n$mm ... $yy _handleMessageArrived: Assistant message arrived: $yy');
     String? mText = mMessages.elementAt(0).content?.first.text!.value;
+    pp('$mm ... $yy _handleMessageArrived: Assistant message arrived: $yy $mText');
 
-    if (messages.length > 1) {
-      pp('$mm ... $yy Handle normal text response ... $yy');
-      messages.addAll(mMessages);
-    } else {
-      pp('$mm ... $yy Extract question list from text .....');
-      questions.clear();
+    if (questions.isEmpty) {
+      //messages must be a list of questions
       _extractQuestionsFromText(mText!);
-      // _pageController.jumpToPage(1);
-      if (questions.isEmpty) {
-        pp('$mm  $yy Message is not valid JSON object; TRY AGAIN?');
+      if (questions.isNotEmpty) {
+        pp('$mm  $yy Questions are cool ..... we have: ${questions.length}');
+        _pageController.animateToPage(
+          1,
+          duration: const Duration(milliseconds: 500), // Animation duration
+          curve: Curves.ease, // Animation curve
+        ); //
       }
+      return;
     }
-
+    messages = mMessages;
     if (mounted) {
       setState(() {});
     }
-  }
-
-  bool isValidJsonObject(String jsonString) {
-    try {
-      jsonDecode(jsonString);
-      pp('$mm Message is  🍎🍎🍎 a valid JSON object');
-      return true;
-    } catch (e) {
-      pp('$mm Message is  $yy NOT a valid JSON object');
-      return false;
+    if (thread != null) {
+      assistantService.getTokens(
+          model: assistant!.model!,
+          sponsoree: sponsoree!,
+          threadId: thread!.id!);
     }
   }
 
@@ -143,12 +134,17 @@ class AssistantMainState extends State<AssistantMain>
 
   _extractQuestionsFromText(String text) {
     try {
+      questions.clear();
       int firstIndex = text.indexOf('[');
       int lastIndex = text.lastIndexOf(']');
       pp('$mm text: ${text.length} firstIndex: $firstIndex lastIndex: $lastIndex');
 
+      if (firstIndex == -1 || lastIndex == -1) {
+        return;
+      }
       String s = text.substring(firstIndex, lastIndex + 1);
-      questions.clear();
+      pp('\n\n\\n$mm List of Extracted Questions');
+
       List mList = jsonDecode(s);
       for (var value in mList) {
         var aq = AssistantQuestion.fromJson(value);
@@ -156,47 +152,77 @@ class AssistantMainState extends State<AssistantMain>
         aq.examLinkId = widget.examLink.id;
         aq.assistantName = assistant?.name;
         aq.assistantId = assistant!.id;
-        aq.examLinkTitle = '${widget.examLink.documentTitle} - ${widget.examLink.title}';
+        aq.examLinkTitle =
+            '${widget.examLink.documentTitle} - ${widget.examLink.title}';
         aq.subject = widget.examLink.subject?.title;
         aq.subjectId = widget.examLink.subject?.id;
         questions.add(aq);
+        pp('$mm Question: ${aq.toJson()}');
       }
-      pp('\n\n$mm .................. QUESTIONS found: ${questions.length}');
+
+      if (questions.isEmpty) {
+        return;
+      }
+      pp('\n\n$mm .................. QUESTIONS found: ${questions.length}, will be added to Firestore');
       FirestoreService service = GetIt.instance<FirestoreService>();
       service.addQuestions(questions);
-
     } catch (e, s) {
       pp('$mm $yy $e $s');
     }
   }
 
   late Run run;
+  int maxRetries = 3;
+  int retryCount = 0;
 
   void _startAssistant() async {
-    setState(() {
-      _busy = true;
-    });
+    pp('\n\n\n$mm ... _startAssistant: get or create Assistant, '
+        '... start running thread \n\n');
+    retryCount++;
+    if (retryCount > maxRetries) {
+      fun.showToast(
+          message:
+              'SgelaAI unable to help you at this time. Please try again later',
+          context: context);
+      return;
+    }
+
     FirestoreService firestoreService = GetIt.instance<FirestoreService>();
     try {
       questions =
           await firestoreService.getAssistantQuestions(widget.examLink.id!);
       assistant = await assistantService.findAssistant(widget.examLink);
+      assistant ??=
+          await assistantService.createAssistant(examLink: widget.examLink);
 
+      if (questions.isEmpty) {
+        pp('$mm ... creating thread ....');
+        var msg = {
+          'role': 'user',
+          'content':
+              'Please build the list of questions as per the assistant instructions',
+          'metadata': {},
+          'file_ids': [],
+        };
+        thread = await assistantService.createThreadWithMessages([msg]);
+      } else {
+        thread = await assistantService.createThread();
+      }
+      //
       if (questions.isNotEmpty) {
         pp('$mm we have questions .... ${questions.length}');
+        _pageController.animateToPage(
+          1,
+          duration: const Duration(milliseconds: 500), // Animation duration
+          curve: Curves.ease, // Animation curve
+        ); //
       } else {
-        assistant ??=
-            await assistantService.createAssistant(examLink: widget.examLink);
         var msg = await assistantService.createMessage(
             threadId: thread!.id!, text: getQuestionsInstructions);
-        pp('$mm ... getQuestionsInstructions message sent: 🍎${msg.id}'
-            ' ... start running thread: ${thread!.id!} 🍎');
+        pp('\n\n$mm ... getQuestionsInstructions message sent: 🍎${msg.id}'
+            ' ... start running thread: ${thread!.id!} 🍎 ');
+        _runThread(true);
       }
-
-      pp('$mm ... creating thread ....');
-      thread = await assistantService.createThread();
-      setState(() {});
-      _runThread(true);
     } catch (e, s) {
       pp('$mm $e $s');
       if ((mounted)) {
@@ -204,13 +230,15 @@ class AssistantMainState extends State<AssistantMain>
         Navigator.of(context).pop();
       }
     }
+    setState(() {});
   }
 
   Future<void> _runThread(bool isQuestion) async {
-    pp('$mm ... running thread .... : 🍎${thread!.id!}');
+    pp('$mm ... start running thread .... : 🍎${thread!.id!}');
     run = await assistantService.runThread(
         threadId: thread!.id!, assistantId: assistant!.id!);
     pp('$mm ... startPollingTimer .... run: ${run.id}');
+    //
     assistantService.startPollingTimer(thread!.id!, run.id!, isQuestion);
   }
 
@@ -241,18 +269,33 @@ class AssistantMainState extends State<AssistantMain>
     pp('$mm ............................'
         ' getting data ...');
     setState(() {
-      _busy = false;
+      _busy = true;
     });
+    FirestoreService firestoreService = GetIt.instance<FirestoreService>();
     try {
       organization = prefs.getOrganization();
       country = prefs.getCountry();
+      sponsoree = prefs.getSponsoree();
+      questions =
+          await firestoreService.getAssistantQuestions(widget.examLink.id!);
+      pp('$mm questions from Firestore: ${questions.length}');
     } catch (e) {
       pp(e);
-      fun.showErrorDialog(context, '$e');
+      if (mounted) {
+        fun.showErrorDialog(context, '$e');
+      }
     }
     setState(() {
       _busy = false;
     });
+    _startAssistant();
+    if (questions.isNotEmpty) {
+      _pageController.animateToPage(
+        1,
+        duration: const Duration(milliseconds: 500), // Animation duration
+        curve: Curves.ease, // Animation curve
+      ); //
+    }
   }
 
   final PageController _pageController = PageController();
@@ -262,12 +305,24 @@ class AssistantMainState extends State<AssistantMain>
     List<Widget> widgets = [
       OpenAPIAssistantChat(
         threadId: thread?.id,
-        assistantId: assistant?.id,
+        assistant: assistant,
+        messages: messages,
+        examLink: widget.examLink,
       ),
       OpenAiAssistantQuestions(
         questions: questions,
         threadId: thread?.id,
         assistantId: assistant?.id,
+        examLink: widget.examLink,
+        onMessagesReceived: (mMessages) {
+          messages = mMessages;
+          setState(() {});
+          _pageController.animateToPage(
+            0,
+            duration: const Duration(milliseconds: 500), // Animation duration
+            curve: Curves.ease, // Animation curve
+          ); //
+        },
       ),
       const OpenAiAssistantDocument(),
     ];
@@ -275,6 +330,18 @@ class AssistantMainState extends State<AssistantMain>
         child: Scaffold(
             appBar: AppBar(
               title: const Text('OpenAI Assistant'),
+              actions: [
+                IconButton(
+                  onPressed: () {
+                    NavigationUtils.navigateToPage(
+                        context: context,
+                        widget: PDFViewer(
+                            pdfUrl: widget.examLink.link!,
+                            examLink: widget.examLink));
+                  },
+                  icon: const Icon(Icons.cloud_download),
+                ),
+              ],
             ),
             body: ScreenTypeLayout.builder(
               mobile: (_) {
@@ -290,27 +357,12 @@ class AssistantMainState extends State<AssistantMain>
                                   currentIndexPage = pg;
                                 });
                               },
+                              physics: const PageScrollPhysics(),
                               controller: _pageController,
                               itemBuilder: (_, index) {
                                 return widgets.elementAt(index);
                               }),
                         ),
-                        // DotsIndicator(
-                        //   dotsCount: 3,
-                        //   position: currentIndexPage,
-                        //   decorator: DotsDecorator(
-                        //     colors: [
-                        //       Colors.grey[300]!,
-                        //       Colors.grey[600]!,
-                        //       Colors.grey[900]!
-                        //     ], // Inactive dot colors
-                        //     activeColors: [
-                        //       Colors.red[300]!,
-                        //       Colors.red[600]!,
-                        //       Colors.red[900]!
-                        //     ], // Àctive dot colors
-                        //   ),
-                        // ),
                         const SponsoredBy(
                           height: 32,
                         ),

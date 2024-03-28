@@ -1,21 +1,33 @@
 import 'dart:async';
 
+import 'package:badges/badges.dart' as bd;
 import 'package:edu_chatbot/local_util/functions.dart';
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
+import 'package:get_it/get_it.dart';
 import 'package:responsive_builder/responsive_builder.dart';
 import 'package:sgela_services/data/assistant_data_openai/message.dart';
 import 'package:sgela_services/data/assistant_data_openai/question/assistant_question.dart';
 import 'package:sgela_services/data/assistant_data_openai/run.dart';
+import 'package:sgela_services/data/assistant_data_openai/thread.dart';
+import 'package:sgela_services/data/exam_link.dart';
 import 'package:sgela_services/services/openai_assistant_service.dart';
 import 'package:sgela_services/sgela_util/functions.dart';
-import 'package:get_it/get_it.dart';
-import 'package:fluttertoast/fluttertoast.dart';
+import 'package:sgela_shared_widgets/widgets/assistant_listener.dart';
 
 class OpenAiAssistantQuestions extends StatefulWidget {
-  const OpenAiAssistantQuestions({super.key, required this.questions, this.threadId, this.assistantId});
+  const OpenAiAssistantQuestions(
+      {super.key,
+      required this.questions,
+      this.threadId,
+      this.assistantId,
+      required this.onMessagesReceived,
+      required this.examLink});
 
   final List<AssistantQuestion> questions;
   final String? threadId, assistantId;
+  final Function(List<Message>) onMessagesReceived;
+  final ExamLink examLink;
 
   @override
   OpenAiAssistantQuestionsState createState() =>
@@ -27,7 +39,7 @@ class OpenAiAssistantQuestionsState extends State<OpenAiAssistantQuestions>
   late AnimationController _controller;
   static const mm = '💛💛💛OpenAiAssistantQuestions 🍎🍎';
   OpenAIAssistantService assistantService =
-  GetIt.instance<OpenAIAssistantService>();
+      GetIt.instance<OpenAIAssistantService>();
 
   late Run run;
 
@@ -36,12 +48,14 @@ class OpenAiAssistantQuestionsState extends State<OpenAiAssistantQuestions>
 
   List<Message> messages = [];
   bool _busy = false;
+
   @override
   void initState() {
     _controller = AnimationController(vsync: this);
     super.initState();
     _listen();
   }
+
   @override
   void dispose() {
     statusSubscription.cancel();
@@ -49,6 +63,7 @@ class OpenAiAssistantQuestionsState extends State<OpenAiAssistantQuestions>
     _controller.dispose();
     super.dispose();
   }
+
   void _listen() {
     pp('$mm ... listening to Assistant result and status streams ....');
 
@@ -68,7 +83,8 @@ class OpenAiAssistantQuestionsState extends State<OpenAiAssistantQuestions>
       }
     });
 
-    messageSubscription = assistantService.questionResponseStream.listen((mMessages) {
+    messageSubscription =
+        assistantService.questionResponseStream.listen((mMessages) {
       pp('$mm ...questionResponseStream: Assistant messages arrived: ${mMessages.length}');
       _handleMessageArrived(mMessages);
       if (mounted) {
@@ -90,21 +106,32 @@ class OpenAiAssistantQuestionsState extends State<OpenAiAssistantQuestions>
     assistantService.startPollingTimer(widget.threadId!, run.id!, true);
   }
 
+  Thread? newThread;
+  String? threadId;
+
   Future _sendMessage(String text) async {
-    if (widget.threadId == null) {
-      return;
-    }
-    pp('\n\n$mm ... _sendMessage .... thread: ${widget.threadId} ');
     setState(() {
       _busy = true;
     });
-     String textToSend = 'Please help me with: $text. Return your response in markdown format';
+
     try {
+      if (widget.threadId == null) {
+        newThread = await assistantService.createThread();
+        if (newThread != null) {
+          threadId = newThread!.id!;
+        }
+      } else {
+        threadId = widget.threadId!;
+      }
+      String textToSend =
+          'Please help me with the following question: $text. \nReturn your response in markdown format';
+      pp('\n\n$mm ... _sendMessage .... thread: ${widget.threadId} textToSend: $textToSend');
+
       var msg = await assistantService.createMessage(
           text: textToSend, threadId: widget.threadId!);
       pp('\n\n$mm ... createMessage .... '
           'response from Assistant, check to see if we need to add this to messages: 🍎 ${msg.toJson()} 🍎\n\n');
-      messages.add(msg);
+      //messages.add(msg);
       _runThread();
     } catch (e, s) {
       pp('$mm $e $s');
@@ -115,10 +142,14 @@ class OpenAiAssistantQuestionsState extends State<OpenAiAssistantQuestions>
   }
 
   void _handleMessageArrived(List<Message> mMessages) {
-    pp('$mm ... do nothing; message arrived via stream: ${mMessages.length},'
+    pp('$mm ... _handleMessageArrived: '
+        'do nothing; message arrived via stream: ${mMessages.length},'
         ' should be handled by chat interface');
+    setState(() {
+      _busy = false;
+    });
+    widget.onMessagesReceived(mMessages);
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -132,24 +163,47 @@ class OpenAiAssistantQuestionsState extends State<OpenAiAssistantQuestions>
               children: [
                 Text(
                   'Exam Questions',
-                  style: myTextStyle(context, Colors.teal, 28, FontWeight.w900),
+                  style: myTextStyle(context, Colors.teal, 20, FontWeight.w900),
                 ),
-                gapH32,
+                gapH8,
+                QuestionHeader(
+                  examLink: widget.examLink,
+                ),
+                // gapH4,
                 Expanded(
-                  child: ListView.builder(
-                      itemCount: widget.questions.length,
-                      itemBuilder: (ctx, index) {
-                        var question = widget.questions.elementAt(index);
-                        return QuestionWidget(
-                          question: question,
-                          onQuestion: (text) {
-                            _sendMessage(text);
-                          },
-                        );
-                      }),
+                  child: bd.Badge(
+                    badgeContent: Text('${widget.questions.length}'),
+                    position: bd.BadgePosition.topEnd(end: 12, top: -2),
+                    badgeStyle: const bd.BadgeStyle(
+                      elevation: 12,
+                      padding: EdgeInsets.all(12.0),
+                      badgeColor: Colors.pink,
+                    ),
+                    child: ListView.builder(
+                        itemCount: widget.questions.length,
+                        itemBuilder: (ctx, index) {
+                          var question = widget.questions.elementAt(index);
+                          return Padding(
+                            padding: const EdgeInsets.all(20.0),
+                            child: QuestionWidget(
+                              question: question,
+                              onQuestion: (text) {
+                                _sendMessage(text);
+                              },
+                            ),
+                          );
+                        }),
+                  ),
                 ),
               ],
-            )
+            ),
+            _busy
+                ? const Positioned(
+                    bottom: 2,
+                    left: 16,
+                    child: AssistantListener(),
+                  )
+                : gapH16,
           ],
         );
       },
@@ -161,7 +215,6 @@ class OpenAiAssistantQuestionsState extends State<OpenAiAssistantQuestions>
       },
     );
   }
-
 }
 
 class QuestionWidget extends StatelessWidget {
@@ -192,7 +245,7 @@ class QuestionWidget extends StatelessWidget {
     question.subQuestionText?.forEach((t) {
       desc.write('$t\n');
     });
-    var height = 64.0;
+    var height = 48.0;
     if (question.subQuestionText != null) {
       height = height + question.subQuestionText!.length * 40.0;
     }
@@ -204,7 +257,7 @@ class QuestionWidget extends StatelessWidget {
       child: Card(
         elevation: 8,
         child: Padding(
-          padding: const EdgeInsets.all(8.0),
+          padding: const EdgeInsets.all(16.0),
           child: Column(
             children: [
               Text(question.questionText!),
@@ -250,9 +303,38 @@ class SubQuestionWidget extends StatelessWidget {
         elevation: 8,
         color: Colors.teal,
         child: Padding(
-          padding: const EdgeInsets.all(8.0),
+          padding: const EdgeInsets.only(
+              left: 16.0, right: 16.0, top: 8.0, bottom: 8.0),
           child: Text(subQuestion),
         ),
+      ),
+    );
+  }
+}
+
+class QuestionHeader extends StatelessWidget {
+  final ExamLink examLink;
+
+  const QuestionHeader({super.key, required this.examLink});
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 72,
+      child: Column(
+        children: [
+          Text('${examLink.subject?.title}'),
+          gapH8,
+          Text(
+            '${examLink.documentTitle}',
+            style: myTextStyleTiny(context),
+          ),
+          gapH4,
+          Text(
+            '${examLink.title}',
+            style: myTextStyleSmall(context),
+          )
+        ],
       ),
     );
   }

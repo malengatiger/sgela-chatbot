@@ -190,7 +190,7 @@ class ExamPageContentSelectorState extends State<ExamPageContentSelector> {
       case modelOpenAI:
         _goToOpenAI(mPages);
         break;
-      case modelAnthropic:
+      case modelClaude:
         showToast(message: 'Claude not available yet. Stay tuned!', context: context );
         _goToGemini(mPages);
         break;
@@ -469,7 +469,7 @@ class ExamPageContentSelectorState extends State<ExamPageContentSelector> {
                         gapH16,
                         Text(
                           'Exam Paper Pages',
-                          style: myTextStyleMediumLargeWithSize(context, 24),
+                          style: myTextStyleMediumLargeWithSize(context, 20),
                         ),
                         ExamLinkDetails(
                             examLink: widget.examLink, pageNumber: 0),

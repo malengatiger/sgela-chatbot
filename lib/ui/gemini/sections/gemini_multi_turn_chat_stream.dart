@@ -3,25 +3,21 @@ import 'dart:io';
 import 'package:badges/badges.dart' as bd;
 import 'package:edu_chatbot/local_util/functions.dart';
 import 'package:edu_chatbot/ui/gemini/widgets/chat_input_box.dart';
-import 'package:flutter/cupertino.dart';
-import 'package:sgela_services/data/branding.dart';
-import 'package:sgela_services/data/exam_link.dart';
-import 'package:sgela_services/data/exam_page_content.dart';
-import 'package:sgela_services/data/subject.dart';
-import 'package:sgela_services/services/local_data_service.dart';
-import 'package:sgela_shared_widgets/widgets/busy_indicator.dart';
-import 'package:sgela_shared_widgets/widgets/sponsored_by.dart';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_gemini/flutter_gemini.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:get_it/get_it.dart';
+import 'package:sgela_services/data/branding.dart';
+import 'package:sgela_services/data/exam_link.dart';
+import 'package:sgela_services/data/exam_page_content.dart';
+import 'package:sgela_services/data/subject.dart';
 import 'package:sgela_services/services/firestore_service.dart';
+import 'package:sgela_services/services/local_data_service.dart';
 import 'package:sgela_services/sgela_util/dio_util.dart';
 import 'package:sgela_services/sgela_util/functions.dart';
 import 'package:sgela_services/sgela_util/prefs.dart';
-
-
+import 'package:sgela_shared_widgets/widgets/busy_indicator.dart';
+import 'package:sgela_shared_widgets/widgets/sponsored_by.dart';
 
 class GeminiMultiTurnStreamChat extends StatefulWidget {
   const GeminiMultiTurnStreamChat(
@@ -72,7 +68,7 @@ class GeminiMultiTurnStreamChatState extends State<GeminiMultiTurnStreamChat> {
     if (widget.examLink != null) {
       _chatInputController = TextEditingController(
           text:
-          'I need help with this subject: ${widget.examLink!.subject?.title}');
+              'I need help with this subject: ${widget.examLink!.subject?.title}');
     }
     if (widget.examPageContents != null) {
       widget.examPageContents?.forEach((page) {
@@ -84,9 +80,10 @@ class GeminiMultiTurnStreamChatState extends State<GeminiMultiTurnStreamChat> {
     _examPageText = sb.toString();
     if (_examPageText != null && _examPageText!.isNotEmpty) {
       _examPageText =
-      'Find the questions or problems in the text below and respond with the solutions in markdown format.\n'
+          'Find the questions or problems in the text below and respond with the solutions in markdown format.\n'
           'Show solution steps where necessary.\n The text: $_examPageText';
       pp('$mm ... length of examText: ${_examPageText!.length}  bytes');
+      _chatInputController = TextEditingController(text: _examPageText!);
     }
     _handleInputText(true);
     setState(() {});
@@ -95,17 +92,8 @@ class GeminiMultiTurnStreamChatState extends State<GeminiMultiTurnStreamChat> {
   int insertIndex = 10;
 
   void _handleInputText(bool isFirstTime) {
-    if (isFirstTime) {
-      if (_examPageText != null && _examPageText!.isNotEmpty) {
-        textPrompt = _examPageText!;
-      }
-    } else {
-      if (_chatInputController.text.isNotEmpty) {
-        textPrompt = _chatInputController.text;
-      } else {
-        textPrompt = 'Hello';
-      }
-    }
+    textPrompt = _chatInputController.text;
+
     if (textPrompt.isNotEmpty) {
       textPrompt = _replaceKeywordsWithBlanks(textPrompt);
       List<Parts> systemPartsContext = [];
@@ -139,18 +127,17 @@ class GeminiMultiTurnStreamChatState extends State<GeminiMultiTurnStreamChat> {
   DioUtil dioUtil = GetIt.instance<DioUtil>();
 
   int totalTokens = 0;
-  Future _countTokens(
-      {required String prompt,
-        required List<String> systemStrings}) async {
 
+  Future _countTokens(
+      {required String prompt, required List<String> systemStrings}) async {
     var sb = StringBuffer();
     for (var element in systemStrings) {
       sb.write('$element\n');
     }
     sb.write(prompt);
 
-    var tokens = await
-    gemini.countTokens(sb.toString(),modelName: 'gemini-pro');
+    var tokens =
+        await gemini.countTokens(sb.toString(), modelName: 'gemini-pro');
     pp('$mm token response,🍎🍎 tokens: $tokens ... will write TokensUsed');
   }
 
@@ -170,6 +157,7 @@ class GeminiMultiTurnStreamChatState extends State<GeminiMultiTurnStreamChat> {
       pp("ERROR counting tokens: $e $s");
     }
   }
+
   Future<void> _startAndListenToChatStream() async {
     pp('$mm _startAndListenToChatStream ...... 🍎🍎🍎🍎🍎🍎🍎🍎🍎 ');
 
@@ -178,9 +166,9 @@ class GeminiMultiTurnStreamChatState extends State<GeminiMultiTurnStreamChat> {
         _busy = true;
       });
 
-      gemini.streamChat(
-          chats,
-          generationConfig: GenerationConfig(temperature: 0.0))
+      gemini
+          .streamChat(chats,
+              generationConfig: GenerationConfig(temperature: 0.0))
           .listen((candidates) async {
         pp("\n\n$mm gemini.streamChat fired!: chats: ${chats.length} turnNumber: $turnNumber"
             " 🍎🍎🍎🍎🍎🍎🍎🍎🍎--------->");
@@ -188,7 +176,7 @@ class GeminiMultiTurnStreamChatState extends State<GeminiMultiTurnStreamChat> {
         loading = false;
         if (chats.isNotEmpty && chats.last.role == candidates.content?.role) {
           chats.last.parts!.last.text =
-          '${chats.last.parts!.last.text}${candidates.output}';
+              '${chats.last.parts!.last.text}${candidates.output}';
         } else {
           chats.add(
               Content(role: 'model', parts: [Parts(text: candidates.output)]));
@@ -241,7 +229,7 @@ class GeminiMultiTurnStreamChatState extends State<GeminiMultiTurnStreamChat> {
     return Card(
       elevation: 0,
       color:
-      content.role == 'model' ? Colors.blue.shade800 : Colors.transparent,
+          content.role == 'model' ? Colors.blue.shade800 : Colors.transparent,
       child: Padding(
         padding: const EdgeInsets.all(8.0),
         child: Column(
@@ -280,96 +268,101 @@ class GeminiMultiTurnStreamChatState extends State<GeminiMultiTurnStreamChat> {
   Widget build(BuildContext context) {
     return SafeArea(
         child: Scaffold(
-          appBar: AppBar(
-            leading: IconButton(onPressed: (){
-              // _addTokensUsed();
-              Navigator.of(context).pop();
-              _addTokensUsed();
-            }, icon: Platform.isAndroid? const Icon(Icons.arrow_back):const Icon(Icons.arrow_back_ios) ,),
-            title: Row(
-              children: [
-                loading
-                    ? gapW4
-                    : Text(
-                  'Chat with ',
-                  style: myTextStyleSmall(context),
-                ),
-                gapW8,
-                loading
-                    ? gapW4
-                    : Text(
-                  'SgelaAI',
-                  style: myTextStyle(context, Theme.of(context).primaryColor,
-                      24, FontWeight.w900),
-                ),
-                gapW16,
-                Text(
-                  '(Gemini AI)',
-                  style: myTextStyleTiny(context),
-                )
-              ],
+      appBar: AppBar(
+        leading: IconButton(
+          onPressed: () {
+            // _addTokensUsed();
+            Navigator.of(context).pop();
+            _addTokensUsed();
+          },
+          icon: Platform.isAndroid
+              ? const Icon(Icons.arrow_back)
+              : const Icon(Icons.arrow_back_ios),
+        ),
+        title: Row(
+          children: [
+            loading
+                ? gapW4
+                : Text(
+                    'Chat with ',
+                    style: myTextStyleSmall(context),
+                  ),
+            gapW8,
+            loading
+                ? gapW4
+                : Text(
+                    'SgelaAI',
+                    style: myTextStyle(context, Theme.of(context).primaryColor,
+                        24, FontWeight.w900),
+                  ),
+            gapW8,
+            Text(
+              modelGeminiAI,
+              style: myTextStyleTiny(context),
+            )
+          ],
+        ),
+        actions: [
+          if (loading)
+            const BusyIndicator(
+              showTimerOnly: true,
             ),
-            actions: [
-              if (loading)
-                const BusyIndicator(
-                  showTimerOnly: true,
-                ),
-              IconButton(
-                  onPressed: () {
-                    pp('$mm ... do the Share thing ...');
-                  },
-                  icon: Icon(Icons.share, color: Theme.of(context).primaryColor)),
-            ],
-          ),
-          body: SizedBox(
-            height: double.infinity,
-            child: Stack(
-              children: [
-                SingleChildScrollView(
-                  child: Column(mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      chats.isNotEmpty
-                          ? Align(
-                        alignment: Alignment.bottomCenter,
-                        child: bd.Badge(
-                          badgeContent: Text('${chats.length}'),
-                          position:
-                          bd.BadgePosition.topEnd(top: -16, end: -8),
-                          badgeStyle: const bd.BadgeStyle(
-                            padding: EdgeInsets.all(12.0),
-                          ),
-                          onTap: () {
-                            pp('$mm badge tapped, scroll up or down');
-                          },
-                          child: Padding(
-                            padding: const EdgeInsets.all(4.0),
-                            child: ListView.builder(
-                              itemBuilder: chatItem,
-                              shrinkWrap: true,
-                              physics:
-                              const NeverScrollableScrollPhysics(),
-                              itemCount: chats.length,
-                              reverse: false,
+          IconButton(
+              onPressed: () {
+                pp('$mm ... do the Share thing ...');
+              },
+              icon: Icon(Icons.share, color: Theme.of(context).primaryColor)),
+        ],
+      ),
+      body: SizedBox(
+        height: double.infinity,
+        child: Stack(
+          children: [
+            SingleChildScrollView(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  chats.isNotEmpty
+                      ? Align(
+                          alignment: Alignment.bottomCenter,
+                          child: bd.Badge(
+                            badgeContent: Text('${chats.length}'),
+                            position:
+                                bd.BadgePosition.topEnd(top: -16, end: -8),
+                            badgeStyle: const bd.BadgeStyle(
+                              padding: EdgeInsets.all(12.0),
+                            ),
+                            onTap: () {
+                              pp('$mm badge tapped, scroll up or down');
+                            },
+                            child: Padding(
+                              padding: const EdgeInsets.all(4.0),
+                              child: ListView.builder(
+                                itemBuilder: chatItem,
+                                shrinkWrap: true,
+                                physics: const NeverScrollableScrollPhysics(),
+                                itemCount: chats.length,
+                                reverse: false,
+                              ),
                             ),
                           ),
-                        ),
-                      )
-                          : const Center(
-                          child: Text('Say something to SgelaAI')),
-                      ChatInputBox(
-                        controller: _chatInputController,
-                        onSend: () {
-                          _handleInputText(false);
-                        },
-                      ),
-                      const SponsoredBy(
-                      ),
-                    ],
+                        )
+                      : const Center(child: Text('Say something to SgelaAI')),
+                  gapH16,
+                  ChatInputBox(
+                    controller: _chatInputController,
+                    onSend: () {
+                      _handleInputText(false);
+                    },
                   ),
-                ),
-                loading
-                    ? const Positioned(
+                  gapH16,
+                  const SponsoredBy(height: 36,),
+                ],
+              ),
+            ),
+            loading
+                ? const Positioned(
                     bottom: 24,
                     left: 24,
                     child: SizedBox(
@@ -377,12 +370,12 @@ class GeminiMultiTurnStreamChatState extends State<GeminiMultiTurnStreamChat> {
                         height: 100,
                         child: Center(
                             child: BusyIndicator(
-                              showTimerOnly: true,
-                            ))))
-                    : gapW4,
-              ],
-            ),
-          ),
-        ));
+                          showTimerOnly: true,
+                        ))))
+                : gapW4,
+          ],
+        ),
+      ),
+    ));
   }
 }

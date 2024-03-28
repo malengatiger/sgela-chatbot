@@ -1,26 +1,26 @@
 import 'package:badges/badges.dart' as bd;
+import 'package:edu_chatbot/ui/exam/exam_link_list_widget.dart';
 import 'package:edu_chatbot/ui/gemini/sections/gemini_multi_turn_chat_stream.dart';
+import 'package:edu_chatbot/ui/groq/groq_chat_stream.dart';
+import 'package:edu_chatbot/ui/open_ai/open_ai_text_chat_widget.dart';
+import 'package:edu_chatbot/ui/youtube/you_tube_searcher.dart';
+import 'package:flutter/material.dart';
+import 'package:get_it/get_it.dart';
 import 'package:sgela_services/data/exam_document.dart';
 import 'package:sgela_services/data/subject.dart';
 import 'package:sgela_services/repositories/basic_repository.dart';
 import 'package:sgela_services/services/firestore_service.dart';
-import 'package:edu_chatbot/ui/exam/exam_link_list_widget.dart';
 import 'package:sgela_services/services/openai_assistant_service.dart';
-import 'package:sgela_shared_widgets/util/widget_prefs.dart';
-import 'package:sgela_shared_widgets/widgets/busy_indicator.dart';
-import 'package:sgela_shared_widgets/widgets/sponsored_by.dart';
-import 'package:sgela_shared_widgets/widgets/color_gallery.dart';
-
-import 'package:edu_chatbot/ui/open_ai/open_ai_text_chat_widget.dart';
-import 'package:edu_chatbot/ui/youtube/you_tube_searcher.dart';
 import 'package:sgela_services/sgela_util/dark_light_control.dart';
 import 'package:sgela_services/sgela_util/functions.dart';
 import 'package:sgela_services/sgela_util/navigation_util.dart';
 import 'package:sgela_services/sgela_util/prefs.dart';
-import 'package:flutter/material.dart';
-import 'package:get_it/get_it.dart';
+import 'package:sgela_shared_widgets/widgets/busy_indicator.dart';
+import 'package:sgela_shared_widgets/widgets/color_gallery.dart';
+import 'package:sgela_shared_widgets/widgets/sponsored_by.dart';
 
 import '../../local_util/functions.dart';
+import '../chat/model_chooser.dart' as chooser;
 
 class ExamsDocumentList extends StatefulWidget {
   const ExamsDocumentList({
@@ -91,35 +91,65 @@ class ExamsDocumentListState extends State<ExamsDocumentList> {
 
   void _navigateToColorGallery() {
     NavigationUtils.navigateToPage(
-        context: context,
-        widget: ColorGallery(colorWatcher: colorWatcher));
+        context: context, widget: ColorGallery(colorWatcher: colorWatcher));
   }
 
-  void _navigateToGeminiOrOpenAIChat() {
+  void _navigateToChat() {
     var aiModel = prefs.getCurrentModel();
-    pp('$mm ... _navigateToGeminiOrOpenAIChat, model: $aiModel');
-    if (aiModel == modelGeminiAI) {
-      NavigationUtils.navigateToPage(
-          context: context, widget: GeminiMultiTurnStreamChat(subject: widget.subject,));
-    }  else if (aiModel == modelOpenAI) {
-      NavigationUtils.navigateToPage(
-          context: context, widget: OpenAITextChatWidget(subject: widget.subject,));
-    } else {
-      NavigationUtils.navigateToPage(
-          context: context, widget: GeminiMultiTurnStreamChat(subject: widget.subject,));
+    pp('$mm ... _navigateToChat, model: $aiModel');
+    
+    switch (aiModel) {
+      case modelGeminiAI:
+        NavigationUtils.navigateToPage(
+            context: context,
+            widget: GeminiMultiTurnStreamChat(
+              subject: widget.subject,
+            ));
+        break;
+      case modelOpenAI:
+        NavigationUtils.navigateToPage(
+            context: context,
+            widget: OpenAITextChatWidget(
+              subject: widget.subject,
+            ));
+        break;
+      case modelMistral:
+        showToast(message: '$modelMistral not available yet', context: context);
+        break;
+      case modelClaude:
+        showToast(message: '$modelClaude not available yet', context: context);
+        break;
+      case modelMixtral:
+        pp('$mm ... go to GroqChat ..... ');
+        NavigationUtils.navigateToPage(
+            context: context,
+            widget: GroqChat(
+              subject: widget.subject,
+            ));
+        break;
+      case modelLlama2:
+        showToast(message: '$modelLlama2 not available yet', context: context);
+        break;
+      default:
+        NavigationUtils.navigateToPage(
+            context: context,
+            widget: GroqChat(
+              subject: widget.subject,
+            ));
+        break;
     }
-
   }
 
-  OpenAIAssistantService assistantService = GetIt.instance<OpenAIAssistantService>();
+  OpenAIAssistantService assistantService =
+      GetIt.instance<OpenAIAssistantService>();
+  String? aiModel;
 
   @override
   Widget build(BuildContext context) {
     return SafeArea(
         child: Scaffold(
             appBar: AppBar(
-              title:
-                  Text('Examination Periods', style: myTextStyleSmall(context)),
+              title: const Text(''),
               actions: [
                 IconButton(
                     onPressed: () {
@@ -135,10 +165,24 @@ class ExamsDocumentListState extends State<ExamsDocumentList> {
                         color: Theme.of(context).primaryColor)),
                 IconButton(
                     onPressed: () {
-                      _navigateToGeminiOrOpenAIChat();
+                      _navigateToChat();
                     },
                     icon: Icon(Icons.message_outlined,
-                        color: Theme.of(context).primaryColor))
+                        color: Theme.of(context).primaryColor)),
+                Card(
+                  elevation: 16,
+                  child: Padding(
+                    padding: const EdgeInsets.only(
+                        left: 16.0, right: 16, top: 8, bottom: 8),
+                    child: chooser.ModelChooser(
+                      onSelected: (model) {
+                        setState(() {
+                          aiModel = model;
+                        });
+                      },
+                    ),
+                  ),
+                ),
               ],
             ),
             body: Stack(

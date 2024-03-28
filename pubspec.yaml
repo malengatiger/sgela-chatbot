@@ -26,6 +26,7 @@ dependencies:
   markdown: ^7.2.1
   google_generative_ai: ^0.2.2
   json_annotation: ^4.8.1
+  flutter_inappwebview: ^6.0.0
 
 
 dev_dependencies:

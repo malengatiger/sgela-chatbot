@@ -1,8 +1,12 @@
 import 'package:badges/badges.dart' as bd;
 import 'package:edu_chatbot/ui/gemini/sections/exam_page_content_selector.dart';
 import 'package:edu_chatbot/ui/gemini/sections/gemini_multi_turn_chat_stream.dart';
-import 'package:edu_chatbot/ui/langchain/lang_chain_main.dart';
-import 'package:edu_chatbot/ui/open_ai/assistant/assistant_main.dart';
+import 'package:edu_chatbot/ui/groq/groq_chat_stream.dart';
+import 'package:edu_chatbot/ui/open_ai/open_ai_text_chat_widget.dart';
+import 'package:edu_chatbot/ui/youtube/you_tube_searcher.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_gemini/flutter_gemini.dart';
+import 'package:get_it/get_it.dart';
 import 'package:sgela_services/data/assistant_data_openai/assistant.dart';
 import 'package:sgela_services/data/exam_document.dart';
 import 'package:sgela_services/data/exam_link.dart';
@@ -13,20 +17,16 @@ import 'package:sgela_services/services/gemini_chat_service.dart';
 import 'package:sgela_services/services/local_data_service.dart';
 import 'package:sgela_services/services/openai_assistant_service.dart';
 import 'package:sgela_services/services/you_tube_service.dart';
-import 'package:sgela_shared_widgets/widgets/busy_indicator.dart';
-import 'package:sgela_shared_widgets/widgets/color_gallery.dart';
-import 'package:sgela_shared_widgets/widgets/sponsored_by.dart';
-import 'package:edu_chatbot/ui/open_ai/open_ai_text_chat_widget.dart';
-import 'package:edu_chatbot/ui/youtube/you_tube_searcher.dart';
 import 'package:sgela_services/sgela_util/dark_light_control.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_gemini/flutter_gemini.dart';
-import 'package:get_it/get_it.dart';
 import 'package:sgela_services/sgela_util/functions.dart';
 import 'package:sgela_services/sgela_util/navigation_util.dart';
 import 'package:sgela_services/sgela_util/prefs.dart';
+import 'package:sgela_shared_widgets/widgets/busy_indicator.dart';
+import 'package:sgela_shared_widgets/widgets/color_gallery.dart';
+import 'package:sgela_shared_widgets/widgets/sponsored_by.dart';
 
 import '../../local_util/functions.dart';
+import '../chat/model_chooser.dart' as chooser;
 
 class ExamLinkListWidget extends StatefulWidget {
   final Subject subject;
@@ -73,6 +73,7 @@ class ExamLinkListWidgetState extends State<ExamLinkListWidget> {
       examLinks = await firestoreService.getExamLinksByDocumentAndSubject(
           subjectId: widget.subject.id!, documentId: widget.examDocument.id!);
       pp('$mm fetchedExamLinks: examLinks: ${examLinks.length}');
+      aiModel = prefs.getCurrentModel();
       filteredExamLinks = examLinks;
       filteredExamLinks.sort((a, b) => a.title!.compareTo(b.title!));
     } catch (e) {
@@ -88,19 +89,60 @@ class ExamLinkListWidgetState extends State<ExamLinkListWidget> {
   }
 
   ExamLink? selectedExamLink;
-  OpenAIAssistantService assistantService = GetIt.instance<OpenAIAssistantService>();
+  OpenAIAssistantService assistantService =
+      GetIt.instance<OpenAIAssistantService>();
   OpenAIAssistant? assistant;
 
+  String? aiModel;
 
-  void _navigateToLangChainMain(ExamLink examLink) {
+  void _navigateToPageContentSelector(ExamLink examLink) {
     NavigationUtils.navigateToPage(
-        context: context,
-        widget: LangChainMain(examLink: examLink));
+        context: context, widget: ExamPageContentSelector(examLink: examLink));
+
+    // NavigationUtils.navigateToPage(
+    //     context: context,
+    //     widget: AssistantMain(examLink: examLink));
   }
+
   void _navigateToColorGallery() {
     NavigationUtils.navigateToPage(
-        context: context,
-        widget: ColorGallery(colorWatcher: colorWatcher));
+        context: context, widget: ColorGallery(colorWatcher: colorWatcher));
+  }
+
+  void _navigateToChat() {
+    switch (aiModel) {
+      case modelGeminiAI:
+        NavigationUtils.navigateToPage(
+            context: context,
+            widget: GeminiMultiTurnStreamChat(
+              subject: widget.subject,
+            ));
+        break;
+      case modelOpenAI:
+        NavigationUtils.navigateToPage(
+            context: context,
+            widget: OpenAITextChatWidget(
+              subject: widget.subject,
+            ));
+        break;
+      case modelMixtral:
+        NavigationUtils.navigateToPage(
+            context: context,
+            widget: GroqChat(
+              subject: widget.subject,
+            ));
+        break;
+      default:
+        if (mounted) {
+          showToast(message: 'Defaulting to OpenAI model', context: context);
+        }
+        NavigationUtils.navigateToPage(
+            context: context,
+            widget: OpenAITextChatWidget(
+              subject: widget.subject,
+            ));
+        break;
+    }
   }
 
   @override
@@ -153,14 +195,16 @@ class ExamLinkListWidgetState extends State<ExamLinkListWidget> {
                   color: Theme.of(context).primaryColor)),
           IconButton(
               onPressed: () {
-                if (aiModelName == modelGeminiAI) {
-                  _navigateToGeminiMultiTurnStreamChat();
-                }
-                if (aiModelName == modelOpenAI) {
-                  _navigateToOpenAIMultiTurnStreamChat();
-                }
+                _navigateToChat();
               },
               icon: Icon(Icons.chat, color: Theme.of(context).primaryColor)),
+          chooser.ModelChooser(
+            onSelected: (model) {
+              setState(() {
+                aiModel = model;
+              });
+            },
+          ),
         ],
       ),
       // backgroundColor: Colors.teal,
@@ -227,7 +271,7 @@ class ExamLinkListWidgetState extends State<ExamLinkListWidget> {
                                         return GestureDetector(
                                           onTap: () {
                                             selectedExamLink = examLink;
-                                            _navigateToLangChainMain(
+                                            _navigateToPageContentSelector(
                                                 examLink);
                                           },
                                           child: ExamLinkWidget(
@@ -248,7 +292,6 @@ class ExamLinkListWidgetState extends State<ExamLinkListWidget> {
                   ],
                 ),
               ),
-              
             ],
           )),
     );
@@ -258,14 +301,18 @@ class ExamLinkListWidgetState extends State<ExamLinkListWidget> {
     pp('$mm _navigateToGeminiMultiTurnStreamChat ...');
 
     NavigationUtils.navigateToPage(
-        context: context, widget: GeminiMultiTurnStreamChat(subject: widget.subject,));
+        context: context,
+        widget: GeminiMultiTurnStreamChat(
+          subject: widget.subject,
+        ));
   }
 
   void _navigateToOpenAIMultiTurnStreamChat() {
     pp('$mm _navigateToOpenAIMultiTurnStreamChat ...');
 
     NavigationUtils.navigateToPage(
-        context: context, widget: OpenAITextChatWidget(subject: widget.subject));
+        context: context,
+        widget: OpenAITextChatWidget(subject: widget.subject));
   }
 
   void _navigateToExamPageContentSelector(ExamLink examLink) {
